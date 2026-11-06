@@ -1,0 +1,183 @@
+[
+  {
+    "id": "py.variables",
+    "subject": "python",
+    "title": "Variables and Assignment",
+    "description": "Understanding variable naming, binding names to values, and the assignment operator '='.",
+    "difficulty_level": "beginner",
+    "learning_objectives": [
+      "Define and assign variables in Python using '='",
+      "Understand that variables point to values in memory",
+      "Differentiate between variable declaration/assignment and algebraic equality"
+    ],
+    "prerequisites": [],
+    "misconceptions": [
+      {
+        "id": "confuse_assign_equals",
+        "name": "Confusing Assignment with Algebraic Equality",
+        "description": "The student interprets 'x = x + 1' as impossible algebra rather than evaluating the right-hand side and binding to 'x'.",
+        "counter_example": "x = 5\nx = x + 1\n# In math this is impossible, but in Python x now points to 6.",
+        "remediation_hint": "Explain '=' as an arrow '<-' pointing the computed result on the right into the box/label on the left."
+      },
+      {
+        "id": "variable_permanent_link",
+        "name": "Permanent Variable Linking",
+        "description": "The student believes that after 'b = a', changing 'a' later will automatically update 'b'.",
+        "counter_example": "a = 10\nb = a\na = 20\nprint(b) # prints 10, not 20",
+        "remediation_hint": "Emphasize that assignment copies the value reference at that instant; it is not a reactive link."
+      }
+    ]
+  },
+  {
+    "id": "py.data_types",
+    "subject": "python",
+    "title": "Primitive Data Types (int, float, str, bool)",
+    "description": "Identifying and working with Python core types: integers, floating point numbers, strings, and booleans.",
+    "difficulty_level": "beginner",
+    "learning_objectives": [
+      "Distinguish between int, float, str, and bool",
+      "Perform type checking and explicit conversion with int(), str(), float()"
+    ],
+    "prerequisites": ["py.variables"],
+    "misconceptions": [
+      {
+        "id": "string_number_conflation",
+        "name": "Conflating Numeric Strings with Integers",
+        "description": "The student expects '\"5\" + \"5\"' to evaluate to 10 instead of string concatenation '\"55\"'.",
+        "counter_example": "result = \"5\" + \"5\"\nprint(result) # prints '55', not 10",
+        "remediation_hint": "Point out quotes indicate text/letters. Show that text glued together gives '55', while numbers give 10."
+      }
+    ]
+  },
+  {
+    "id": "py.operators_expressions",
+    "subject": "python",
+    "title": "Operators and Expressions",
+    "description": "Arithmetic (+, -, *, /, //, %, **) and comparison (==, !=, <, >, <=, >=) operations.",
+    "difficulty_level": "beginner",
+    "learning_objectives": [
+      "Evaluate arithmetic expressions with correct precedence",
+      "Evaluate boolean comparison expressions returning True or False",
+      "Distinguish between single '=' (assign) and double '==' (equality test)"
+    ],
+    "prerequisites": ["py.variables", "py.data_types"],
+    "misconceptions": [
+      {
+        "id": "division_types_confusion",
+        "name": "Floor Division vs Float Division",
+        "description": "The student expects 7 / 2 to return integer 3, or confuses // with % modulo.",
+        "counter_example": "print(7 / 2)   # 3.5 (float division)\nprint(7 // 2)  # 3 (integer floor)\nprint(7 % 2)   # 1 (remainder)",
+        "remediation_hint": "Clarify that '/' always yields a decimal float in Python 3, whereas '//' chops off the decimal."
+      }
+    ]
+  },
+  {
+    "id": "py.conditionals",
+    "subject": "python",
+    "title": "Conditional Branching (if, elif, else)",
+    "description": "Directing program flow based on boolean expressions and indentation blocks.",
+    "difficulty_level": "beginner",
+    "learning_objectives": [
+      "Write multi-branch decisions using if, elif, and else",
+      "Understand block scope delineated by 4-space indentation",
+      "Predict which branch executes when multiple conditions evaluate"
+    ],
+    "prerequisites": ["py.operators_expressions"],
+    "misconceptions": [
+      {
+        "id": "multiple_if_vs_elif",
+        "name": "Multiple Ifs vs Elif Execution",
+        "description": "The student writes multiple independent 'if' statements expecting mutual exclusivity.",
+        "counter_example": "score = 85\nif score >= 80: print('B')\nif score >= 70: print('C')\n# Both execute! With elif, only the first matching branch runs.",
+        "remediation_hint": "Illustrate that 'elif' forms a single connected chain where at most one branch can win."
+      }
+    ]
+  },
+  {
+    "id": "py.lists_sequences",
+    "subject": "python",
+    "title": "Lists and Sequences",
+    "description": "Creating lists, indexing, slicing, and mutating ordered collections.",
+    "difficulty_level": "beginner",
+    "learning_objectives": [
+      "Create lists containing primitive items",
+      "Access elements using 0-based indexing and negative indexing",
+      "Append and modify list elements"
+    ],
+    "prerequisites": ["py.data_types"],
+    "misconceptions": [
+      {
+        "id": "one_based_indexing_error",
+        "name": "One-Based Indexing Assumption",
+        "description": "The student accesses the first element with my_list[1] instead of my_list[0].",
+        "counter_example": "fruits = ['apple', 'banana', 'cherry']\nprint(fruits[1]) # prints 'banana', not 'apple'!",
+        "remediation_hint": "Remind that computer indices measure offset from start; the very first item is at offset 0."
+      }
+    ]
+  },
+  {
+    "id": "py.for_loops",
+    "subject": "python",
+    "title": "For Loops and Iteration",
+    "description": "Iterating over collections and number sequences using 'for' and 'range()'.",
+    "difficulty_level": "beginner",
+    "learning_objectives": [
+      "Iterate over items in a list using 'for item in collection'",
+      "Generate sequences with range(start, stop, step)",
+      "Accumulate results across loop iterations"
+    ],
+    "prerequisites": ["py.lists_sequences", "py.conditionals"],
+    "misconceptions": [
+      {
+        "id": "range_inclusive_stop",
+        "name": "Expecting range(n) to Include n",
+        "description": "The student assumes range(1, 5) counts 1, 2, 3, 4, 5.",
+        "counter_example": "list(range(1, 5)) # gives [1, 2, 3, 4], stopping BEFORE 5.",
+        "remediation_hint": "Explain the stop parameter in Python is always exclusive: 'up to but not including'."
+      }
+    ]
+  },
+  {
+    "id": "py.while_loops",
+    "subject": "python",
+    "title": "While Loops and Loop Control",
+    "description": "Repetition governed by dynamic boolean conditions and terminating states.",
+    "difficulty_level": "beginner",
+    "learning_objectives": [
+      "Construct while loops with initialization, condition, and update steps",
+      "Avoid infinite loops through deterministic state updates"
+    ],
+    "prerequisites": ["py.conditionals"],
+    "misconceptions": [
+      {
+        "id": "missing_loop_increment",
+        "name": "Omission of Termination Variable Update",
+        "description": "The student creates an infinite loop because the condition variable is never modified inside the loop body.",
+        "counter_example": "count = 0\nwhile count < 3:\n    print(count)\n    # forgot count += 1 -> infinite loop!",
+        "remediation_hint": "Teach the three-step checklist for while loops: initialize, check, update."
+      }
+    ]
+  },
+  {
+    "id": "py.functions",
+    "subject": "python",
+    "title": "Functions, Parameters, and Return Values",
+    "description": "Encapsulating reusable logic using 'def', positional arguments, and explicit 'return' statements.",
+    "difficulty_level": "beginner",
+    "learning_objectives": [
+      "Define functions with def, parameters, and docstrings",
+      "Distinguish returning a value from printing to console",
+      "Understand variable scope inside vs outside functions"
+    ],
+    "prerequisites": ["py.for_loops", "py.conditionals"],
+    "misconceptions": [
+      {
+        "id": "print_vs_return_conflation",
+        "name": "Conflating Print with Return",
+        "description": "The student uses print() inside a function and assumes callers receive the printed value, resulting in None.",
+        "counter_example": "def add(a, b):\n    print(a + b)\n\nres = add(2, 3)\nprint(res) # prints None! res is not 5.",
+        "remediation_hint": "Explain that print() sends text to the screen for human eyes; return sends the value back to the code."
+      }
+    ]
+  }
+]
