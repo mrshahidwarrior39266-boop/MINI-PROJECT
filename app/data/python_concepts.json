@@ -25,6 +25,27 @@
         "description": "The student believes that after 'b = a', changing 'a' later will automatically update 'b'.",
         "counter_example": "a = 10\nb = a\na = 20\nprint(b) # prints 10, not 20",
         "remediation_hint": "Emphasize that assignment copies the value reference at that instant; it is not a reactive link."
+      },
+      {
+        "id": "swap_data_loss",
+        "name": "Losing a Value During a Swap",
+        "description": "The student writes x = y before saving x, so x's original value is overwritten and the swap loses data.",
+        "counter_example": "x = 1\ny = 2\nx = y  # x is now 2 too\ny = x  # both are 2; x's original 1 is gone",
+        "remediation_hint": "Before overwriting x, copy it into a third variable: temp = x."
+      },
+      {
+        "id": "undefined_variable_in_swap",
+        "name": "Using an Undefined Temporary Variable",
+        "description": "The student copies from a name that was never assigned, or uses a helper variable that has no value yet.",
+        "counter_example": "x = 1\ny = 2\nx = a  # NameError: name 'a' is not defined",
+        "remediation_hint": "Create the helper from a real variable first, e.g. temp = x, then use it."
+      },
+      {
+        "id": "reversed_assignment",
+        "name": "Reversing the Direction of Assignment",
+        "description": "The student writes x = temp instead of temp = x, so the old or empty helper value flows into x instead of saving x.",
+        "counter_example": "temp = x  # correct: save x into temp\n# x = temp would copy temp back into x instead of saving x",
+        "remediation_hint": "Read '=' as an arrow pointing into the left name: the right side is computed and stored on the left."
       }
     ]
   },
@@ -38,7 +59,9 @@
       "Distinguish between int, float, str, and bool",
       "Perform type checking and explicit conversion with int(), str(), float()"
     ],
-    "prerequisites": ["py.variables"],
+    "prerequisites": [
+      "py.variables"
+    ],
     "misconceptions": [
       {
         "id": "string_number_conflation",
@@ -46,6 +69,13 @@
         "description": "The student expects '\"5\" + \"5\"' to evaluate to 10 instead of string concatenation '\"55\"'.",
         "counter_example": "result = \"5\" + \"5\"\nprint(result) # prints '55', not 10",
         "remediation_hint": "Point out quotes indicate text/letters. Show that text glued together gives '55', while numbers give 10."
+      },
+      {
+        "id": "wrong_type_conversion",
+        "name": "Choosing the Wrong Conversion Function",
+        "description": "The student uses str() or float() when whole-number arithmetic needs int(), or assumes Python converts text automatically.",
+        "counter_example": "age = '18'\nprint(str(age) + 1)  # TypeError; use int(age) + 1",
+        "remediation_hint": "Use int() for whole-number text and float() for decimal text; str() only when you need text."
       }
     ]
   },
@@ -60,7 +90,10 @@
       "Evaluate boolean comparison expressions returning True or False",
       "Distinguish between single '=' (assign) and double '==' (equality test)"
     ],
-    "prerequisites": ["py.variables", "py.data_types"],
+    "prerequisites": [
+      "py.variables",
+      "py.data_types"
+    ],
     "misconceptions": [
       {
         "id": "division_types_confusion",
@@ -82,7 +115,9 @@
       "Understand block scope delineated by 4-space indentation",
       "Predict which branch executes when multiple conditions evaluate"
     ],
-    "prerequisites": ["py.operators_expressions"],
+    "prerequisites": [
+      "py.operators_expressions"
+    ],
     "misconceptions": [
       {
         "id": "multiple_if_vs_elif",
@@ -104,7 +139,9 @@
       "Access elements using 0-based indexing and negative indexing",
       "Append and modify list elements"
     ],
-    "prerequisites": ["py.data_types"],
+    "prerequisites": [
+      "py.data_types"
+    ],
     "misconceptions": [
       {
         "id": "one_based_indexing_error",
@@ -126,7 +163,10 @@
       "Generate sequences with range(start, stop, step)",
       "Accumulate results across loop iterations"
     ],
-    "prerequisites": ["py.lists_sequences", "py.conditionals"],
+    "prerequisites": [
+      "py.lists_sequences",
+      "py.conditionals"
+    ],
     "misconceptions": [
       {
         "id": "range_inclusive_stop",
@@ -147,7 +187,9 @@
       "Construct while loops with initialization, condition, and update steps",
       "Avoid infinite loops through deterministic state updates"
     ],
-    "prerequisites": ["py.conditionals"],
+    "prerequisites": [
+      "py.conditionals"
+    ],
     "misconceptions": [
       {
         "id": "missing_loop_increment",
@@ -169,7 +211,10 @@
       "Distinguish returning a value from printing to console",
       "Understand variable scope inside vs outside functions"
     ],
-    "prerequisites": ["py.for_loops", "py.conditionals"],
+    "prerequisites": [
+      "py.for_loops",
+      "py.conditionals"
+    ],
     "misconceptions": [
       {
         "id": "print_vs_return_conflation",

@@ -21,10 +21,19 @@ class TutorCoordinator:
         knowledge_file: Path,
         mastery_threshold: float = 0.70
     ):
+        if not 0.0 < mastery_threshold <= 1.0:
+            raise ValueError("mastery_threshold must be greater than 0 and at most 1.")
+
         self.graph_service = ConceptGraphService(concepts_file)
         self.knowledge_service = KnowledgeBaseService(knowledge_file)
         self.student_service = StudentStateService(student_profile)
         self.mastery_threshold = mastery_threshold
+
+        if not self.graph_service.concepts:
+            raise ValueError(
+                "No concepts were loaded. Check app/data/python_concepts.json."
+            )
+        self.knowledge_service.validate(set(self.graph_service.concepts))
 
     def get_frontier(self) -> LearningFrontier:
         """Compute the active learning frontier for the student."""
@@ -41,6 +50,9 @@ class TutorCoordinator:
         3. Priority 3: Introduce the next 'ready' frontier concept.
         4. Priority 4: If everything unlocked is mastered, curriculum complete.
         """
+        if not self.graph_service.concepts:
+            raise ValueError("No concepts were loaded.")
+
         frontier = self.get_frontier()
 
         # Check in_progress concepts for unresolved misconceptions

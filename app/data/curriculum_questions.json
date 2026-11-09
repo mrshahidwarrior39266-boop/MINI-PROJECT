@@ -1,0 +1,1082 @@
+[
+  {
+    "id": "q_var_01",
+    "concept_id": "py.variables",
+    "prompt": "In Python, what does the expression 'x = x + 1' mean, and why is it not an algebraic impossibility?",
+    "hint": "Think about the order of execution: which side of the '=' evaluates first, and what does '=' actually do?",
+    "canonical_answer": "Python evaluates the right side (x + 1) first using the current value of x, and then binds that new resulting value back to the label x on the left.",
+    "explanation": "In Python, '=' is the assignment operator, NOT algebraic equality.\n1. Step 1 (Evaluation): Python evaluates the right-hand side first (x + 1). If x was 5, 5 + 1 evaluates to 6.\n2. Step 2 (Binding): Python then binds the label 'x' to the new value 6 in memory.\nIn mathematics, x = x + 1 has no solution because it assumes simultaneous equality. In Python, it represents a two-step sequence in time.",
+    "rubric_keywords": [
+      "evaluate",
+      "right",
+      "assign",
+      "bind",
+      "store",
+      "label",
+      "memory",
+      "value",
+      "gets",
+      "becomes",
+      "calculated",
+      "arrow"
+    ],
+    "common_mistakes": [
+      {
+        "triggers": [
+          "impossible",
+          "no solution",
+          "algebra",
+          "cannot equal",
+          "math error",
+          "can't be equal"
+        ],
+        "diagnosis": "You treated '=' as algebraic equality. In Python, '=' is an assignment command (like an arrow '<-'), not an equation to be solved.",
+        "misconception_id": "confuse_assign_equals"
+      }
+    ],
+    "followup": {
+      "prompt": "Now consider: if count = 4, what happens when Python runs 'count = count * 2'? What is the new value of count?",
+      "hint": "Evaluate the right-hand side first, then store the result.",
+      "canonical_answer": "count becomes 8 because 4 * 2 evaluates to 8, which is then assigned back to count.",
+      "rubric_keywords": [
+        "8",
+        "evaluates",
+        "multiplies",
+        "assign",
+        "becomes 8"
+      ]
+    },
+    "scaffold_steps": [
+      {
+        "step_number": 1,
+        "prompt": "Let's break it into two simple steps. If x starts at 5, what does the right-hand side 'x + 1' calculate to?",
+        "hint": "Just calculate 5 + 1.",
+        "expected_answer": "6",
+        "rubric_keywords": [
+          "6",
+          "six"
+        ],
+        "explanation": "Python calculates 5 + 1 = 6 first on the right side."
+      },
+      {
+        "step_number": 2,
+        "prompt": "Now, where does the '=' operator store that resulting value 6?",
+        "hint": "Look at the variable name on the left side of '='.",
+        "expected_answer": "In variable x",
+        "rubric_keywords": [
+          "x",
+          "in x",
+          "into x",
+          "variable x"
+        ],
+        "explanation": "The '=' operator assigns 6 to 'x', so 'x' now holds 6."
+      }
+    ]
+  },
+  {
+    "id": "q_var_02",
+    "concept_id": "py.variables",
+    "prompt": "Suppose we execute:\n   a = 10\n   b = a\n   a = 20\nWhat is the value of 'b' now, and why?",
+    "hint": "Does changing 'a' automatically change 'b', or did 'b' receive a snapshot/copy at the moment of assignment?",
+    "canonical_answer": "b is 10. When 'b = a' ran, 'a' held 10, so 'b' was assigned 10. Changing 'a' to 20 later does not affect 'b'.",
+    "explanation": "Python variables are independent name tags pointing to objects in memory:\n1. 'a = 10' points 'a' to integer 10.\n2. 'b = a' inspects what 'a' points to at that split-second (10) and attaches 'b' to 10 as well.\n3. 'a = 20' moves tag 'a' to 20. It does NOT touch 'b'. Variables are one-time snapshots, not reactive formulas.",
+    "rubric_keywords": [
+      "10",
+      "snapshot",
+      "copy",
+      "copied",
+      "independent",
+      "not change",
+      "not changed",
+      "untouched",
+      "reference",
+      "at that moment",
+      "at the moment",
+      "captured",
+      "doesn't affect",
+      "does not affect",
+      "not affect",
+      "unchanged",
+      "remains 10",
+      "still 10",
+      "ten",
+      "stays 10",
+      "not linked",
+      "no link",
+      "separate",
+      "separate value"
+    ],
+    "common_mistakes": [
+      {
+        "triggers": [
+          "b is 20",
+          "b = 20",
+          "b will be 20",
+          "b becomes 20",
+          "b equals 20",
+          "b is still 20",
+          "b now holds 20",
+          "prints 20",
+          "permanent",
+          "linked",
+          "update automatically",
+          "both change"
+        ],
+        "diagnosis": "You assumed 'b = a' created a permanent link. In Python, assignment copies the reference at that instant; changing 'a' later never alters 'b'.",
+        "misconception_id": "variable_permanent_link"
+      }
+    ],
+    "followup": {
+      "prompt": "Let's verify with new variables:\n   score1 = 50\n   score2 = score1\n   score1 = 100\nWhat is the value of 'score2' now, and why?",
+      "hint": "What was score1 at the exact moment score2 was assigned?",
+      "canonical_answer": "score2 is 50 because it captured score1's value when it was 50; changing score1 to 100 later has no effect on score2.",
+      "rubric_keywords": [
+        "50",
+        "snapshot",
+        "moment",
+        "independent",
+        "not 100"
+      ]
+    },
+    "scaffold_steps": [
+      {
+        "step_number": 1,
+        "prompt": "At line 2 ('b = a'), what was the value of 'a' at that exact split second?",
+        "hint": "Look at line 1: a = 10.",
+        "expected_answer": "10",
+        "rubric_keywords": [
+          "10",
+          "ten"
+        ],
+        "explanation": "At that instant, 'a' was 10, so 'b' received 10."
+      },
+      {
+        "step_number": 2,
+        "prompt": "When line 3 ('a = 20') runs, is there any code on line 3 telling 'b' to change?",
+        "hint": "Answer 'yes' or 'no'.",
+        "expected_answer": "no",
+        "rubric_keywords": [
+          "no",
+          "never",
+          "nope",
+          "will not",
+          "won't",
+          "does not",
+          "doesn't",
+          "not changed",
+          "stays 10"
+        ],
+        "explanation": "No! 'b' was never reassigned, so 'b' stays 10."
+      }
+    ],
+    "required_keyword_groups": [
+      [
+        "10",
+        "ten"
+      ],
+      [
+        "copy",
+        "copied",
+        "snapshot",
+        "independent",
+        "not change",
+        "not changed",
+        "untouched",
+        "captured",
+        "doesn't affect",
+        "does not affect",
+        "not affect",
+        "unchanged",
+        "remains 10",
+        "still 10",
+        "reference",
+        "doesn't change",
+        "does not change",
+        "stays 10",
+        "not linked",
+        "no link",
+        "separate",
+        "separate value"
+      ]
+    ]
+  },
+  {
+    "id": "q_var_03",
+    "concept_id": "py.variables",
+    "prompt": "Write or describe the code to swap the values of two variables 'x' and 'y' without losing either value.",
+    "hint": "If you write 'x = y' immediately, x's original value is destroyed. You need a third variable (like 'temp') to save it.",
+    "canonical_answer": "temp = x\nx = y\ny = temp\n(or in Python: x, y = y, x)",
+    "explanation": "To swap two variables without losing data, you need a 3-step temporary storage process:\n1. temp = x  (saves x's original value before it gets overwritten)\n2. x = y     (copies y's value into x)\n3. y = temp  (copies the saved original value of x into y)\nPython also supports tuple unpacking: 'x, y = y, x'.",
+    "rubric_keywords": [
+      "temp",
+      "x, y = y, x",
+      "third",
+      "save",
+      "temporary",
+      "hold"
+    ],
+    "common_mistakes": [
+      {
+        "triggers": [
+          "x=y",
+          "x = y",
+          "y=x",
+          "y = x"
+        ],
+        "diagnosis": "If you write 'x = y' first without saving 'x' into a temporary variable, x's original value is overwritten and lost forever!",
+        "misconception_id": "swap_data_loss"
+      },
+      {
+        "triggers": [
+          "x=a",
+          "x = a"
+        ],
+        "diagnosis": "You introduced variable 'a', but 'a' was never defined with a value, and 'y' was never used!",
+        "misconception_id": "undefined_variable_in_swap"
+      },
+      {
+        "triggers": [
+          "first=temp",
+          "x=temp"
+        ],
+        "diagnosis": "Notice the direction of '=': writing 'x = temp' copies the empty temp into x! You must do 'temp = x' to save x into temp.",
+        "misconception_id": "reversed_assignment"
+      }
+    ],
+    "followup": {
+      "prompt": "Now write the 3 lines of code to swap variables 'first' and 'second' using a temporary variable called 'temp'.",
+      "hint": "1. Save 'first' into 'temp'. 2. Copy 'second' into 'first'. 3. Copy 'temp' into 'second'.",
+      "canonical_answer": "temp = first\nfirst = second\nsecond = temp",
+      "rubric_keywords": [
+        "temp = first",
+        "first = second",
+        "second = temp",
+        "first, second = second, first",
+        "temp=first",
+        "first=second",
+        "second=temp",
+        "save first",
+        "first into temp",
+        "second into first",
+        "temp into second",
+        "copy second",
+        "copy temp",
+        "temp holds first",
+        "first holds second",
+        "second holds temp"
+      ],
+      "min_keyword_hits": 3,
+      "required_keyword_groups": [
+        [
+          "temp = first",
+          "temp=first",
+          "save first",
+          "first into temp",
+          "temporary = first",
+          "temp holds first"
+        ],
+        [
+          "first = second",
+          "first=second",
+          "second into first",
+          "copy second",
+          "first holds second"
+        ],
+        [
+          "second = temp",
+          "second=temp",
+          "temp into second",
+          "copy temp",
+          "second holds temp"
+        ]
+      ]
+    },
+    "scaffold_steps": [
+      {
+        "step_number": 1,
+        "prompt": "Let's build the 3 lines together one-by-one!\nStep 1: Save variable 'x' into temporary variable 'temp'. How do you write that line?",
+        "hint": "Remember: Left receives Right. Write: temp = x",
+        "expected_answer": "temp = x",
+        "rubric_keywords": [
+          "temp=x",
+          "temp = x"
+        ],
+        "explanation": "Line 1: temp = x (saves x's original value safely into temp)."
+      },
+      {
+        "step_number": 2,
+        "prompt": "Step 2: Now that 'x' is safely backed up, copy 'y' into 'x'. How do you write that line?",
+        "hint": "Write: x = y",
+        "expected_answer": "x = y",
+        "rubric_keywords": [
+          "x=y",
+          "x = y"
+        ],
+        "explanation": "Line 2: x = y (overwrites x with y's value)."
+      },
+      {
+        "step_number": 3,
+        "prompt": "Step 3: Finally, take the saved value from 'temp' and put it into 'y'. How do you write that line?",
+        "hint": "Write: y = temp",
+        "expected_answer": "y = temp",
+        "rubric_keywords": [
+          "y=temp",
+          "y = temp"
+        ],
+        "explanation": "Line 3: y = temp (puts x's original value from temp into y. Swap complete!)."
+      }
+    ],
+    "min_keyword_hits": 2,
+    "required_keyword_groups": [
+      [
+        "temp",
+        "temporary",
+        "third",
+        "holding",
+        "hold"
+      ],
+      [
+        "save",
+        "store",
+        "hold",
+        "preserve",
+        "backup",
+        "keep"
+      ],
+      [
+        "x = y",
+        "copy y",
+        "y into x",
+        "put y",
+        "y to x",
+        "second into first",
+        "copy the value",
+        "x holds y"
+      ],
+      [
+        "y = temp",
+        "temp into y",
+        "restore",
+        "saved value",
+        "from temp",
+        "put temp",
+        "box",
+        "y holds temp"
+      ]
+    ]
+  },
+  {
+    "id": "q_types_01",
+    "concept_id": "py.data_types",
+    "prompt": "What will Python output for the expression: print(\"5\" + \"5\"), and why does it not output 10?",
+    "hint": "Notice the quotation marks around \"5\". What data type uses quotes?",
+    "canonical_answer": "It outputs '55'. Quotation marks define text strings (str), and the '+' operator concatenates (glues) strings together rather than performing math.",
+    "explanation": "Values wrapped in quotes like \"5\" are strings (str), not integers (int).\nIn Python, the '+' operator is overloaded:\n- For integers: 5 + 5 = 10 (arithmetic addition)\n- For strings: \"5\" + \"5\" = \"55\" (string concatenation / gluing text together).",
+    "rubric_keywords": [
+      "55",
+      "string",
+      "str",
+      "concatenate",
+      "concatenation",
+      "quotes",
+      "text",
+      "glue",
+      "gluing",
+      "join",
+      "joins",
+      "fifty five"
+    ],
+    "common_mistakes": [
+      {
+        "triggers": [
+          "10"
+        ],
+        "diagnosis": "You calculated 10 because you treated \"5\" as an integer. But the quotation marks make it a text string, so '+' glues them into '55'.",
+        "misconception_id": "string_number_conflation"
+      }
+    ],
+    "followup": {
+      "prompt": "What will print(\"Hello\" + \"World\") output?",
+      "hint": "Strings are glued together directly.",
+      "canonical_answer": "HelloWorld",
+      "rubric_keywords": [
+        "helloworld",
+        "concatenate",
+        "glue",
+        "gluing",
+        "joining",
+        "no space"
+      ]
+    },
+    "scaffold_steps": [
+      {
+        "step_number": 1,
+        "prompt": "What data type is a value enclosed in quotes like \"5\"? (int or str?)",
+        "hint": "Quotes indicate text/string.",
+        "expected_answer": "str",
+        "rubric_keywords": [
+          "str",
+          "string"
+        ],
+        "explanation": "\"5\" is a string (str), not a number."
+      },
+      {
+        "step_number": 2,
+        "prompt": "When you use '+' between two strings, does Python add them mathematically or glue the characters together?",
+        "hint": "Answer 'glue' (concatenate) or 'add'.",
+        "expected_answer": "glue",
+        "rubric_keywords": [
+          "glue",
+          "concatenate",
+          "together",
+          "join"
+        ],
+        "explanation": "Strings are glued together: \"5\" + \"5\" produces \"55\"."
+      }
+    ],
+    "required_keyword_groups": [
+      [
+        "55",
+        "fifty five"
+      ],
+      [
+        "string",
+        "str",
+        "concatenate",
+        "quotes",
+        "text",
+        "glue",
+        "join",
+        "joins"
+      ]
+    ]
+  },
+  {
+    "id": "q_types_02",
+    "concept_id": "py.data_types",
+    "prompt": "If you have age = '18' as a string, how do you convert it so you can perform math like age + 1?",
+    "hint": "What built-in function converts a string to an integer?",
+    "canonical_answer": "Use int(age), for example: age = int(age)",
+    "explanation": "To perform arithmetic on numeric text, you must explicitly type-cast it using the 'int()' constructor: age = int(age). Then age + 1 equals 19 instead of raising a TypeError.",
+    "rubric_keywords": [
+      "int(",
+      "int(age)",
+      "int",
+      "integer",
+      "type cast",
+      "convert to int",
+      "convert",
+      "conversion"
+    ],
+    "common_mistakes": [
+      {
+        "triggers": [
+          "str(",
+          "float("
+        ],
+        "diagnosis": "str() converts values to text. To do whole-number arithmetic, you need int().",
+        "misconception_id": "wrong_type_conversion"
+      },
+      {
+        "triggers": [
+          "automatically",
+          "no need",
+          "leave it",
+          "python will convert",
+          "python converts"
+        ],
+        "diagnosis": "Python does not convert text to a number automatically. You must call int() explicitly, e.g. age = int(age).",
+        "misconception_id": "wrong_type_conversion"
+      }
+    ],
+    "followup": {
+      "prompt": "How would you convert the integer 42 into a text string in Python?",
+      "hint": "What function converts a number to a string?",
+      "canonical_answer": "str(42)",
+      "rubric_keywords": [
+        "str(42)",
+        "str("
+      ]
+    },
+    "scaffold_steps": [
+      {
+        "step_number": 1,
+        "prompt": "What is the 3-letter name of the Python function that turns text into an integer?",
+        "hint": "Short for integer: int",
+        "expected_answer": "int",
+        "rubric_keywords": [
+          "int",
+          "int()"
+        ],
+        "explanation": "The int() function converts convertible text into integers."
+      }
+    ]
+  },
+  {
+    "id": "q_ops_01",
+    "concept_id": "py.operators_expressions",
+    "prompt": "What is the difference between '/' and '//' in Python 3? For example, what do 7 / 2 and 7 // 2 return?",
+    "hint": "One returns an exact float decimal, while the other performs floor division returning an integer.",
+    "canonical_answer": "7 / 2 returns 3.5 (float division), while 7 // 2 returns 3 (floor division, discarding the fractional part).",
+    "explanation": "In Python 3:\n- '/' is standard float division; it ALWAYS returns a float (e.g. 7 / 2 = 3.5, 8 / 2 = 4.0).\n- '//' is floor division; it divides and rounds down to the nearest integer (e.g. 7 // 2 = 3).",
+    "rubric_keywords": [
+      "3.5",
+      "3",
+      "floor",
+      "floor division",
+      "float",
+      "float division",
+      "decimal",
+      "integer",
+      "single slash",
+      "double slash",
+      "chops",
+      "chops off",
+      "three point five"
+    ],
+    "common_mistakes": [
+      {
+        "triggers": [
+          "both return 3",
+          "both return 3.5",
+          "both 3",
+          "both 3.5",
+          "both are 3",
+          "both are 3.5",
+          "same result",
+          "same answer"
+        ],
+        "diagnosis": "They return different types! '/' preserves decimals (3.5), whereas '//' chops off decimals (3).",
+        "misconception_id": "division_types_confusion"
+      },
+      {
+        "triggers": [],
+        "regex_triggers": [
+          "7\\s*/\\s*2[^.\\n]{0,20}?\\b3(?!\\.\\d)",
+          "7\\s*//\\s*2[^.\\n]{0,20}?3\\.\\d"
+        ],
+        "diagnosis": "You swapped the results: '/' gives 3.5 (float division) and '//' gives 3 (floor division).",
+        "misconception_id": "division_types_confusion"
+      }
+    ],
+    "followup": {
+      "prompt": "What will 9 // 2 return in Python?",
+      "hint": "Divide 9 by 2 and chop off the decimal.",
+      "canonical_answer": "4",
+      "rubric_keywords": [
+        "4"
+      ]
+    },
+    "scaffold_steps": [
+      {
+        "step_number": 1,
+        "prompt": "Which division operator keeps the decimal: '/' or '//'?",
+        "hint": "Single slash.",
+        "expected_answer": "/",
+        "rubric_keywords": [
+          "/"
+        ],
+        "explanation": "'/' always returns a float decimal (like 3.5)."
+      },
+      {
+        "step_number": 2,
+        "prompt": "What does '//' do with the decimal? Does it keep it or chop it off?",
+        "hint": "Chops it off (floors).",
+        "expected_answer": "chops it off",
+        "rubric_keywords": [
+          "chop",
+          "chops",
+          "floor",
+          "discard",
+          "remove",
+          "round down"
+        ],
+        "explanation": "'//' discards the fractional part, returning an integer."
+      }
+    ],
+    "min_keyword_hits": 2,
+    "required_keyword_groups": [
+      [
+        "3.5",
+        "float",
+        "decimal",
+        "single slash"
+      ],
+      [
+        "3",
+        "floor",
+        "integer",
+        "double slash",
+        "chop",
+        "chops",
+        "discard"
+      ]
+    ]
+  },
+  {
+    "id": "q_cond_01",
+    "concept_id": "py.conditionals",
+    "prompt": "What is the difference between using multiple independent 'if' statements versus an 'if...elif...else' chain?",
+    "hint": "Can multiple 'if' blocks execute? What happens when one branch in an 'elif' chain evaluates to True?",
+    "canonical_answer": "Multiple 'if' statements are evaluated independently, so several can run. In an 'elif' chain, branches are mutually exclusive; once one condition is True, all remaining branches are skipped.",
+    "explanation": "Control flow differs significantly:\n- Independent 'if' statements: Every condition is checked. Multiple blocks can execute.\n- 'if...elif...else' chain: Mutually exclusive. As soon as the first True condition is found, its block runs and the entire rest of the chain is skipped.",
+    "rubric_keywords": [
+      "mutually exclusive",
+      "independent",
+      "independently",
+      "all checked",
+      "every condition",
+      "all conditions",
+      "first true",
+      "first match",
+      "skip",
+      "skipped",
+      "only one",
+      "one branch",
+      "more than one",
+      "multiple blocks",
+      "rest skipped",
+      "stops after",
+      "stops",
+      "not the same",
+      "separate ifs",
+      "all run",
+      "both run",
+      "multiple can run",
+      "every if",
+      "each if"
+    ],
+    "common_mistakes": [
+      {
+        "triggers": [
+          "same thing",
+          "no difference"
+        ],
+        "diagnosis": "They behave very differently! Multiple 'if' statements can execute multiple times, whereas 'elif' ensures only at most ONE branch executes.",
+        "misconception_id": "multiple_if_vs_elif"
+      }
+    ],
+    "followup": {
+      "prompt": "If score = 85, and we have:\nif score >= 80: print('B')\nelif score >= 70: print('C')\nWhat gets printed?",
+      "hint": "Does elif run if the first condition was already True?",
+      "canonical_answer": "Only 'B' prints, because elif is skipped once the first branch matches.",
+      "rubric_keywords": [
+        "b",
+        "only b",
+        "b only"
+      ],
+      "common_mistakes": [
+        {
+          "triggers": [
+            "and c",
+            "b and c",
+            "both b and c",
+            "both"
+          ],
+          "diagnosis": "Only 'B' prints. Once score >= 80 matches, the elif branch is skipped entirely.",
+          "misconception_id": "multiple_if_vs_elif"
+        }
+      ]
+    },
+    "scaffold_steps": [
+      {
+        "step_number": 1,
+        "prompt": "In an 'if...elif' chain, if the first 'if' matches and executes, will the 'elif' below it run? (yes or no)",
+        "hint": "Only one branch runs in an elif chain.",
+        "expected_answer": "no",
+        "rubric_keywords": [
+          "no",
+          "never",
+          "will not",
+          "won't",
+          "does not",
+          "doesn't"
+        ],
+        "explanation": "In an elif chain, once one branch succeeds, all other elifs are skipped."
+      }
+    ],
+    "required_keyword_groups": [
+      [
+        "multiple ifs",
+        "independent",
+        "independently",
+        "all checked",
+        "all run",
+        "separate ifs",
+        "every condition",
+        "each if",
+        "more than one",
+        "both run",
+        "multiple can run"
+      ],
+      [
+        "mutually exclusive",
+        "only one",
+        "one branch",
+        "skip",
+        "skipped",
+        "stops after",
+        "first true",
+        "first match",
+        "stops",
+        "runs one",
+        "rest"
+      ]
+    ]
+  },
+  {
+    "id": "q_lists_01",
+    "concept_id": "py.lists_sequences",
+    "prompt": "If fruits = ['apple', 'banana', 'cherry'], what code accesses 'apple', and why is fruits[1] not 'apple'?",
+    "hint": "What index does Python use for the very first item in a list?",
+    "canonical_answer": "fruits[0] accesses 'apple'. Python uses 0-based indexing, so the first element is at index 0 and fruits[1] is 'banana'.",
+    "explanation": "Python lists are 0-indexed. An index measures the distance/offset from the beginning of the list:\n- Index 0: First element ('apple')\n- Index 1: Second element ('banana')\n- Index 2: Third element ('cherry')",
+    "rubric_keywords": [
+      "fruits[0]",
+      "0",
+      "zero based",
+      "zero-based",
+      "offset",
+      "first item",
+      "banana",
+      "index 0",
+      "starts at 0",
+      "zero",
+      "index zero"
+    ],
+    "common_mistakes": [
+      {
+        "triggers": [
+          "fruits[1] is apple",
+          "second item is apple",
+          "second is apple",
+          "index 1 is apple",
+          "1 is apple"
+        ],
+        "diagnosis": "In Python, counting starts at 0, not 1! fruits[1] is the second item ('banana').",
+        "misconception_id": "one_based_indexing_error"
+      }
+    ],
+    "followup": {
+      "prompt": "In the same list fruits = ['apple', 'banana', 'cherry'], how do you access the last element 'cherry' using negative indexing?",
+      "hint": "What negative index accesses the last item from the end?",
+      "canonical_answer": "fruits[-1]",
+      "rubric_keywords": [
+        "fruits[-1]",
+        "-1"
+      ]
+    },
+    "scaffold_steps": [
+      {
+        "step_number": 1,
+        "prompt": "What number does Python indexing start with for the first item? 0 or 1?",
+        "hint": "Zero-based indexing.",
+        "expected_answer": "0",
+        "rubric_keywords": [
+          "0",
+          "zero"
+        ],
+        "explanation": "Python starts counting indices at 0."
+      }
+    ],
+    "required_keyword_groups": [
+      [
+        "fruits[0]",
+        "index zero",
+        "first item"
+      ],
+      [
+        "starts at 0",
+        "zero based",
+        "zero-based",
+        "banana",
+        "fruits[1] is not",
+        "second item",
+        "index 0",
+        "zero",
+        "from zero",
+        "counts from zero"
+      ]
+    ]
+  },
+  {
+    "id": "q_loops_01",
+    "concept_id": "py.for_loops",
+    "prompt": "What numbers are generated by list(range(1, 5)) in Python, and why is 5 not included?",
+    "hint": "Is the stop parameter in range(start, stop) inclusive or exclusive?",
+    "canonical_answer": "[1, 2, 3, 4]. The stop value 5 is exclusive ('up to but not including 5').",
+    "explanation": "In Python's range(start, stop), the stop boundary is strictly EXCLUSIVE.\nrange(1, 5) produces 1, 2, 3, 4. It stops before reaching 5. This makes length calculations (stop - start = 5 - 1 = 4 items) seamless.",
+    "rubric_keywords": [
+      "1, 2, 3, 4",
+      "1,2,3,4",
+      "exclusive",
+      "stops before 5",
+      "not include 5",
+      "not included",
+      "5 is not included",
+      "stops at 4",
+      "up to 4",
+      "excluded",
+      "excludes 5",
+      "one, two, three, four",
+      "one two three four",
+      "stops before five",
+      "not include five",
+      "up to four"
+    ],
+    "common_mistakes": [
+      {
+        "triggers": [
+          "1, 2, 3, 4, 5",
+          "includes 5",
+          "5 is included",
+          "5 included",
+          "includes the 5"
+        ],
+        "diagnosis": "In Python, range(start, stop) never includes the stop number! It stops at stop - 1.",
+        "misconception_id": "range_inclusive_stop"
+      }
+    ],
+    "followup": {
+      "prompt": "How many times will 'for i in range(3):' execute its loop body?",
+      "hint": "range(3) starts at 0 and goes up to 2.",
+      "canonical_answer": "3 times (for i = 0, 1, 2)",
+      "rubric_keywords": [
+        "3",
+        "three",
+        "0, 1, 2"
+      ]
+    },
+    "scaffold_steps": [
+      {
+        "step_number": 1,
+        "prompt": "In range(1, 5), is the stop number 5 included in the output? (yes or no)",
+        "hint": "The stop boundary is exclusive.",
+        "expected_answer": "no",
+        "rubric_keywords": [
+          "no",
+          "never",
+          "will not",
+          "won't",
+          "does not",
+          "doesn't"
+        ],
+        "explanation": "The stop value is never included. range(1, 5) stops at 4."
+      }
+    ],
+    "required_keyword_groups": [
+      [
+        "1, 2, 3, 4",
+        "1,2,3,4",
+        "one two three four",
+        "one, two, three, four"
+      ],
+      [
+        "exclusive",
+        "stops before 5",
+        "not include 5",
+        "not included",
+        "5 is not included",
+        "stops at 4",
+        "up to 4",
+        "excluded",
+        "excludes 5",
+        "stops before five",
+        "not include five"
+      ]
+    ]
+  },
+  {
+    "id": "q_while_01",
+    "concept_id": "py.while_loops",
+    "prompt": "What causes an 'infinite loop' in a while loop, and how do you prevent it?",
+    "hint": "What must happen to the loop condition variable inside the loop body?",
+    "canonical_answer": "An infinite loop occurs when the condition never evaluates to False. To prevent it, you must update/increment the loop variable inside the body so the condition eventually terminates.",
+    "explanation": "A while loop runs as long as its condition is True. If you forget to modify the variable controlling the condition (e.g. forgetting 'count += 1'), the condition remains True forever, locking up the program.",
+    "rubric_keywords": [
+      "never false",
+      "never becomes false",
+      "update",
+      "increment",
+      "condition",
+      "terminate",
+      "terminates",
+      "always true",
+      "stays true",
+      "update the variable",
+      "change the variable",
+      "counter",
+      "loop variable",
+      "never ends",
+      "runs forever",
+      "forever",
+      "endless",
+      "never stops",
+      "keeps running",
+      "never changes",
+      "forgot",
+      "forget"
+    ],
+    "common_mistakes": [
+      {
+        "triggers": [
+          "break only"
+        ],
+        "diagnosis": "While 'break' can stop a loop, the primary way is updating the variable controlling the condition so it evaluates to False naturally.",
+        "misconception_id": "missing_loop_increment"
+      }
+    ],
+    "followup": {
+      "prompt": "Look at: count = 0; while count < 3: print(count). What missing line inside the loop will prevent an infinite loop?",
+      "hint": "How do you increase count by 1 each time?",
+      "canonical_answer": "count += 1 (or count = count + 1)",
+      "rubric_keywords": [
+        "count += 1",
+        "count = count + 1"
+      ]
+    },
+    "scaffold_steps": [
+      {
+        "step_number": 1,
+        "prompt": "If you never change the variable in a while loop, will the condition ever become False? (yes or no)",
+        "hint": "If nothing changes, the condition stays True forever.",
+        "expected_answer": "no",
+        "rubric_keywords": [
+          "no",
+          "never",
+          "will not",
+          "won't",
+          "does not",
+          "doesn't"
+        ],
+        "explanation": "If nothing changes, the loop runs forever (infinite loop)."
+      }
+    ],
+    "required_keyword_groups": [
+      [
+        "never false",
+        "never becomes false",
+        "always true",
+        "stays true",
+        "never ends",
+        "runs forever",
+        "forever",
+        "infinite",
+        "endless",
+        "never stops",
+        "keeps running",
+        "never changes",
+        "forgot",
+        "forget"
+      ],
+      [
+        "update",
+        "increment",
+        "change the variable",
+        "update the variable",
+        "counter",
+        "loop variable",
+        "terminate"
+      ]
+    ]
+  },
+  {
+    "id": "q_fn_01",
+    "concept_id": "py.functions",
+    "prompt": "What is the critical difference between using print() inside a function versus using the return statement?",
+    "hint": "Which one sends text to the human console, and which one passes a value back to the code that called the function?",
+    "canonical_answer": "print() displays text on the screen for humans to see and returns None. 'return' sends the computed value back to the caller so it can be stored in a variable or used in further calculations.",
+    "explanation": "Printing and returning serve entirely different purposes:\n- print() is a side-effect that shows output on the terminal. It gives nothing back to code.\n- return sends data back to the program. If a function lacks 'return', calling it evaluates to None.",
+    "rubric_keywords": [
+      "return sends back",
+      "return sends",
+      "return passes",
+      "passes a value back",
+      "passes value back",
+      "gives back",
+      "caller",
+      "screen",
+      "side effect",
+      "none",
+      "store in variable",
+      "use it later",
+      "shows",
+      "displays",
+      "returns a value",
+      "return value",
+      "gives the value back",
+      "sends the value back",
+      "hand back",
+      "gives a value back",
+      "sends a value back",
+      "passes the value back"
+    ],
+    "common_mistakes": [
+      {
+        "triggers": [
+          "print returns a value",
+          "print returns the value",
+          "print returns it",
+          "same thing",
+          "print gives back the value",
+          "print gives a value back",
+          "print sends a value back",
+          "print passes a value back"
+        ],
+        "diagnosis": "print() does NOT return a value! If you do res = my_func() and my_func only prints, res will be None.",
+        "misconception_id": "print_vs_return_conflation"
+      }
+    ],
+    "followup": {
+      "prompt": "If def add(a, b): print(a + b). What will x hold after: x = add(2, 3)?",
+      "hint": "What does a function return if there is no explicit 'return' statement?",
+      "canonical_answer": "x will hold None, because add() only printed 5 but did not return it.",
+      "rubric_keywords": [
+        "none",
+        "null"
+      ]
+    },
+    "scaffold_steps": [
+      {
+        "step_number": 1,
+        "prompt": "Does print() return a value that Python code can save in a variable? (yes or no)",
+        "hint": "print() only writes text to the screen.",
+        "expected_answer": "no",
+        "rubric_keywords": [
+          "no",
+          "never",
+          "will not",
+          "won't",
+          "does not",
+          "doesn't"
+        ],
+        "explanation": "print() produces no return value (it returns None)."
+      }
+    ],
+    "required_keyword_groups": [
+      [
+        "print",
+        "screen",
+        "displays",
+        "shows",
+        "side effect"
+      ],
+      [
+        "return",
+        "sends back",
+        "passes a value back",
+        "passes value back",
+        "gives back",
+        "gives the value back",
+        "sends the value back",
+        "caller",
+        "use it later",
+        "none",
+        "store in variable",
+        "gives a value back",
+        "sends a value back",
+        "passes the value back"
+      ]
+    ]
+  }
+]

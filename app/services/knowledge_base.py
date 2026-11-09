@@ -5,7 +5,7 @@ Ensures factual grounding and produces strict academic/documentation citations.
 """
 import json
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 from app.models.concept import KnowledgeChunk
 
@@ -23,12 +23,17 @@ class KnowledgeBaseService:
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
+        if not isinstance(data, list):
+            raise ValueError("Knowledge data must be a JSON list.")
+
         for item in data:
             chunk = KnowledgeChunk(**item)
             self.add_chunk(chunk)
 
     def add_chunk(self, chunk: KnowledgeChunk) -> None:
         """Register a knowledge chunk and index it by concept."""
+        if chunk.id in self.chunks:
+            raise ValueError(f"Duplicate knowledge chunk id: {chunk.id}")
         self.chunks[chunk.id] = chunk
         if chunk.concept_id not in self.concept_to_chunks:
             self.concept_to_chunks[chunk.concept_id] = []
@@ -37,6 +42,24 @@ class KnowledgeBaseService:
     def get_chunks_for_concept(self, concept_id: str) -> List[KnowledgeChunk]:
         """Fetch all verified chunks supporting a given concept."""
         return self.concept_to_chunks.get(concept_id, [])
+
+    def validate(self, concept_ids: Optional[Set[str]] = None) -> None:
+        """Fail fast when a concept has no cited lesson material."""
+        if not self.chunks:
+            raise ValueError(
+                "No knowledge chunks were loaded. Check app/data/python_knowledge.json."
+            )
+        if concept_ids is not None:
+            missing = sorted(set(concept_ids) - set(self.concept_to_chunks))
+            if missing:
+                raise ValueError(
+                    "Missing knowledge chunks for concept(s): " + ", ".join(missing)
+                )
+        for chunk in self.chunks.values():
+            if not chunk.content.strip():
+                raise ValueError(f"Knowledge chunk {chunk.id} has empty content.")
+            if not chunk.citations:
+                raise ValueError(f"Knowledge chunk {chunk.id} has no citations.")
 
     def get_chunk(self, chunk_id: str) -> Optional[KnowledgeChunk]:
         """Retrieve a specific chunk by its identifier."""

@@ -32,7 +32,8 @@ def test_end_to_end_adaptive_frontier_flow():
     # 4. Fetch lesson materials and verified citations
     lesson_ctx = coordinator.get_lesson_context("py.variables")
     assert "Official Python 3 Documentation" in lesson_ctx["citations"]
-    assert len(lesson_ctx["common_misconceptions"]) == 2
+    misconception_ids = {m["id"] for m in lesson_ctx["common_misconceptions"]}
+    assert {"confuse_assign_equals", "variable_permanent_link"} <= misconception_ids
 
     # 5. Alice attempts problem, but exhibits 'confuse_assign_equals'
     eval1 = coordinator.process_student_eval(

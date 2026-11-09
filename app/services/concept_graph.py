@@ -13,7 +13,7 @@ from app.models.curriculum import LearningFrontier, ConceptState
 from app.models.student import ConceptMastery
 
 
-class ConceptGraphError(Exception):
+class ConceptGraphError(ValueError):
     """Raised when the curriculum graph violates DAG integrity."""
     pass
 
@@ -35,6 +35,9 @@ class ConceptGraphService:
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
+        if not isinstance(data, list):
+            raise ConceptGraphError("Concept data must be a JSON list.")
+
         for item in data:
             concept = Concept(**item)
             self.add_concept(concept)
@@ -43,6 +46,8 @@ class ConceptGraphService:
 
     def add_concept(self, concept: Concept) -> None:
         """Add a concept and update adjacency mappings."""
+        if concept.id in self.concepts:
+            raise ConceptGraphError(f"Duplicate concept ID: {concept.id}")
         self.concepts[concept.id] = concept
         if concept.id not in self.prerequisites_of:
             self.prerequisites_of[concept.id] = set()
@@ -61,6 +66,9 @@ class ConceptGraphService:
         1. All referenced prerequisite IDs exist in the curriculum.
         2. There are NO circular dependencies (A -> B -> A).
         """
+        if not self.concepts:
+            raise ConceptGraphError("No concepts were loaded.")
+
         # 1. Existence check
         for concept_id, prereqs in self.prerequisites_of.items():
             for p in prereqs:
@@ -96,9 +104,16 @@ class ConceptGraphService:
         if not recursive:
             return direct
 
-        transitive = set(direct)
-        for p in direct:
-            transitive.update(self.get_all_prerequisites(p, recursive=True))
+        # Iterative traversal is cycle-safe even if a caller asks before
+        # validate_graph_integrity() has run.
+        transitive = set()
+        stack = list(direct)
+        while stack:
+            prerequisite = stack.pop()
+            if prerequisite in transitive:
+                continue
+            transitive.add(prerequisite)
+            stack.extend(self.prerequisites_of.get(prerequisite, set()))
         return transitive
 
     def compute_learning_frontier(

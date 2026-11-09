@@ -1,0 +1,49 @@
+Judge
+Python evaluates the right side (x + 1) first using the current value of x, and then binds that new resulting value back to the label x on the left.
+
+b is 10. When 'b = a' ran, 'a' held 10, so 'b' was assigned 10. Changing 'a' to 20 later does not affect 'b'.
+
+temp = x; x = y; y = temp
+
+It outputs '55'. Quotation marks define text strings (str), and the '+' operator concatenates (glues) strings together rather than performing math.
+
+Use int(age), for example: age = int(age)
+
+Use int(age), for example: age = int(age)
+
+7 / 2 returns 3.5 (float division), while 7 // 2 returns 3 (floor division, discarding the fractional part).
+
+7 / 2 returns 3.5 (float division), while 7 // 2 returns 3 (floor division, discarding the fractional part).
+
+7 / 2 returns 3.5 (float division), while 7 // 2 returns 3 (floor division, discarding the fractional part).
+
+Multiple 'if' statements are evaluated independently, so several can run. In an 'elif' chain, branches are mutually exclusive; once one condition is True, all remaining branches are skipped.
+
+Multiple 'if' statements are evaluated independently, so several can run. In an 'elif' chain, branches are mutually exclusive; once one condition is True, all remaining branches are skipped.
+
+Multiple 'if' statements are evaluated independently, so several can run. In an 'elif' chain, branches are mutually exclusive; once one condition is True, all remaining branches are skipped.
+
+fruits[0] accesses 'apple'. Python uses 0-based indexing, so the first element is at index 0 and fruits[1] is 'banana'.
+
+fruits[0] accesses 'apple'. Python uses 0-based indexing, so the first element is at index 0 and fruits[1] is 'banana'.
+
+fruits[0] accesses 'apple'. Python uses 0-based indexing, so the first element is at index 0 and fruits[1] is 'banana'.
+
+[1, 2, 3, 4]. The stop value 5 is exclusive ('up to but not including 5').
+
+[1, 2, 3, 4]. The stop value 5 is exclusive ('up to but not including 5').
+
+[1, 2, 3, 4]. The stop value 5 is exclusive ('up to but not including 5').
+
+An infinite loop occurs when the condition never evaluates to False. To prevent it, you must update/increment the loop variable inside the body so the condition eventually terminates.
+
+An infinite loop occurs when the condition never evaluates to False. To prevent it, you must update/increment the loop variable inside the body so the condition eventually terminates.
+
+An infinite loop occurs when the condition never evaluates to False. To prevent it, you must update/increment the loop variable inside the body so the condition eventually terminates.
+
+print() displays text on the screen for humans to see and returns None. 'return' sends the computed value back to the caller so it can be stored in a variable or used in further calculations.
+
+print() displays text on the screen for humans to see and returns None. 'return' sends the computed value back to the caller so it can be stored in a variable or used in further calculations.
+
+print() displays text on the screen for humans to see and returns None. 'return' sends the computed value back to the caller so it can be stored in a variable or used in further calculations.
+

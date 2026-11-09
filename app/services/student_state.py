@@ -38,13 +38,13 @@ class StudentStateService:
         with an explicit misconception penalty.
 
         Math:
-            alpha = 0.30 (learning rate)
+            alpha = 0.35 (learning rate)
             new_mastery = (1 - alpha) * old_mastery + alpha * score
             if misconceptions detected:
-                new_mastery = max(0.0, new_mastery - (0.15 * count))
+                new_mastery = max(0.0, new_mastery - (0.12 * count))
 
         Confidence increases monotonically with observation count:
-            confidence = 1.0 - e^(-0.5 * attempts)
+            confidence = 1.0 - e^(-0.45 * attempts)
         """
         detected_misconceptions = detected_misconceptions or []
         record = self.get_or_create_mastery(concept_id)

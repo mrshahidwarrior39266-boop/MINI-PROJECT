@@ -7,7 +7,9 @@
     "source_author": "Python Software Foundation",
     "reliability_score": 1.0,
     "content": "In Python, variables do not need explicit type declarations. A variable is created the moment you first assign a value to it using the assignment operator '='. In Python, variables are essentially name tags (references) pointing to objects in memory. For example, 'x = 10' creates an integer object 10 and binds the label 'x' to that object. Assigning 'y = x' does not duplicate the value 10 in memory; it attaches a second label 'y' to the same object.",
-    "citations": ["Python 3.12 Docs - Informal Introduction to Python, §3.1.1"]
+    "citations": [
+      "Python 3.12 Docs - Informal Introduction to Python, §3.1.1"
+    ]
   },
   {
     "id": "chunk.py.types.01",
@@ -17,7 +19,9 @@
     "source_author": "Allen B. Downey",
     "reliability_score": 0.95,
     "content": "A value is one of the basic things a program works with, like a letter or a number. Values belong to different types: 2 is an integer (int), 42.0 is a floating-point number (float), 'Hello, World!' is a string (str), and True/False are booleans (bool). The type() function tells you what type a value has. Strings enclosed in quotation marks concatenate when using the '+' operator, whereas numbers add mathematically.",
-    "citations": ["Think Python 2e, Chapter 2: Variables, expressions and statements"]
+    "citations": [
+      "Think Python 2e, Chapter 2: Variables, expressions and statements"
+    ]
   },
   {
     "id": "chunk.py.ops.01",
@@ -27,7 +31,9 @@
     "source_author": "Luciano Ramalho",
     "reliability_score": 0.95,
     "content": "Python 3 introduced a clear distinction between float division '/' and floor division '//'. The '/' operator always returns a float (e.g. 8 / 2 results in 4.0, and 7 / 2 results in 3.5). The '//' operator performs floor division, returning the largest integer less than or equal to the quotient (e.g. 7 // 2 results in 3). The modulo operator '%' computes the integer remainder.",
-    "citations": ["Fluent Python 2e, Numeric Types and Operators"]
+    "citations": [
+      "Fluent Python 2e, Numeric Types and Operators"
+    ]
   },
   {
     "id": "chunk.py.cond.01",
@@ -37,7 +43,9 @@
     "source_author": "Python Software Foundation",
     "reliability_score": 1.0,
     "content": "The 'if' statement is used for conditional execution. In an 'if...elif...else' chain, conditions are tested sequentially from top to bottom. As soon as one condition evaluates to True, its associated indented block executes, and Python skips all remaining elif and else clauses. Python uses indentation (conventionally 4 spaces) rather than curly braces or keywords like 'end' to define code blocks.",
-    "citations": ["Python 3.12 Docs - Control Flow Tools, §4.1"]
+    "citations": [
+      "Python 3.12 Docs - Control Flow Tools, §4.1"
+    ]
   },
   {
     "id": "chunk.py.lists.01",
@@ -45,9 +53,11 @@
     "source_title": "Automate the Boring Stuff with Python",
     "source_type": "textbook",
     "source_author": "Al Sweigart",
-    "reliability_score": 0.90,
+    "reliability_score": 0.9,
     "content": "A list is a value that contains multiple values in an ordered sequence. The values inside a list are called items. Lists are delineated by square brackets '[' and ']'. The first item in a list is at index 0, the second item is at index 1, and so on. Attempting to use an index that is equal to or greater than len(list) raises an IndexError.",
-    "citations": ["Automate the Boring Stuff with Python, Chapter 4: Lists"]
+    "citations": [
+      "Automate the Boring Stuff with Python, Chapter 4: Lists"
+    ]
   },
   {
     "id": "chunk.py.for.01",
@@ -57,7 +67,9 @@
     "source_author": "Python Software Foundation",
     "reliability_score": 1.0,
     "content": "Python's 'for' statement iterates over the items of any sequence (a list or a string) in the order that they appear. The built-in range() function generates arithmetic progressions. Note that range(start, stop) generates numbers starting at 'start' and stopping at 'stop - 1'; the upper bound is strictly exclusive.",
-    "citations": ["Python 3.12 Docs - Control Flow Tools, §4.2-4.3"]
+    "citations": [
+      "Python 3.12 Docs - Control Flow Tools, §4.2-4.3"
+    ]
   },
   {
     "id": "chunk.py.fn.01",
@@ -67,6 +79,20 @@
     "source_author": "John DeNero et al.",
     "reliability_score": 0.95,
     "content": "The keyword 'def' introduces a function definition. Functions allow programmers to abstract away computational details and reuse logic. A critical distinction in programming is between side-effects (such as displaying text with print()) and returning values (using the 'return' statement). If a Python function execution ends without encountering a return statement, it implicitly returns the special value None.",
-    "citations": ["Composing Programs, Chapter 1: Building Abstractions with Functions"]
+    "citations": [
+      "Composing Programs, Chapter 1: Building Abstractions with Functions"
+    ]
+  },
+  {
+    "id": "chunk.py.while.01",
+    "concept_id": "py.while_loops",
+    "source_title": "Official Python 3 Documentation - Compound Statements",
+    "source_type": "official_doc",
+    "source_author": "Python Software Foundation",
+    "reliability_score": 1.0,
+    "content": "The 'while' statement repeatedly executes its indented body as long as its condition remains true. The condition is evaluated before each iteration; if it is false initially, the body never runs. Because the loop does not update anything automatically, the body must change the condition variable (or execute a break) or the loop can run forever.",
+    "citations": [
+      "Python 3.12 Docs - Compound Statements, §8.2"
+    ]
   }
 ]
