@@ -1,4 +1,5 @@
 """End-to-end tests for the student-facing CLI."""
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -9,7 +10,11 @@ ROOT = Path(__file__).resolve().parent.parent
 PLAYTHROUGH = ROOT / "tests" / "data" / "full_playthrough_input.txt"
 
 
-def run_tutor(input_text: str) -> subprocess.CompletedProcess:
+def run_tutor(input_text: str, env: dict | None = None) -> subprocess.CompletedProcess:
+    full_env = os.environ.copy()
+    full_env.setdefault("TUTOR_EPHEMERAL", "1")
+    if env:
+        full_env.update(env)
     return subprocess.run(
         [sys.executable, str(ROOT / "interactive_tutor.py")],
         cwd=str(ROOT),
@@ -19,6 +24,7 @@ def run_tutor(input_text: str) -> subprocess.CompletedProcess:
         encoding="utf-8",
         errors="replace",
         timeout=60,
+        env=full_env,
     )
 
 
@@ -132,3 +138,33 @@ def test_quit_at_continue_prompt_ends_session():
     )
     assert "SESSION SUMMARY" in output
     assert "TUTOR QUESTION 2 of 3" not in output
+
+
+def test_cli_persistence_and_resume_across_runs(tmp_path):
+    test_db = tmp_path / "cli_test.db"
+    env = {"TUTOR_DB_PATH": str(test_db), "TUTOR_EPHEMERAL": "0"}
+
+    # Run 1: Student answers question 1 correctly and quits at continue prompt
+    res1 = run_tutor(
+        "Dana\nthe right side x + 1 is calculated first, then the result is assigned to x\nquit\n",
+        env=env,
+    )
+    out1 = clean_output(res1)
+    assert "WELCOME TO YOUR ADAPTIVE AI TUTOR" in out1
+    assert "WELCOME BACK, DANA!" not in out1
+
+    # Run 2: Same student returns -- must detect existing profile and resume
+    res2 = run_tutor("Dana\nquit\n", env=env)
+    out2 = clean_output(res2)
+    assert "WELCOME BACK, DANA!" in out2
+    assert "Resuming your saved learning progress from persistent disk storage." in out2
+
+
+def test_cli_restart_wipes_persisted_progress(tmp_path):
+    test_db = tmp_path / "cli_test_restart.db"
+    env = {"TUTOR_DB_PATH": str(test_db), "TUTOR_EPHEMERAL": "0"}
+
+    # Run 1: Progress, then trigger restart, then quit
+    res = run_tutor("Dana\nrestart\nquit\n", env=env)
+    out = clean_output(res)
+    assert "RESTARTING TUTORING SESSION" in out

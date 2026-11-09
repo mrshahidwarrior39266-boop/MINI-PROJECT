@@ -8,20 +8,39 @@ No matter how many times a student answers incorrectly, the tutor NEVER leaves t
 It explains the mechanism, offers transfer challenges, and drops into Guided Scaffolding Mode
 to walk them through atomic micro-steps until the guided walkthrough is complete.
 """
+import os
 import sys
 from pathlib import Path
+from typing import Optional
 
 from app.models.student import StudentProfile
 from app.services.tutor_coordinator import TutorCoordinator
 from app.services.question_service import QuestionService
+from app.services.student_repository import StudentRepository
 
 DATA_DIR = Path(__file__).parent / "app" / "data"
 CONCEPTS_FILE = DATA_DIR / "python_concepts.json"
 KNOWLEDGE_FILE = DATA_DIR / "python_knowledge.json"
 QUESTIONS_FILE = DATA_DIR / "curriculum_questions.json"
+DEFAULT_RECORDS_DB = DATA_DIR / "tutor_records.db"
 
 QUIT_COMMANDS = {"quit", "exit"}
 RESTART_COMMANDS = {"restart", "reset", "start over", "interactive_tutor.py", "python interactive_tutor.py"}
+
+
+def get_records_db_path() -> Optional[Path]:
+    """Resolve records database path from environment or default.
+
+    Returns None if ephemeral mode is active (e.g. during testing or explicit opt-out).
+    """
+    if os.environ.get("TUTOR_EPHEMERAL") == "1":
+        return None
+    env_path = os.environ.get("TUTOR_DB_PATH")
+    if env_path:
+        if env_path.strip().lower() in ("none", "off", "ephemeral", "0", ":memory:"):
+            return None
+        return Path(env_path)
+    return DEFAULT_RECORDS_DB
 
 
 class SessionExit(Exception):
@@ -178,12 +197,15 @@ def run_guided_scaffolding(coordinator, question_service, concept, curr_q, stude
     return res
 
 
-def build_coordinator(student: StudentProfile) -> TutorCoordinator:
+def build_coordinator(
+    student: StudentProfile, repository: Optional[StudentRepository] = None
+) -> TutorCoordinator:
     return TutorCoordinator(
         student_profile=student,
         concepts_file=CONCEPTS_FILE,
         knowledge_file=KNOWLEDGE_FILE,
-        mastery_threshold=0.70
+        mastery_threshold=0.70,
+        repository=repository,
     )
 
 
@@ -208,15 +230,27 @@ def main():
     if not user_name:
         user_name = "Student"
 
-    student = StudentProfile(
-        student_id=f"stu_{user_name.lower().replace(' ', '_')}",
-        name=user_name,
-        target_goal="Master Python from fundamentals",
-        explanation_preference="analogy_heavy"
-    )
+    db_path = get_records_db_path()
+    repo = StudentRepository(db_path) if db_path else None
+    student_id = f"stu_{user_name.lower().replace(' ', '_')}"
+    existing_profile = repo.load_profile(student_id) if repo else None
+
+    if existing_profile:
+        student = existing_profile
+        is_returning = True
+    else:
+        student = StudentProfile(
+            student_id=student_id,
+            name=user_name,
+            target_goal="Master Python from fundamentals",
+            explanation_preference="analogy_heavy"
+        )
+        if repo:
+            repo.save_profile(student)
+        is_returning = False
 
     try:
-        coordinator = build_coordinator(student)
+        coordinator = build_coordinator(student, repository=repo)
         question_service = QuestionService(QUESTIONS_FILE)
         misconception_catalog = {
             (concept_id, misconception.id)
@@ -231,16 +265,32 @@ def main():
         print(f"\nThe tutor could not start: {exc}")
         return
 
-    print_curriculum_dashboard(coordinator)
+    if is_returning:
+        print_header(f"WELCOME BACK, {student.name.upper()}!")
+        print("  Resuming your saved learning progress from persistent disk storage.")
+        cursor_data = repo.load_session_cursor(student.student_id) if repo else {}
+        question_indexes = cursor_data.get("question_indexes", {})
+    else:
+        question_indexes = {}
 
-    question_indexes = {}
+    print_curriculum_dashboard(coordinator)
 
     def restart_session() -> TutorCoordinator:
         print("\n" + "=" * 70)
         print(" [RESTARTING TUTORING SESSION FROM SCRATCH...]".center(70))
         print("=" * 70 + "\n")
         question_indexes.clear()
-        fresh = build_coordinator(student)
+        if repo:
+            repo.reset_student(student.student_id)
+        fresh_student = StudentProfile(
+            student_id=student.student_id,
+            name=student.name,
+            target_goal=student.target_goal,
+            explanation_preference=student.explanation_preference
+        )
+        if repo:
+            repo.save_profile(fresh_student)
+        fresh = build_coordinator(fresh_student, repository=repo)
         print_curriculum_dashboard(fresh)
         return fresh
 
@@ -425,6 +475,8 @@ def main():
                     print(f"[UNLOCKED] '{next_title}' is now READY to be learned!")
 
             print_curriculum_dashboard(coordinator)
+            if repo:
+                repo.save_session_cursor(student.student_id, question_indexes, {}, target_cid)
             wait_for_enter()
 
     except (SessionExit, KeyboardInterrupt):

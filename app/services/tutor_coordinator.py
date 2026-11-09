@@ -19,14 +19,16 @@ class TutorCoordinator:
         student_profile: StudentProfile,
         concepts_file: Path,
         knowledge_file: Path,
-        mastery_threshold: float = 0.70
+        mastery_threshold: float = 0.70,
+        repository: Optional[Any] = None,
     ):
         if not 0.0 < mastery_threshold <= 1.0:
             raise ValueError("mastery_threshold must be greater than 0 and at most 1.")
 
+        self.repository = repository
         self.graph_service = ConceptGraphService(concepts_file)
         self.knowledge_service = KnowledgeBaseService(knowledge_file)
-        self.student_service = StudentStateService(student_profile)
+        self.student_service = StudentStateService(student_profile, repository=repository)
         self.mastery_threshold = mastery_threshold
 
         if not self.graph_service.concepts:

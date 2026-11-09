@@ -2,6 +2,7 @@
 Milestone 1 Interactive Simulation & Visual Demo:
 Runs a step-by-step demonstration of the Adaptive Learning Assistant engine.
 """
+import sys
 from pathlib import Path
 from app.models.student import StudentProfile
 from app.services.tutor_coordinator import TutorCoordinator
@@ -9,6 +10,17 @@ from app.services.tutor_coordinator import TutorCoordinator
 DATA_DIR = Path(__file__).parent / "app" / "data"
 CONCEPTS_FILE = DATA_DIR / "python_concepts.json"
 KNOWLEDGE_FILE = DATA_DIR / "python_knowledge.json"
+
+
+def configure_console() -> None:
+    """Use UTF-8 on Windows consoles so section symbols and citations never crash or garble."""
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        if stream is None:
+            continue
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, OSError, ValueError):
+            pass
 
 
 def render_progress_bar(val: float, width: int = 20) -> str:
@@ -47,6 +59,7 @@ def print_state_summary(coordinator: TutorCoordinator):
 
 
 def main():
+    configure_console()
     print_banner("AI-POWERED ADAPTIVE LEARNING ASSISTANT - MILESTONE 1 DEMO")
     
     # Initialize Learner

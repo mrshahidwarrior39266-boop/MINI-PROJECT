@@ -7,16 +7,22 @@ based on concrete assessment evidence, not self-reported sentiment.
 import math
 import uuid
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 
 from app.models.student import StudentProfile, ConceptMastery, AssessmentLog
 
 
 class StudentStateService:
-    def __init__(self, profile: StudentProfile):
+    def __init__(self, profile: StudentProfile, repository: Optional[Any] = None):
         self.profile = profile
+        self.repository = repository
         self.mastery_map: Dict[str, ConceptMastery] = {}
         self.assessment_history: List[AssessmentLog] = []
+
+        if self.repository is not None:
+            self.repository.save_profile(profile)
+            self.mastery_map = self.repository.load_mastery_map(profile.student_id)
+            self.assessment_history = self.repository.load_assessment_history(profile.student_id)
 
     def get_or_create_mastery(self, concept_id: str) -> ConceptMastery:
         """Fetch mastery record for a concept, initializing with 0 if unseen."""
@@ -104,5 +110,9 @@ class StudentStateService:
             timestamp=now
         )
         self.assessment_history.append(log)
+
+        if self.repository is not None:
+            self.repository.save_mastery(self.profile.student_id, record)
+            self.repository.save_assessment_log(log)
 
         return record, log
