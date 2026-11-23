@@ -6,7 +6,7 @@ spacing, formatting, or stylistic variations.
 """
 import ast
 import re
-from typing import Tuple, Dict, Any, List, Optional
+from typing import Tuple, Dict, Any, List, Optional, NamedTuple
 
 # Leading words students use when they describe code in prose.
 _LEADING_NOISE = re.compile(
@@ -335,3 +335,21 @@ def check_swap_goal(v1: str, v2: str):
             return False, f"Variables were not swapped. Expected {v1}={init_v2} and {v2}={init_v1}, but got {v1}={final_v1} and {v2}={final_v2}."
 
     return _checker
+
+
+class LogicVerificationResult(NamedTuple):
+    is_valid: bool
+    message: str
+
+
+class LogicVerifier:
+    """Isolated AST execution and computational state verifier."""
+
+    def verify_swap(self, code_str: str, v1: str = "x", v2: str = "y") -> LogicVerificationResult:
+        checker = check_swap_goal(v1, v2)
+        valid, msg = run_symbolic_code_evaluation(
+            code_str=code_str,
+            setup_env={v1: "ORIGINAL_V1_VALUE", v2: "ORIGINAL_V2_VALUE"},
+            goal_check=checker,
+        )
+        return LogicVerificationResult(is_valid=valid, message=msg)

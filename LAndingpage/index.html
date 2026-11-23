@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ARCHALEARN — Learn to Build, Build to Learn</title>
+  <meta name="description" content="Dual-Engine Adaptive Intelligence: Learning the Subject, Learning the Student. A continuous 3D night valley of living knowledge.">
+  <link rel="icon" type="image/png" href="assets/archalearn-emblem-clean.png">
+
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- 3D WebGL Night Valley Canvas -->
+  <div id="valley-stage" aria-hidden="true"></div>
+  <div id="vignette" class="stage-vignette"></div>
+  <div class="stage-grain"></div>
+
+  <!-- Minimalist High-End Interface Layer -->
+  <div class="ui" id="ui">
+
+    <!-- Top Navigation Header -->
+    <header>
+      <a class="logo-lockup" href="#" aria-label="Archalearn">
+        <img src="assets/archalearn-emblem-clean.png" alt="Archalearn Emblem" class="logo-emblem">
+        <img src="assets/archalearn-lockup-clean.png" alt="Archalearn" class="logo-wordmark">
+      </a>
+
+      <nav aria-label="Main Navigation">
+        <a href="#canon" class="open-cockpit-trigger">The Canon</a>
+        <a href="#topology" class="open-cockpit-trigger">The Topology</a>
+        <a href="#telemetry" class="open-cockpit-trigger">Telemetry</a>
+        <a class="pill open-cockpit-trigger" href="#cockpit">Enter Cockpit</a>
+      </nav>
+    </header>
+
+    <!-- Centred Monumental Hero -->
+    <section class="hero">
+      <div class="hero-tag">ARCHALEARN // THE ARCHITECTURE OF DUAL RESONANCE</div>
+      <h1 class="hero-statement">Learn to build, build to learn.</h1>
+      <p class="cap">
+        The subject mastered with zero guesswork.<br>
+        The student mapped with sub-second intuition.
+      </p>
+
+      <a class="go-portal" href="#explore" id="go-btn" aria-label="Engage convergence flight">
+        <svg viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></svg>
+      </a>
+    </section>
+
+    <!-- Bottom Left Telemetry -->
+    <div class="corner-left">
+      <span class="pulse-node"></span>
+      <span>DUAL ENGINE: RESONATING</span>
+    </div>
+
+    <!-- Bottom Right Controls -->
+    <div class="corner-right">
+      <span>Scroll to wander</span>
+      <i class="corner-divider"></i>
+      <button class="sound-btn" id="sound-btn" aria-pressed="false" aria-label="Toggle ambient soundtrack">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 9.5v5h3.5L12 18V6L7.5 9.5Z"/>
+          <path class="w" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>
+          <path class="x" d="m16 10 4 4m0-4-4 4"/>
+        </svg>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Minimalist Fullscreen Loader (Fernhollow Heritage) -->
+  <div class="loader-cover" id="loader">
+    <div class="loader-dot"></div>
+  </div>
+
+  <!-- Slide-Out Cockpit Drawer (Immersion Preserved) -->
+  <aside class="cockpit-drawer" id="cockpit-drawer" aria-hidden="true">
+    <div class="drawer-panel">
+      <div class="drawer-header">
+        <div style="font-family:var(--font-mono); font-size:0.75rem; letter-spacing:0.18em; color:var(--gold-primary); text-transform:uppercase;">
+          ARCHALEARN KERNEL v2.6 // TELEMETRY TERMINAL
+        </div>
+        <button id="close-drawer-btn" class="drawer-close-btn">ESC // CLOSE</button>
+      </div>
+
+      <div style="margin-bottom: 32px;">
+        <h2 style="font-family:var(--font-serif); font-size:2rem; margin-bottom:12px; color:#ffffff;">
+          The Dual-Engine Cockpit
+        </h2>
+        <p style="font-size:0.95rem; color:var(--cream-dim); line-height:1.7;">
+          Archalearn maintains continuous synchronization between the verified subject canon and the student's cognitive topography.
+        </p>
+      </div>
+
+      <!-- Quick Metrics Grid -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:32px;">
+        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:20px; border-radius:6px;">
+          <div style="font-family:var(--font-mono); font-size:0.7rem; color:var(--gold-primary); margin-bottom:6px;">ENGINE 01 // CANON</div>
+          <div style="font-family:var(--font-serif); font-size:2rem; font-weight:700; color:#ffffff;">100%</div>
+          <div style="font-size:0.8rem; color:var(--cream-dim); margin-top:4px;">Primary source anchored, 0.00 hallucination.</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:20px; border-radius:6px;">
+          <div style="font-family:var(--font-mono); font-size:0.7rem; color:var(--teal-primary); margin-bottom:6px;">ENGINE 02 // TOPOLOGY</div>
+          <div style="font-family:var(--font-serif); font-size:2rem; font-weight:700; color:#ffffff;">Δ420ms</div>
+          <div style="font-size:0.8rem; color:var(--cream-dim); margin-top:4px;">Sub-second hesitation & misconception isolation.</div>
+        </div>
+      </div>
+
+      <!-- Interactive Concept Nodes in Terminal -->
+      <div style="margin-bottom: 24px;">
+        <div style="font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.12em; color:var(--cream-dim); margin-bottom:14px; text-transform:uppercase;">
+          Live Adaptive Reasoning Trail (Click to Probe)
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div class="cockpit-concept-node" data-concept="Eigenvector Decomposition" data-confidence="94" data-reasoning="Mastered orthogonal projections on attempt 2 after Archalearn replaced symbolic algebraic notation with a dynamic geometric rotation model." style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:16px 20px; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:600; color:#ffffff;">Eigenvector Decomposition</div>
+              <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--cream-dim);">Mathematics // Spectral Theory</div>
+            </div>
+            <span style="font-family:var(--font-mono); font-size:0.7rem; padding:4px 10px; border-radius:40px; background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3);">
+              MASTERED (94%)
+            </span>
+          </div>
+
+          <div class="cockpit-concept-node" data-concept="Schrodinger Wave Mechanics" data-confidence="68" data-reasoning="Identified hesitation on complex probability amplitudes. Archalearn generated an intuitive counter-example to dismantle classical particle trajectory bias." style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:16px 20px; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:600; color:#ffffff;">Schrodinger Wave Mechanics</div>
+              <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--cream-dim);">Quantum Physics // Wavefunctions</div>
+            </div>
+            <span style="font-family:var(--font-mono); font-size:0.7rem; padding:4px 10px; border-radius:40px; background:var(--gold-dim); color:var(--gold-primary); border:1px solid var(--gold-glow);">
+              RESOLVING (68%)
+            </span>
+          </div>
+
+          <div class="cockpit-concept-node" data-concept="Differential Entropy" data-confidence="42" data-reasoning="Active frontier. Archalearn is assessing background readiness in multivariate calculus before introducing continuous probability density integration." style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:16px 20px; border-radius:6px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:600; color:#ffffff;">Differential Entropy</div>
+              <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--cream-dim);">Information Theory // Thermodynamics</div>
+            </div>
+            <span style="font-family:var(--font-mono); font-size:0.7rem; padding:4px 10px; border-radius:40px; background:var(--teal-dim); color:var(--teal-primary); border:1px solid var(--teal-glow);">
+              FRONTIER (42%)
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div id="node-diagnostic-output" style="margin-top:auto; padding-top:20px;">
+        <div style="padding:16px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:6px; font-size:0.85rem; color:var(--cream-dim);">
+          Click any concept node above to probe the live cognitive diagnostic trace.
+        </div>
+      </div>
+
+      <div style="margin-top:24px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-family:var(--font-mono); font-size:0.72rem; color:var(--cream-dim);">© 2026 ARCHALEARN</span>
+        <a href="mailto:access@archalearn.com" style="font-family:var(--font-mono); font-size:0.78rem; color:var(--gold-primary); text-transform:uppercase; font-weight:600;">Request Access →</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Local Hardware-Accelerated 3D Engine -->
+  <script src="libs/three.min.js"></script>
+  <script src="main.js"></script>
+
+</body>
+</html>

@@ -168,3 +168,26 @@ def test_cli_restart_wipes_persisted_progress(tmp_path):
     res = run_tutor("Dana\nrestart\nquit\n", env=env)
     out = clean_output(res)
     assert "RESTARTING TUTORING SESSION" in out
+
+
+def test_cli_analogy_command():
+    res = run_tutor("Student\nanalogy\nquit\n")
+    out = clean_output(res)
+    assert "BEGINNER MENTAL MODEL & PHYSICAL ANALOGY" in out
+    assert "Real-World Analogy" in out
+
+
+def test_cli_memory_command():
+    res = run_tutor("Student\nmemory\nquit\n")
+    out = clean_output(res)
+    assert "ASCII HARDWARE MEMORY STATE VISUALIZER" in out
+    assert "3-STEP MEMORY MOVIE" in out or "COMPUTER MEMORY (RAM)" in out
+
+
+def test_cli_report_command():
+    res = run_tutor("Student\nreport\nquit\n")
+    out = clean_output(res)
+    assert "VERIFIABLE MASTERY TRANSCRIPT & PORTFOLIO" in out
+    assert "EXPORT COMPLETE" in out
+    assert "TRANSCRIPT-" in out
+

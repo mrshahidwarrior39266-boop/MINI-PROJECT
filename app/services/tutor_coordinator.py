@@ -8,9 +8,14 @@ from typing import Dict, Any, Optional, List
 
 from app.models.student import StudentProfile, ConceptMastery
 from app.models.curriculum import LearningFrontier, SessionGoal
+from app.models.evaluator import LLMEvaluationRequest, LLMEvaluationResponse
+from app.models.rag import RetrievalResult
 from app.services.concept_graph import ConceptGraphService
 from app.services.knowledge_base import KnowledgeBaseService
 from app.services.student_state import StudentStateService
+from app.services.semantic_rag import SemanticRAGService
+from app.services.llm_evaluator import LLMEvaluator
+from app.services.beginner_pedagogy import BeginnerPedagogyService
 
 
 class TutorCoordinator:
@@ -21,6 +26,9 @@ class TutorCoordinator:
         knowledge_file: Path,
         mastery_threshold: float = 0.70,
         repository: Optional[Any] = None,
+        evaluator: Optional[LLMEvaluator] = None,
+        rag_service: Optional[SemanticRAGService] = None,
+        pedagogy_service: Optional[BeginnerPedagogyService] = None,
     ):
         if not 0.0 < mastery_threshold <= 1.0:
             raise ValueError("mastery_threshold must be greater than 0 and at most 1.")
@@ -30,12 +38,23 @@ class TutorCoordinator:
         self.knowledge_service = KnowledgeBaseService(knowledge_file)
         self.student_service = StudentStateService(student_profile, repository=repository)
         self.mastery_threshold = mastery_threshold
+        self.pedagogy_service = pedagogy_service or BeginnerPedagogyService()
 
         if not self.graph_service.concepts:
             raise ValueError(
                 "No concepts were loaded. Check app/data/python_concepts.json."
             )
         self.knowledge_service.validate(set(self.graph_service.concepts))
+
+        # Milestone 2: Dense Semantic RAG & LLM Evaluator
+        self.rag_service = rag_service or SemanticRAGService(
+            knowledge_file=knowledge_file,
+            repository=repository,
+        )
+        self.evaluator = evaluator or LLMEvaluator(
+            rag_service=self.rag_service,
+            pedagogy_service=self.pedagogy_service,
+        )
 
     def get_frontier(self) -> LearningFrontier:
         """Compute the active learning frontier for the student."""
@@ -130,8 +149,13 @@ class TutorCoordinator:
             "confidence": mastery.confidence,
             "active_misconceptions": mastery.active_misconceptions,
             "verified_content_chunks": [c.content for c in chunks],
-            "citations": citations_str
+            "citations": citations_str,
+            "beginner_mental_model": self.pedagogy_service.get_analogy(concept_id),
         }
+
+    def get_beginner_briefing(self, concept_id: str) -> str:
+        """Render a real-world physical analogy and mental movie for absolute beginners."""
+        return self.pedagogy_service.format_beginner_briefing(concept_id)
 
     def process_student_eval(
         self,
@@ -167,3 +191,54 @@ class TutorCoordinator:
             "frontier_mastered": updated_frontier.mastered,
             "next_recommended_goal": next_goal.model_dump()
         }
+
+    def evaluate_student_response(
+        self,
+        concept_id: str,
+        question: str,
+        student_response: str,
+    ) -> Dict[str, Any]:
+        """Milestone 2 Socratic Evaluation: Combines dense RAG, LLM reasoning, and math mastery."""
+        concept = self.graph_service.concepts.get(concept_id)
+        if not concept:
+            raise KeyError(f"Concept '{concept_id}' does not exist.")
+
+        req = LLMEvaluationRequest(
+            concept_id=concept_id,
+            concept_title=concept.title,
+            question=question,
+            student_response=student_response,
+            misconception_catalog=concept.misconceptions,
+            student_preference=self.student_service.profile.explanation_preference,
+        )
+
+        eval_response: LLMEvaluationResponse = self.evaluator.evaluate(req)
+
+        # Update mathematical mastery state using the evidence-based formula
+        process_res = self.process_student_eval(
+            concept_id=concept_id,
+            question=question,
+            student_response=student_response,
+            score=eval_response.score,
+            detected_misconceptions=eval_response.detected_misconceptions,
+            feedback=eval_response.feedback,
+        )
+
+        return {
+            "evaluation": eval_response,
+            "is_correct": eval_response.is_correct,
+            "score": eval_response.score,
+            "diagnosis": eval_response.diagnosis,
+            "feedback": eval_response.feedback,
+            "step_by_step_explanation": eval_response.step_by_step_explanation,
+            "follow_up_challenge": eval_response.follow_up_challenge,
+            "evaluator_mode": eval_response.evaluator_mode,
+            "detected_misconceptions": eval_response.detected_misconceptions,
+            **process_res,
+        }
+
+    def get_semantic_context(
+        self, query: str, concept_id: Optional[str] = None, top_k: int = 3
+    ) -> RetrievalResult:
+        """Query the dense semantic knowledge base."""
+        return self.rag_service.retrieve(query=query, concept_id=concept_id, top_k=top_k)

@@ -84,8 +84,19 @@ class StudentRepository:
                 FOREIGN KEY (student_id) REFERENCES student_profiles(student_id) ON DELETE CASCADE
             );
 
+            CREATE TABLE IF NOT EXISTS chunk_embeddings (
+                chunk_id TEXT PRIMARY KEY,
+                concept_id TEXT NOT NULL,
+                provider_name TEXT NOT NULL,
+                dimension INTEGER NOT NULL,
+                embedding_json TEXT NOT NULL,
+                content_hash TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+
             CREATE INDEX IF NOT EXISTS idx_assessment_student ON assessment_logs(student_id);
             CREATE INDEX IF NOT EXISTS idx_mastery_student ON student_concept_mastery(student_id);
+            CREATE INDEX IF NOT EXISTS idx_chunk_embeddings_provider ON chunk_embeddings(provider_name);
             """)
 
     def save_profile(self, profile: StudentProfile) -> None:
@@ -275,3 +286,51 @@ class StudentRepository:
         """Completely reset all progress and records for a student."""
         with self._get_connection() as conn:
             conn.execute("DELETE FROM student_profiles WHERE student_id = ?", (student_id,))
+
+    def save_chunk_embedding(
+        self,
+        chunk_id: str,
+        concept_id: str,
+        provider_name: str,
+        dimension: int,
+        embedding: List[float],
+        content_hash: str
+    ) -> None:
+        now = datetime.now(timezone.utc).isoformat()
+        emb_json = json.dumps(embedding)
+        with self._get_connection() as conn:
+            conn.execute("""
+            INSERT INTO chunk_embeddings (
+                chunk_id, concept_id, provider_name, dimension, embedding_json, content_hash, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(chunk_id) DO UPDATE SET
+                concept_id = excluded.concept_id,
+                provider_name = excluded.provider_name,
+                dimension = excluded.dimension,
+                embedding_json = excluded.embedding_json,
+                content_hash = excluded.content_hash,
+                updated_at = excluded.updated_at
+            """, (chunk_id, concept_id, provider_name, dimension, emb_json, content_hash, now))
+
+    def load_chunk_embeddings(self, provider_name: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
+        """Load cached chunk embeddings mapped by chunk_id."""
+        result: Dict[str, Dict[str, Any]] = {}
+        with self._get_connection() as conn:
+            if provider_name:
+                rows = conn.execute(
+                    "SELECT * FROM chunk_embeddings WHERE provider_name = ?", (provider_name,)
+                ).fetchall()
+            else:
+                rows = conn.execute("SELECT * FROM chunk_embeddings").fetchall()
+
+            for r in rows:
+                result[r["chunk_id"]] = {
+                    "chunk_id": r["chunk_id"],
+                    "concept_id": r["concept_id"],
+                    "provider_name": r["provider_name"],
+                    "dimension": r["dimension"],
+                    "embedding": json.loads(r["embedding_json"]),
+                    "content_hash": r["content_hash"],
+                    "updated_at": r["updated_at"],
+                }
+        return result

@@ -1,0 +1,66 @@
+{
+  "py.variables": {
+    "concept_id": "py.variables",
+    "real_world_analogy": "Cardboard Boxes with Sticky Note Name-Tags",
+    "plain_english_concept": "A variable is simply a storage box where you can keep one item at a time. The variable's name is the sticky note on the box.",
+    "human_vs_computer_trap": "In math, '=' means two things are permanently identical (balance). In programming, '=' is an ACTION ARROW (<-) meaning: calculate the right side, and stuff the result into the box on the left.",
+    "mental_movie": "When Python sees 'x = x + 1':\n  1. Peek inside the box labeled 'x' (suppose it holds 5).\n  2. In your hand, compute 5 + 1 = 6.\n  3. Drop 6 into the box 'x', replacing the 5.",
+    "cup_swap_analogy": "To swap the contents of two full cups (Milk and Juice) without spilling, you need a 3rd temporary empty cup: Pour Milk into Temp -> Pour Juice into Milk -> Pour Temp into Juice."
+  },
+  "py.data_types": {
+    "concept_id": "py.data_types",
+    "real_world_analogy": "Different Shapes of Cargo (Liquid, Solids, Badges, Switches)",
+    "plain_english_concept": "Just like a water bottle holds liquid and an envelope holds letters, Python needs to know what 'kind' of thing you are storing.",
+    "human_vs_computer_trap": "Humans read the text '5' and the number 5 as the same thing. To a computer, text '5' is a drawing of a number, while 5 is an actual mathematical amount.",
+    "mental_movie": "If you glue text badges together: '5' + '5' gives '55' (gluing words together). If you add numbers together: 5 + 5 gives 10. That's why strings (str), integers (int), floats, and booleans (True/False) have different rules.",
+    "cup_swap_analogy": "Don't try to add a word to a number without converting it first, just like you can't add an apple to an hour."
+  },
+  "py.operators_expressions": {
+    "concept_id": "py.operators_expressions",
+    "real_world_analogy": "Kitchen Utensils (Cake Knife, Pizza Slicer, and Leftovers Container)",
+    "plain_english_concept": "Operators are tools that do math or compare values to produce a fresh result.",
+    "human_vs_computer_trap": "When humans say 'divide 7 by 2', we think 3.5. But computers have two different division tools:\n  - '/' is the Cake Knife: cuts exact fractional slices (7 / 2 = 3.5).\n  - '//' is the Pizza Slicer: gives only whole slices and throws away fractions (7 // 2 = 3).\n  - '%' is the Leftovers Container: gives whatever is left over after dividing (7 % 2 = 1).",
+    "mental_movie": "When Python sees 2 + 3 * 4:\n  1. Multiplication happens first (just like in school order of operations): 3 * 4 = 12.\n  2. Addition happens next: 2 + 12 = 14.",
+    "cup_swap_analogy": "Use parentheses () if you want to force your kitchen tool to run first: (2 + 3) * 4 = 20."
+  },
+  "py.conditionals": {
+    "concept_id": "py.conditionals",
+    "real_world_analogy": "A Security Guard at a Club Door with a Rulebook",
+    "plain_english_concept": "Conditionals let your code make decisions and take different pathways depending on whether a statement is True or False.",
+    "human_vs_computer_trap": "Humans think about multiple possibilities simultaneously. A computer is a strict security guard reading rules top to bottom, one by one.",
+    "mental_movie": "When Python sees 'if...elif...else':\n  1. The guard checks Rule 1 (the 'if'). If it's True, you enter through Door 1, and the guard burns the rest of the list without even looking at them!\n  2. Only if Rule 1 was False does the guard check Rule 2 ('elif').\n  3. If every single rule was False, you take the catch-all exit ('else').",
+    "cup_swap_analogy": "'=' puts something in a box; '==' asks the security guard 'are these two things equal?'"
+  },
+  "py.lists_sequences": {
+    "concept_id": "py.lists_sequences",
+    "real_world_analogy": "An Egg Carton or an Ice Cube Tray with Numbered Slots",
+    "plain_english_concept": "Instead of creating 10 separate boxes for 10 items, a list is one long tray holding multiple items in a fixed order.",
+    "human_vs_computer_trap": "The #1 beginner surprise in programming: Computers start counting at ZERO (0), not 1!",
+    "mental_movie": "In a list of fruits ['apple', 'banana', 'cherry']:\n  - Slot 0 holds 'apple'\n  - Slot 1 holds 'banana'\n  - Slot 2 holds 'cherry'\nIf you ask for fruits[3], you fall off the edge of the tray and crash with an 'IndexError'!",
+    "cup_swap_analogy": "Think of slot numbers as the number of steps away from the start. At the very start, you are 0 steps away."
+  },
+  "py.for_loops": {
+    "concept_id": "py.for_loops",
+    "real_world_analogy": "An Assembly Line Worker with a Conveyor Belt",
+    "plain_english_concept": "A 'for loop' repeats an action for every single item in a collection, automatically moving to the next item until done.",
+    "human_vs_computer_trap": "You don't have to tell the computer 'repeat 5 times'; you give it a conveyor belt and say: 'for item in belt: do action'.",
+    "mental_movie": "For item in ['apple', 'banana', 'cherry']:\n  - Pick up 'apple' -> wash it.\n  - Pick up 'banana' -> wash it.\n  - Pick up 'cherry' -> wash it.\n  - Belt is empty? The loop automatically finishes and code moves on.",
+    "cup_swap_analogy": "The range(1, 5) trap: range is like an alarm clock set for 5. It stops BEFORE 5 happens, so you only get 1, 2, 3, 4."
+  },
+  "py.while_loops": {
+    "concept_id": "py.while_loops",
+    "real_world_analogy": "Doing Pushups Until the Coach Blows the Whistle",
+    "plain_english_concept": "A 'while loop' keeps repeating an action over and over as long as a condition stays True.",
+    "human_vs_computer_trap": "A 'for loop' knows in advance when it will stop (when items run out). A 'while loop' has NO IDEA how long it will run—it just checks its condition before every single repetition.",
+    "mental_movie": "While energy > 0:\n  1. Check energy. Is it > 0? Yes.\n  2. Do 1 pushup.\n  3. Reduce energy by 1.\n  4. Go back to step 1.\nIf you forget step 3, energy stays high forever, and the computer does pushups forever until it crashes (Infinite Loop)!",
+    "cup_swap_analogy": "'break' is an emergency fire exit that immediately stops the loop, regardless of the condition."
+  },
+  "py.functions": {
+    "concept_id": "py.functions",
+    "real_world_analogy": "A Vending Machine / Microwave",
+    "plain_english_concept": "A function is a named recipe or machine: you give it inputs (ingredients), it does work, and it returns a finished product.",
+    "human_vs_computer_trap": "The 'print' vs 'return' confusion: Showing something on screen is NOT the same as giving you the object.",
+    "mental_movie": "Think of a microwave:\n  - 'print()' is the microwave screen showing the text 'HOT PIZZA'. You can look at it, but you can't eat it.\n  - 'return' is the microwave door opening and physically sliding the hot pizza into your hands so your rest of your program can use it!\nIf a function doesn't use 'return', it gives back None (empty hands).",
+    "cup_swap_analogy": "Variables created inside a function are like secrets whispered in a room: when you leave the room, they disappear (local scope)."
+  }
+}

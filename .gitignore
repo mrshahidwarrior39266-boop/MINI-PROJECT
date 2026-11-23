@@ -18,3 +18,7 @@ htmlcov/
 *.sqlite
 *.sqlite3
 app/data/*.db
+app/data/transcripts/
+
+# Editor and agent temporary skill archives
+*.skill

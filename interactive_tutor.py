@@ -17,6 +17,11 @@ from app.models.student import StudentProfile
 from app.services.tutor_coordinator import TutorCoordinator
 from app.services.question_service import QuestionService
 from app.services.student_repository import StudentRepository
+from app.services.semantic_rag import SemanticRAGService
+from app.services.llm_client import get_default_llm_client, BaseLLMClient
+from app.services.llm_evaluator import LLMEvaluator
+from app.services.memory_visualizer import MemoryStateVisualizer
+from app.services.mastery_reporter import MasteryReporter
 
 DATA_DIR = Path(__file__).parent / "app" / "data"
 CONCEPTS_FILE = DATA_DIR / "python_concepts.json"
@@ -26,6 +31,9 @@ DEFAULT_RECORDS_DB = DATA_DIR / "tutor_records.db"
 
 QUIT_COMMANDS = {"quit", "exit"}
 RESTART_COMMANDS = {"restart", "reset", "start over", "interactive_tutor.py", "python interactive_tutor.py"}
+ANALOGY_COMMANDS = {"analogy", "eli5", "story", "help me understand"}
+REPORT_COMMANDS = {"report", "transcript", "export", "portfolio"}
+MEMORY_COMMANDS = {"memory", "boxes", "ram", "visualize"}
 
 
 def get_records_db_path() -> Optional[Path]:
@@ -86,6 +94,84 @@ def is_quit(text: str) -> bool:
 
 def is_restart(text: str) -> bool:
     return text.strip().lower() in RESTART_COMMANDS
+
+
+def read_student_input(
+    prompt: str,
+    coordinator: TutorCoordinator,
+    current_concept_id: str,
+    student: StudentProfile,
+) -> str:
+    """Read student answer while supporting interactive pedagogical commands:
+    - 'analogy' / 'eli5': Displays the physical real-world mental model for this topic
+    - 'report' / 'transcript' / 'portfolio': Shows and exports the verifiable mastery transcript
+    - 'memory' / 'boxes' / 'ram': Shows the ASCII memory box state visualizer
+    - 'quit' / 'exit': Ends session
+    - 'restart' / 'reset': Resets progress
+    """
+    while True:
+        raw = read_answer(prompt)
+        low = raw.strip().lower()
+
+        if is_quit(raw) or is_restart(raw):
+            return raw
+
+        if low in ANALOGY_COMMANDS:
+            print("\n" + "=" * 70)
+            print(" [BEGINNER MENTAL MODEL & PHYSICAL ANALOGY]".center(70))
+            print("=" * 70)
+            briefing = coordinator.get_beginner_briefing(current_concept_id)
+            if briefing:
+                print(briefing)
+            else:
+                print(f" Analogy: Think of '{current_concept_id}' as step-by-step instructions.")
+            print("=" * 70)
+            continue
+
+        if low in REPORT_COMMANDS:
+            print("\n" + "=" * 70)
+            print(" VERIFIABLE MASTERY TRANSCRIPT & PORTFOLIO".center(70))
+            print("=" * 70)
+            md_report = MasteryReporter.generate_markdown_report(coordinator)
+            print(md_report)
+            export_path = MasteryReporter.export_report_to_file(coordinator)
+            print(f"\n [EXPORT COMPLETE] Cryptographically verified transcript saved to:\n   {export_path}")
+            print("=" * 70)
+            continue
+
+        if low in MEMORY_COMMANDS:
+            print("\n" + "=" * 70)
+            print(" ASCII HARDWARE MEMORY STATE VISUALIZER".center(70))
+            print("=" * 70)
+            if current_concept_id == "py.variables":
+                print(MemoryStateVisualizer.render_swap_transition("x", "y", "temp"))
+            elif current_concept_id == "py.lists_sequences":
+                print(MemoryStateVisualizer.render_list_carton(["apple", "banana", "cherry"], list_name="fruits"))
+            elif current_concept_id == "py.functions":
+                print(MemoryStateVisualizer.render_variable_boxes(
+                    {"x (param)": 5, "result (local)": 25, "total (global)": 100},
+                    title="FUNCTION CALL STACK FRAME"
+                ))
+            else:
+                print(MemoryStateVisualizer.render_variable_boxes(
+                    {"counter": 3, "is_valid": True, "target": 10},
+                    title=f"MEMORY STATE FOR {current_concept_id.upper()}"
+                ))
+            print("=" * 70)
+            continue
+
+        if low in {"help", "commands", "?"}:
+            print("\n" + "-" * 60)
+            print(" AVAILABLE COMMANDS AT ANY PROMPT:")
+            print("   * analogy / eli5  : View the real-world physical mental model")
+            print("   * memory / boxes  : View RAM storage boxes and memory transitions")
+            print("   * report / export : View & export your verifiable mastery transcript")
+            print("   * restart / reset : Restart tutoring from scratch")
+            print("   * quit / exit     : Exit the session safely")
+            print("-" * 60)
+            continue
+
+        return raw
 
 
 def render_progress_bar(val: float, width: int = 20) -> str:
@@ -165,7 +251,12 @@ def run_guided_scaffolding(coordinator, question_service, concept, curr_q, stude
             print(f"  (Tip: {step.hint})")
 
         while True:
-            s_ans = read_answer(f"\n{student.name}'s Step {step.step_number} Answer > ")
+            s_ans = read_student_input(
+                f"\n{student.name}'s Step {step.step_number} Answer > ",
+                coordinator,
+                concept.id,
+                student,
+            )
 
             if is_quit(s_ans):
                 return "QUIT"
@@ -198,24 +289,37 @@ def run_guided_scaffolding(coordinator, question_service, concept, curr_q, stude
 
 
 def build_coordinator(
-    student: StudentProfile, repository: Optional[StudentRepository] = None
+    student: StudentProfile,
+    repository: Optional[StudentRepository] = None,
+    llm_client: Optional[BaseLLMClient] = None,
 ) -> TutorCoordinator:
+    rag = SemanticRAGService(KNOWLEDGE_FILE, repository=repository)
+    evaluator = LLMEvaluator(
+        llm_client=llm_client,
+        rag_service=rag,
+        question_service=QuestionService(QUESTIONS_FILE),
+    )
     return TutorCoordinator(
         student_profile=student,
         concepts_file=CONCEPTS_FILE,
         knowledge_file=KNOWLEDGE_FILE,
         mastery_threshold=0.70,
         repository=repository,
+        evaluator=evaluator,
+        rag_service=rag,
     )
 
 
 def main():
     configure_console()
+    active_client = get_default_llm_client()
+    engine_name = active_client.provider_name if active_client else "Dense Semantic RAG + Deterministic Socratic Engine"
     print_header("WELCOME TO YOUR ADAPTIVE AI TUTOR")
+    print(f"  [AI Engine: {engine_name}]")
     print("This tutor doesn't just grade -- it actively teaches.")
     print("If you struggle, it breaks the challenge down into micro-steps")
     print("and guides you line-by-line until you can complete the mechanism step by step.")
-    print("Type 'quit' or 'exit' at any prompt to finish.\n")
+    print("Commands: 'quit' to exit, 'analogy' for physical models, 'memory' for RAM visualizer, 'report' for transcript.\n")
 
     try:
         raw_name = input("Enter your name (press Enter for 'Student'): ")
@@ -250,7 +354,7 @@ def main():
         is_returning = False
 
     try:
-        coordinator = build_coordinator(student, repository=repo)
+        coordinator = build_coordinator(student, repository=repo, llm_client=active_client)
         question_service = QuestionService(QUESTIONS_FILE)
         misconception_catalog = {
             (concept_id, misconception.id)
@@ -290,7 +394,7 @@ def main():
         )
         if repo:
             repo.save_profile(fresh_student)
-        fresh = build_coordinator(fresh_student, repository=repo)
+        fresh = build_coordinator(fresh_student, repository=repo, llm_client=active_client)
         print_curriculum_dashboard(fresh)
         return fresh
 
@@ -303,12 +407,22 @@ def main():
             if recommendation.action_type == "COMPLETE":
                 print_header("CONGRATULATIONS! ALL CURRICULUM CONCEPTS MASTERED!")
                 print("You have successfully demonstrated mastery across all foundational units.")
+                try:
+                    export_path = MasteryReporter.export_report_to_file(coordinator)
+                    print(f"\n[TRANSCRIPT EXPORTED] Cryptographically verified portfolio generated at:\n  {export_path}")
+                    print(f"Verification Audit Hash: {MasteryReporter.compute_audit_hash(coordinator)}")
+                except Exception:
+                    pass
                 break
 
             if recommendation.action_type == "INTRODUCE":
                 print_header(f"NEW CONCEPT UNLOCKED: {concept.title.upper()}")
+                # Zero-Knowledge Beginner Mental Model & Real-World Physical Analogy
+                briefing = coordinator.get_beginner_briefing(target_cid)
+                if briefing:
+                    print(briefing)
                 lesson = coordinator.get_lesson_context(target_cid)
-                print("\nLESSON BITE:")
+                print("LESSON BITE (Official Ground Truth Reference):")
                 for chunk in lesson["verified_content_chunks"]:
                     print(f"  {chunk}\n")
                 print(f"Ground Truth Source: {lesson['citations']}")
@@ -344,8 +458,14 @@ def main():
             print(f"  {curr_q.prompt}")
             if curr_q.hint:
                 print(f"  (Tip: {curr_q.hint})")
+            print("  (Tip: Type 'analogy' for physical model, 'memory' for RAM boxes, or 'report' for transcript)")
 
-            user_response = read_answer(f"\n{student.name}'s Answer > ")
+            user_response = read_student_input(
+                f"\n{student.name}'s Answer > ",
+                coordinator,
+                target_cid,
+                student,
+            )
 
             if is_quit(user_response):
                 break
@@ -378,6 +498,12 @@ def main():
                 print(" HOW IT WORKS:")
                 for line in eval_res.explanation.split("\n"):
                     print(f"   {line}")
+                if target_cid == "py.variables" and ("swap" in curr_q.prompt.lower() or "swap" in user_response.lower()):
+                    print("\n MEMORY TRANSITION (VISUALIZED):")
+                    print(MemoryStateVisualizer.render_swap_transition("x", "y", "t"))
+                elif target_cid == "py.lists_sequences":
+                    print("\n MEMORY SLOTS (VISUALIZED):")
+                    print(MemoryStateVisualizer.render_list_carton(["apple", "banana", "cherry"], list_name="items"))
                 question_indexes[target_cid] = curr_idx + 1
             else:
                 label = "PARTIALLY CORRECT" if eval_res.score > 0 else "NEEDS WORK"
@@ -401,6 +527,13 @@ def main():
                 for line in eval_res.explanation.split("\n"):
                     print(f"   {line}")
 
+                if target_cid == "py.variables" and ("swap" in curr_q.prompt.lower() or "swap" in user_response.lower()):
+                    print("\n MEMORY TRANSITION (VISUALIZED):")
+                    print(MemoryStateVisualizer.render_swap_transition("x", "y", "t"))
+                elif target_cid == "py.lists_sequences":
+                    print("\n MEMORY SLOTS (VISUALIZED):")
+                    print(MemoryStateVisualizer.render_list_carton(["apple", "banana", "cherry"], list_name="items"))
+
                 # Offer a follow-up transfer challenge.
                 followup_succeeded = False
                 if eval_res.has_followup and eval_res.followup_question:
@@ -413,7 +546,12 @@ def main():
                     if followup.hint:
                         print(f"  (Tip: {followup.hint})")
 
-                    f_response = read_answer(f"\n{student.name}'s Follow-up Answer > ")
+                    f_response = read_student_input(
+                        f"\n{student.name}'s Follow-up Answer > ",
+                        coordinator,
+                        target_cid,
+                        student,
+                    )
 
                     if is_quit(f_response):
                         break
@@ -484,6 +622,12 @@ def main():
 
     print_header("SESSION SUMMARY")
     print_curriculum_dashboard(coordinator)
+    try:
+        report_path = MasteryReporter.export_report_to_file(coordinator)
+        print(f"\n[PORTFOLIO RECORDED] Verifiable progress saved to:\n  {report_path}")
+        print(f"Verification Audit Hash: {MasteryReporter.compute_audit_hash(coordinator)}")
+    except Exception:
+        pass
     print("\nGreat progress today! See you next session.\n")
 
 

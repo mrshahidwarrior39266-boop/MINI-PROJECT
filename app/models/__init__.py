@@ -7,6 +7,12 @@ from app.models.question import (
     ScaffoldStep,
     QuestionMistakePattern,
 )
+from app.models.rag import ScoredChunk, RetrievalQuery, RetrievalResult
+from app.models.evaluator import (
+    LLMEvaluationRequest,
+    LLMEvaluationResponse,
+    GeneratedTransferQuestion,
+)
 
 __all__ = [
     "Concept",
@@ -22,4 +28,10 @@ __all__ = [
     "FollowupQuestion",
     "ScaffoldStep",
     "QuestionMistakePattern",
+    "ScoredChunk",
+    "RetrievalQuery",
+    "RetrievalResult",
+    "LLMEvaluationRequest",
+    "LLMEvaluationResponse",
+    "GeneratedTransferQuestion",
 ]
