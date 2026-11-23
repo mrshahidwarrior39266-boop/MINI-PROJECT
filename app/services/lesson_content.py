@@ -36,14 +36,15 @@ LESSONS_CATALOG: Dict[str, Dict[str, Any]] = {
             "bonus = temp           # Step 3: Move saved value from temp into bonus"
         ),
         "analogy": {
-            "name": "Cardboard Boxes with Sticky Notes & Cup Swap",
+            "name": "Warehouse Boxes with Sticky Labels & The 3-Cup Swap",
             "metaphor": (
-                "Think of RAM as a grid of storage boxes in a warehouse. A variable name is a yellow sticky note "
-                "slapped onto a box. The '=' sign is not an equals scale; it is an instruction to put an item into "
-                "the box. If you have two full cups (Milk in cup A, Juice in cup B), you cannot pour Juice directly "
-                "into cup A without dumping out the Milk! You must use a third empty cup (Temp) as a buffer."
+                "Think of computer RAM as a warehouse of storage compartments. A variable name is a sticky label "
+                "attached to a box. The '=' sign is not an algebraic equation scale; it is an action arrow (←) that calculates "
+                "the value on the right first and puts it into the box on the left. If you have two full cups (Milk in Cup A, Juice in Cup B) "
+                "and write 'A = B', you pour Juice directly into Cup A—destroying the Milk forever! You must use a third empty cup (Temp) "
+                "as a temporary buffer to preserve Cup A's value before transferring Cup B."
             ),
-            "trap": "Thinking 'x = x + 1' is mathematically impossible. In programming, it reads: 'Calculate x + 1, then rebind label x'."
+            "trap": "Direct Swap Overwrite: Believing 'x = y; y = x' swaps values. In reality, the first line 'x = y' immediately overwrites and destroys x's original value (both become 20!). A temporary holding variable 'temp' is mandatory."
         },
         "misconceptions": [
             {

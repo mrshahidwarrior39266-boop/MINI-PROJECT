@@ -6,47 +6,58 @@
 
 const CONCEPT_VIDEO_STORYBOARDS = {
   "py.variables": {
-    title: "Animated Explainer: Variables, Memory Boxes & Pointer References",
+    title: "Animated Concept Explainer: Memory Labels, Action Arrow '=' & The 3-Cup Swap",
     duration: "0:45",
     scenes: [
       {
         id: 1,
         title: "Scene 1: The Warehouse Box Metaphor",
-        narration: "Think of your computer's RAM as a warehouse full of storage boxes. A variable name is not a balance scale—it is just a yellow sticky label slapped on a box.",
+        narration: "Think of your computer's RAM as a warehouse full of storage boxes. A variable name is not an equation balance—it is just a yellow sticky label slapped on a box.",
         render: () => `
-          <div class="flex items-center justify-center space-x-8 anim-float">
-            <div class="flex flex-col items-center p-4 rounded-xl bg-[#1c1c22] border border-cyan-500/60 shadow-lg shadow-cyan-950/30">
-              <span class="text-[10px] font-mono text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-700/60 mb-2">STICKY LABEL: "score"</span>
-              <div class="w-24 h-24 rounded-xl bg-[#121216] border border-zinc-700 flex items-center justify-center text-3xl font-mono text-white font-bold">
-                100
+          <div class="flex items-center justify-center space-x-8 anim-float py-2">
+            <div class="flex flex-col items-center p-4 rounded-xl bg-[#1c1c22] border border-cyan-500/70 glow-box-cyan">
+              <span class="text-[10px] font-mono text-cyan-300 bg-cyan-950/80 px-2.5 py-0.5 rounded-full border border-cyan-700/60 mb-2">STICKY LABEL: "x"</span>
+              <div class="w-24 h-24 rounded-xl bg-[#121216] border border-zinc-700 flex flex-col items-center justify-center">
+                <span class="text-3xl font-mono text-white font-bold tracking-tight">10</span>
+                <span class="text-[10px] text-zinc-500 font-mono mt-1">int (28 B)</span>
               </div>
-              <span class="text-[10px] text-zinc-500 font-mono mt-2">RAM Box 0x7ffe10</span>
+              <span class="text-[10px] text-cyan-400/80 font-mono mt-2">RAM Box 0x7ffe10</span>
             </div>
-            <div class="text-2xl text-zinc-600 font-mono">&larr;</div>
-            <div class="p-3 bg-zinc-900/90 rounded-lg border border-zinc-800 text-xs font-mono text-zinc-300 max-w-xs leading-relaxed">
-              <span class="text-amber-400 font-bold">Rule:</span> '=' is an ACTION ARROW. It puts the item on the right into the box on the left.
+            <div class="anim-arrow-flow flex flex-col items-center text-cyan-400 font-mono">
+              <span class="text-2xl font-bold">&larr;</span>
+              <span class="text-[10px] uppercase tracking-wider text-cyan-300">Action '='</span>
+            </div>
+            <div class="p-3.5 bg-zinc-900/90 rounded-xl border border-zinc-800 text-xs font-mono text-zinc-300 max-w-xs leading-relaxed space-y-1">
+              <div class="text-amber-400 font-bold flex items-center space-x-1">
+                <span>⚡ Golden Rule:</span>
+              </div>
+              <p class="text-[11px] text-zinc-300">
+                '=' is an ACTION ARROW. Python calculates the value on the right first, and binds the name tag on the left.
+              </p>
             </div>
           </div>
         `
       },
       {
         id: 2,
-        title: "Scene 2: How Python Evaluates Assignment",
-        narration: "When Python sees 'score = score + 25', it completely evaluates the right-hand side first (100 + 25 = 125), and then rebinds the label 'score' to the new value.",
+        title: "Scene 2: How Python Evaluates Rebinding (x = x + 1)",
+        narration: "When Python sees 'x = x + 1', it completely evaluates the right-hand side first (10 + 1 = 11), and then rebinds the label 'x' to the new value in memory.",
         render: () => `
-          <div class="flex flex-col items-center space-y-4">
-            <div class="px-4 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 font-mono text-xs text-amber-300">
-              score = score + 25   # Step 1: Reads 100 &rarr; Computes 125 &rarr; Rebinds
+          <div class="flex flex-col items-center space-y-4 py-2">
+            <div class="px-5 py-2 rounded-xl bg-zinc-900 border border-zinc-700 font-mono text-xs text-amber-300 shadow-md">
+              x = x + 1   <span class="text-zinc-500"># Step 1: Reads 10 &rarr; Computes 11 &rarr; Rebinds tag 'x'</span>
             </div>
-            <div class="flex items-center space-x-6">
-              <div class="flex flex-col items-center p-3 rounded-lg bg-[#18181c] border border-zinc-700">
-                <span class="text-[10px] font-mono text-zinc-500">Old Value</span>
-                <span class="text-xl font-mono text-zinc-500 line-through mt-1">100</span>
+            <div class="flex items-center space-x-8">
+              <div class="flex flex-col items-center p-3.5 rounded-xl bg-[#18181c] border border-zinc-700/80">
+                <span class="text-[10px] font-mono text-zinc-500">Old Value in 0x7ffe10</span>
+                <span class="text-2xl font-mono text-zinc-500 line-through mt-1">10</span>
+                <span class="text-[9px] text-zinc-600 font-mono mt-1">Discarded</span>
               </div>
-              <span class="text-xl text-cyan-400">&rarr;</span>
-              <div class="flex flex-col items-center p-3 rounded-lg bg-[#18181c] border border-emerald-400 animate-pulse">
-                <span class="text-[10px] font-mono text-emerald-400">New Value in RAM</span>
-                <span class="text-2xl font-mono text-white font-bold mt-1">125</span>
+              <div class="anim-arrow-flow text-xl text-cyan-400 font-mono">&rarr;</div>
+              <div class="flex flex-col items-center p-3.5 rounded-xl bg-[#18181c] border border-emerald-400 glow-box-emerald anim-pulse-glow">
+                <span class="text-[10px] font-mono text-emerald-400 font-medium">New Value in RAM</span>
+                <span class="text-3xl font-mono text-white font-bold mt-1">11</span>
+                <span class="text-[9px] text-emerald-400/70 font-mono mt-1">Label 'x' bound</span>
               </div>
             </div>
           </div>
@@ -54,42 +65,50 @@ const CONCEPT_VIDEO_STORYBOARDS = {
       },
       {
         id: 3,
-        title: "Scene 3: The Fatal Overwrite Trap & 3-Step Cup Swap",
-        narration: "If you have two full cups (Milk in Cup A, Juice in Cup B) and write 'a = b', Cup A is overwritten and the Milk is destroyed forever! You MUST use a temporary holding cup 'temp'.",
+        title: "Scene 3: The Fatal Overwrite Trap & The 3-Cup Swap",
+        narration: "If you have two cups (Milk in Cup x, Juice in Cup y) and write 'x = y', Cup x is overwritten and the Milk is destroyed forever! You MUST pour Cup x into a third buffer cup 'temp' first.",
         render: () => `
-          <div class="grid grid-cols-3 gap-6 w-full max-w-md">
-            <div class="flex flex-col items-center p-3 rounded-lg bg-[#18181c] border border-cyan-500/60">
-              <span class="text-[10px] font-mono text-zinc-400">Cup A (Milk)</span>
-              <div class="text-2xl font-mono text-cyan-300 mt-2">10</div>
-              <span class="text-[10px] text-zinc-500 mt-1">0x7ffe10</span>
+          <div class="flex flex-col items-center space-y-3 py-1">
+            <div class="grid grid-cols-3 gap-6 w-full max-w-md">
+              <div class="flex flex-col items-center p-3 rounded-xl bg-[#18181c] border border-cyan-500/70 glow-box-cyan">
+                <span class="text-[10px] font-mono text-cyan-300">Cup x (Milk)</span>
+                <div class="text-2xl font-mono text-cyan-200 font-bold mt-1">10</div>
+                <span class="text-[9px] text-zinc-500 mt-1">0x7ffe10</span>
+              </div>
+              <div class="flex flex-col items-center p-3 rounded-xl bg-[#18181c] border border-emerald-500/70 glow-box-emerald">
+                <span class="text-[10px] font-mono text-emerald-300">Cup y (Juice)</span>
+                <div class="text-2xl font-mono text-emerald-200 font-bold mt-1">20</div>
+                <span class="text-[9px] text-zinc-500 mt-1">0x7ffe18</span>
+              </div>
+              <div class="flex flex-col items-center p-3 rounded-xl bg-[#18181c] border border-amber-500/70 glow-box-amber">
+                <span class="text-[10px] font-mono text-amber-300">Buffer 'temp'</span>
+                <div class="text-2xl font-mono text-amber-200 font-bold mt-1">10</div>
+                <span class="text-[9px] text-zinc-500 mt-1">Safe Copy</span>
+              </div>
             </div>
-            <div class="flex flex-col items-center p-3 rounded-lg bg-[#18181c] border border-emerald-500/60">
-              <span class="text-[10px] font-mono text-zinc-400">Cup B (Juice)</span>
-              <div class="text-2xl font-mono text-emerald-300 mt-2">20</div>
-              <span class="text-[10px] text-zinc-500 mt-1">0x7ffe18</span>
-            </div>
-            <div class="flex flex-col items-center p-3 rounded-lg bg-[#18181c] border border-amber-500/60">
-              <span class="text-[10px] font-mono text-amber-400">Holding Cup 'temp'</span>
-              <div class="text-2xl font-mono text-amber-300 mt-2">10</div>
-              <span class="text-[10px] text-zinc-500 mt-1">Buffer</span>
+            <div class="px-4 py-1.5 rounded-lg bg-rose-950/40 border border-rose-800/40 text-[11px] font-mono text-rose-300 text-center">
+              ⚠ If you do <code class="text-white font-bold">x = y</code> directly, x becomes 20 and 10 is destroyed forever!
             </div>
           </div>
         `
       },
       {
         id: 4,
-        title: "Scene 4: The Golden Invariant",
-        narration: "Golden Rule: 'b = a' copies the address at that exact millisecond. Changing 'a' later NEVER alters 'b'. You are now ready to solve the diagnostic challenge below!",
+        title: "Scene 4: The Golden Invariant (3-Step Safe Swap)",
+        narration: "Golden Rule: To swap values safely without data loss in Python: 1) temp = x, 2) x = y, 3) y = temp. You are now fully prepared to solve the Socratic Checkpoint below!",
         render: () => `
-          <div class="p-5 rounded-xl bg-emerald-950/30 border border-emerald-500/40 text-center space-y-2 max-w-md">
-            <div class="text-xs font-mono text-emerald-400 uppercase font-bold tracking-wider">Concept Invariant Verified</div>
-            <p class="text-xs text-zinc-200 leading-relaxed">
-              Variables store memory references. To swap values safely without data loss:
-              <br><code class="text-cyan-300 font-mono font-bold">temp = a; a = b; b = temp</code>
-            </p>
-            <div class="pt-2 text-[11px] font-mono text-zinc-400">
-              Ready! Scroll down to the Socratic Checkpoint below.
+          <div class="p-5 rounded-xl bg-emerald-950/40 border border-emerald-500/50 glow-box-emerald text-center space-y-2 max-w-md">
+            <div class="text-xs font-mono text-emerald-400 uppercase font-bold tracking-wider flex items-center justify-center space-x-1.5">
+              <span>✓ Concept Invariant Verified</span>
             </div>
+            <div class="p-2.5 rounded-lg bg-black/40 border border-emerald-800/40 font-mono text-xs text-cyan-300 text-left space-y-0.5">
+              <div>1. <span class="text-amber-300">temp = x</span>  <span class="text-zinc-500"># Save Milk into holding buffer</span></div>
+              <div>2. <span class="text-emerald-300">x = y</span>     <span class="text-zinc-500"># Overwrite x with Juice safely</span></div>
+              <div>3. <span class="text-cyan-300">y = temp</span>  <span class="text-zinc-500"># Rebind y to saved Milk</span></div>
+            </div>
+            <p class="text-[11px] text-zinc-300 pt-1">
+              Scroll down to the Socratic Practice Checkpoint below to confirm your understanding!
+            </p>
           </div>
         `
       }
@@ -593,6 +612,7 @@ class ConceptVideoEngine {
   render() {
     const sb = this.getCurrentStoryboard();
     const scene = sb.scenes[this.sceneIndex];
+    this.renderedOnce = true;
 
     const titleEl = document.getElementById("video-player-title");
     const indicatorEl = document.getElementById("video-scene-indicator");
@@ -608,8 +628,8 @@ class ConceptVideoEngine {
 
     if (viewport) {
       viewport.innerHTML = `
-        <div class="flex flex-col items-center justify-center w-full h-full space-y-4">
-          <div class="text-[11px] font-mono text-codex-muted uppercase tracking-wider">
+        <div class="scene-enter flex flex-col items-center justify-center w-full h-full space-y-3 p-2">
+          <div class="text-[11px] font-mono text-cyan-400/80 uppercase tracking-widest bg-cyan-950/40 px-3 py-0.5 rounded-full border border-cyan-800/40">
             ${scene.title}
           </div>
           <div class="w-full flex items-center justify-center">
@@ -625,7 +645,7 @@ class ConceptVideoEngine {
         return `
           <button onclick="videoEngine.goToScene(${idx})"
             title="${s.title}"
-            class="scrubber-segment h-2 rounded-full transition-all ${isCurrent ? 'w-8 bg-cyan-400' : (idx < this.sceneIndex ? 'w-4 bg-zinc-600' : 'w-4 bg-zinc-800')}">
+            class="scrubber-segment h-2 rounded-full transition-all ${isCurrent ? 'w-8 bg-cyan-400 shadow-sm shadow-cyan-400/50' : (idx < this.sceneIndex ? 'w-4 bg-zinc-600' : 'w-4 bg-zinc-800')}">
           </button>
         `;
       }).join("");
@@ -635,3 +655,13 @@ class ConceptVideoEngine {
 
 // Global Video Engine Instance
 const videoEngine = new ConceptVideoEngine();
+window.videoEngine = videoEngine;
+
+// Auto-render initial scene on DOM load
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      videoEngine.loadStoryboard("py.variables");
+    }, 150);
+  });
+}
