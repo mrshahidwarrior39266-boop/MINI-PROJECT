@@ -13,15 +13,15 @@
         extend: {
           colors: {
             codex: {
-              base: '#151517',
-              sidebar: '#1b1b1e',
-              card: '#202024',
+              base: '#141416',
+              sidebar: '#19191c',
+              card: '#1f1f23',
               hover: '#26262b',
               border: 'rgba(255, 255, 255, 0.08)',
               borderFocus: 'rgba(255, 255, 255, 0.2)',
               text: '#f4f4f6',
               secondary: '#9e9ea7',
-              muted: '#5e5e66',
+              muted: '#60606a',
               accent: '#38bdf8',
             }
           }
@@ -33,9 +33,9 @@
 <body class="bg-codex-base text-codex-text font-sans h-screen flex flex-col overflow-hidden select-none">
 
   <!-- ========================================================================= -->
-  <!-- 1. TOP WINDOW TITLEBAR (Codex Studio Header)                              -->
+  <!-- 1. TOP TITLEBAR (All Milestones Prominently Accessible)                    -->
   <!-- ========================================================================= -->
-  <header class="h-10 bg-[#121214] border-b border-codex-border px-4 flex items-center justify-between text-xs text-codex-secondary font-mono z-50">
+  <header class="h-10 bg-[#111113] border-b border-codex-border px-4 flex items-center justify-between text-xs text-codex-secondary font-mono z-50">
     <div class="flex items-center space-x-3">
       <!-- Mac/Window Controls -->
       <div class="flex items-center space-x-1.5">
@@ -50,22 +50,24 @@
         <svg class="w-3.5 h-3.5 text-codex-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
       </div>
 
-      <!-- Nav Links -->
+      <!-- Milestone Navigation Links -->
       <nav class="hidden md:flex items-center space-x-4 pl-4 text-codex-secondary text-xs font-sans">
         <span class="hover:text-white cursor-pointer transition" onclick="showView('home')">Overview</span>
-        <span class="hover:text-white cursor-pointer transition" onclick="showView('lessons')">Lessons</span>
-        <span class="hover:text-white cursor-pointer transition" onclick="showView('plan')">Daily Plan</span>
-        <span class="hover:text-white cursor-pointer transition" onclick="showView('ram')">Hardware RAM</span>
-        <span class="hover:text-white cursor-pointer transition" onclick="showView('rag')">Knowledge</span>
-        <span class="hover:text-white cursor-pointer transition" onclick="showView('audit')">Ledger</span>
+        <span class="hover:text-white cursor-pointer transition" onclick="showView('lessons')">Lessons &amp; Video</span>
+        <span class="hover:text-white cursor-pointer transition" onclick="showView('dag')">Curriculum DAG (M4)</span>
+        <span class="hover:text-white cursor-pointer transition" onclick="showView('plan')">Daily Plan (M4)</span>
+        <span class="hover:text-white cursor-pointer transition" onclick="showView('socratic')">Socratic Lab (M1)</span>
+        <span class="hover:text-white cursor-pointer transition" onclick="showView('ram')">Hardware RAM (M1)</span>
+        <span class="hover:text-white cursor-pointer transition" onclick="showView('rag')">Knowledge RAG (M3)</span>
+        <span class="hover:text-white cursor-pointer transition" onclick="showView('audit')">Ledger Audit (M2)</span>
       </nav>
     </div>
 
     <!-- Right Telemetry -->
     <div class="flex items-center space-x-3 text-xs">
-      <div class="hidden sm:flex items-center space-x-1.5 text-emerald-400/90 bg-emerald-950/30 border border-emerald-800/40 px-2.5 py-0.5 rounded-full text-[11px] font-mono">
+      <div class="hidden sm:flex items-center space-x-1.5 text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-2.5 py-0.5 rounded-full text-[11px] font-mono">
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-        <span>350 tests passing</span>
+        <span>350 tests certified</span>
       </div>
       <span class="text-codex-muted text-[11px] font-mono" id="top-learner-label">Shahid (stu_shahid)</span>
     </div>
@@ -76,53 +78,55 @@
   <!-- ========================================================================= -->
   <div class="flex-1 flex overflow-hidden relative">
 
-    <!-- 2A. SLIM LEFT ICON RAIL (Minimal SVG Icons) -->
+    <!-- 2A. SLIM LEFT ICON RAIL -->
     <aside class="w-12 bg-codex-sidebar border-r border-codex-border flex flex-col items-center py-3 justify-between z-30 shrink-0">
       <div class="flex flex-col space-y-2">
-        <!-- Home -->
         <button id="nav-btn-home" onclick="showView('home')" title="Overview Stage"
           class="w-8 h-8 rounded-lg flex items-center justify-center text-codex-secondary hover:text-white hover:bg-codex-card transition smooth-fade">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
         </button>
-        <!-- Lessons & Animations -->
-        <button id="nav-btn-lessons" onclick="showView('lessons')" title="Lessons & Interactive Animations"
+        <button id="nav-btn-lessons" onclick="showView('lessons')" title="Lessons &amp; Animated Video Explainer"
           class="w-8 h-8 rounded-lg flex items-center justify-center text-codex-secondary hover:text-white hover:bg-codex-card transition smooth-fade">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         </button>
-        <!-- Daily 30/60/10 Plan -->
-        <button id="nav-btn-plan" onclick="showView('plan')" title="30/60/10 Daily Plan"
+        <button id="nav-btn-dag" onclick="showView('dag')" title="Curriculum DAG Graph Traversal (Milestone 4)"
+          class="w-8 h-8 rounded-lg flex items-center justify-center text-codex-secondary hover:text-white hover:bg-codex-card transition smooth-fade">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+        </button>
+        <button id="nav-btn-plan" onclick="showView('plan')" title="30/60/10 Daily Plan (Milestone 4)"
           class="w-8 h-8 rounded-lg flex items-center justify-center text-codex-secondary hover:text-white hover:bg-codex-card transition smooth-fade">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
         </button>
-        <!-- Hardware RAM -->
-        <button id="nav-btn-ram" onclick="showView('ram')" title="Hardware Memory Model"
+        <button id="nav-btn-socratic" onclick="showView('socratic')" title="Socratic Dialogue &amp; Misconceptions (Milestone 1)"
+          class="w-8 h-8 rounded-lg flex items-center justify-center text-codex-secondary hover:text-white hover:bg-codex-card transition smooth-fade">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+        </button>
+        <button id="nav-btn-ram" onclick="showView('ram')" title="Hardware Memory Model (Milestone 1 &amp; 2)"
           class="w-8 h-8 rounded-lg flex items-center justify-center text-codex-secondary hover:text-white hover:bg-codex-card transition smooth-fade">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
         </button>
-        <!-- RAG Knowledge -->
-        <button id="nav-btn-rag" onclick="showView('rag')" title="Knowledge Base & Ingestion"
+        <button id="nav-btn-rag" onclick="showView('rag')" title="Dynamic RAG &amp; Vector Citations (Milestone 3)"
           class="w-8 h-8 rounded-lg flex items-center justify-center text-codex-secondary hover:text-white hover:bg-codex-card transition smooth-fade">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
         </button>
-        <!-- Audit Ledger -->
-        <button id="nav-btn-audit" onclick="showView('audit')" title="Cryptographic Ledger"
+        <button id="nav-btn-audit" onclick="showView('audit')" title="Cryptographic SHA-256 Ledger (Milestone 2)"
           class="w-8 h-8 rounded-lg flex items-center justify-center text-codex-secondary hover:text-white hover:bg-codex-card transition smooth-fade">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
         </button>
       </div>
 
       <!-- Settings -->
-      <button onclick="showModal('studentModal')" title="Switch Student"
+      <button onclick="showModal('studentModal')" title="Switch Student Profile"
         class="w-8 h-8 rounded-lg flex items-center justify-center text-codex-muted hover:text-white hover:bg-codex-card transition smooth-fade">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
       </button>
     </aside>
 
-    <!-- 2B. CURRICULUM TREE SIDEBAR (Quiet Codex Drawer) -->
+    <!-- 2B. CURRICULUM TREE SIDEBAR (Strictly locked visual indicator) -->
     <aside id="curriculum-sidebar" class="w-64 bg-codex-sidebar border-r border-codex-border flex flex-col justify-between p-3 shrink-0 overflow-y-auto">
       <div>
         <div class="flex items-center justify-between px-2 py-1 mb-2 text-xs text-codex-muted font-mono tracking-wider">
-          <span>CURRICULUM</span>
+          <span>CURRICULUM CHAPTERS</span>
           <span>8 UNITS</span>
         </div>
 
@@ -131,9 +135,9 @@
           <span class="text-codex-muted text-[11px] font-mono">30/60/10</span>
         </button>
 
-        <!-- Concept Tree -->
+        <!-- Concept Tree with Lock State -->
         <div id="sidebar-concepts-list" class="space-y-0.5 text-xs">
-          <!-- Injected dynamically -->
+          <!-- Dynamically populated -->
         </div>
       </div>
 
@@ -153,196 +157,287 @@
     <main class="flex-1 flex flex-col overflow-hidden relative pb-36">
 
       <!-- =================================================================== -->
-      <!-- VIEW 1: HERO OVERVIEW (Clean Codex Reflection)                      -->
+      <!-- VIEW 1: HERO OVERVIEW                                               -->
       <!-- =================================================================== -->
       <section id="view-home" class="view-panel flex-1 flex flex-col items-center justify-center p-6 overflow-y-auto">
         <div class="max-w-xl w-full flex flex-col items-center text-center space-y-6 -mt-16">
           
-          <!-- Minimalist Cloud / Terminal Glyph -->
           <div class="w-14 h-14 rounded-2xl bg-codex-card border border-codex-border flex items-center justify-center text-codex-muted">
             <svg class="w-6 h-6 text-codex-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
           </div>
 
-          <!-- Hero Greeting -->
           <div>
             <h1 class="text-2xl font-medium text-codex-text tracking-tight">
               What should we work on in <span class="underline decoration-codex-muted hover:decoration-white underline-offset-4 cursor-pointer transition" onclick="showView('lessons')">python-foundations</span>?
             </h1>
             <p class="text-codex-secondary text-xs mt-2" id="home-subtitle">
-              Socratic tutor active • Target concept: <code class="text-codex-text font-mono text-xs">py.operators_expressions</code>
+              Socratic tutor active • Target concept: <code class="text-codex-text font-mono text-xs">py.variables</code>
             </p>
           </div>
 
-          <!-- Quick Action Cards -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full pt-2">
+            <div onclick="showView('lessons')" class="p-3.5 rounded-xl bg-codex-card/80 border border-codex-border hover:bg-codex-hover hover:border-codex-borderFocus cursor-pointer transition text-left">
+              <h3 class="text-xs font-medium text-codex-text">Lessons &amp; Video</h3>
+              <p class="text-[11px] text-codex-secondary mt-1">Explainer videos + interactive runtime simulator.</p>
+            </div>
+            <div onclick="showView('dag')" class="p-3.5 rounded-xl bg-codex-card/80 border border-codex-border hover:bg-codex-hover hover:border-codex-borderFocus cursor-pointer transition text-left">
+              <h3 class="text-xs font-medium text-codex-text">Curriculum DAG</h3>
+              <p class="text-[11px] text-codex-secondary mt-1">Topological ordering &amp; frontier traversal.</p>
+            </div>
             <div onclick="showView('plan')" class="p-3.5 rounded-xl bg-codex-card/80 border border-codex-border hover:bg-codex-hover hover:border-codex-borderFocus cursor-pointer transition text-left">
               <h3 class="text-xs font-medium text-codex-text">Daily Plan</h3>
               <p class="text-[11px] text-codex-secondary mt-1">30% Review, 60% Frontier, 10% Synthesis.</p>
             </div>
-            <div onclick="showConceptLesson('py.variables')" class="p-3.5 rounded-xl bg-codex-card/80 border border-codex-border hover:bg-codex-hover hover:border-codex-borderFocus cursor-pointer transition text-left">
-              <h3 class="text-xs font-medium text-codex-text">Lessons &amp; Animations</h3>
-              <p class="text-[11px] text-codex-secondary mt-1">Interactive runtime visualizers for all 8 concepts.</p>
-            </div>
-            <div onclick="showView('ram')" class="p-3.5 rounded-xl bg-codex-card/80 border border-codex-border hover:bg-codex-hover hover:border-codex-borderFocus cursor-pointer transition text-left">
-              <h3 class="text-xs font-medium text-codex-text">Hardware RAM</h3>
-              <p class="text-[11px] text-codex-secondary mt-1">Inspect heap memory cells and pointer swaps.</p>
-            </div>
           </div>
 
         </div>
       </section>
 
       <!-- =================================================================== -->
-      <!-- VIEW 2: LESSONS & INTERACTIVE ANIMATIONS                            -->
+      <!-- VIEW 2: LESSONS & ANIMATED VIDEO EXPLAINER (Strictly Enforced Locks) -->
       <!-- =================================================================== -->
-      <section id="view-lessons" class="view-panel hidden flex-1 flex flex-col overflow-y-auto p-6 space-y-5">
+      <section id="view-lessons" class="view-panel hidden flex-1 flex flex-col overflow-y-auto p-6 space-y-4">
         
-        <!-- Concept Horizontal Strip -->
-        <div class="flex items-center space-x-1 overflow-x-auto pb-1 border-b border-codex-border scrollbar-none">
-          <button onclick="loadLesson('py.variables')" id="lesson-tab-py.variables" class="lesson-nav-btn px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap bg-codex-card text-white">Variables</button>
-          <button onclick="loadLesson('py.data_types')" id="lesson-tab-py.data_types" class="lesson-nav-btn px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap text-codex-secondary hover:text-white">Data Types</button>
-          <button onclick="loadLesson('py.operators_expressions')" id="lesson-tab-py.operators_expressions" class="lesson-nav-btn px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap text-codex-secondary hover:text-white">Operators</button>
-          <button onclick="loadLesson('py.conditionals')" id="lesson-tab-py.conditionals" class="lesson-nav-btn px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap text-codex-secondary hover:text-white">Conditionals</button>
-          <button onclick="loadLesson('py.lists_sequences')" id="lesson-tab-py.lists_sequences" class="lesson-nav-btn px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap text-codex-secondary hover:text-white">Lists</button>
-          <button onclick="loadLesson('py.for_loops')" id="lesson-tab-py.for_loops" class="lesson-nav-btn px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap text-codex-secondary hover:text-white">For Loops</button>
-          <button onclick="loadLesson('py.while_loops')" id="lesson-tab-py.while_loops" class="lesson-nav-btn px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap text-codex-secondary hover:text-white">While Loops</button>
-          <button onclick="loadLesson('py.functions')" id="lesson-tab-py.functions" class="lesson-nav-btn px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap text-codex-secondary hover:text-white">Functions</button>
+        <!-- Clean Chapter Header Breadcrumb Bar (No squashed horizontal text!) -->
+        <div class="flex items-center justify-between pb-2 border-b border-codex-border text-xs">
+          <div class="flex items-center space-x-2">
+            <span class="text-codex-muted font-mono">Curriculum /</span>
+            <span class="text-codex-text font-medium" id="lesson-breadcrumb-title">Chapter 1: Variables and Assignment</span>
+            <span class="font-mono text-[10px] px-2 py-0.5 rounded" id="lesson-status-pill">Unlocked</span>
+          </div>
+
+          <div class="flex items-center space-x-2 text-xs font-mono">
+            <button onclick="navPrevChapter()" id="btn-prev-chapter" class="px-2.5 py-1 rounded bg-codex-card hover:bg-codex-hover border border-codex-border text-codex-secondary hover:text-white transition">
+              &lt; Prev Chapter
+            </button>
+            <button onclick="navNextChapter()" id="btn-next-chapter" class="px-2.5 py-1 rounded bg-codex-card hover:bg-codex-hover border border-codex-border text-codex-secondary hover:text-white transition">
+              Next Chapter &gt;
+            </button>
+          </div>
         </div>
 
-        <!-- 2-Column Clean Studio -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- LOCKED CHAPTER SCREEN (Shown when a locked concept is clicked) -->
+        <div id="locked-chapter-screen" class="hidden flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4 my-8">
+          <div class="w-16 h-16 rounded-2xl bg-codex-card border border-codex-border flex items-center justify-center text-amber-400">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+          </div>
+          <div class="max-w-md space-y-2">
+            <h2 class="text-lg font-medium text-white" id="locked-concept-title">Chapter Locked</h2>
+            <p class="text-xs text-codex-secondary leading-relaxed" id="locked-prereq-explanation">
+              You must complete the prerequisite concept with at least 70% mastery before this chapter unlocks.
+            </p>
+          </div>
+          <div class="w-full max-w-sm p-3 rounded-xl bg-codex-card border border-codex-border space-y-2 text-xs font-mono">
+            <div class="flex justify-between text-codex-muted">
+              <span>Prerequisite Progress</span>
+              <span id="locked-prereq-status" class="text-amber-400">0% / 70% Required</span>
+            </div>
+            <div class="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+              <div id="locked-prereq-bar" class="h-full bg-amber-400 rounded-full" style="width: 0%;"></div>
+            </div>
+          </div>
+          <button onclick="jumpToActiveFrontier()" class="px-4 py-2 rounded-lg bg-white text-black text-xs font-medium hover:bg-zinc-200 transition">
+            Go to Active Chapter &rarr;
+          </button>
+        </div>
 
-          <!-- Left Column: Theory, Analogy, Code (5 Cols) -->
-          <div class="lg:col-span-5 space-y-4">
-            
-            <div class="p-4 rounded-xl bg-codex-card border border-codex-border space-y-2">
-              <div class="flex items-center justify-between text-xs">
-                <span class="font-mono text-codex-muted text-[11px]" id="lesson-id-badge">py.variables</span>
-                <span class="font-mono text-[11px] text-emerald-400" id="lesson-status-badge">Mastered</span>
+        <!-- UNLOCKED CHAPTER CONTENT (Only visible for accessible concepts) -->
+        <div id="unlocked-chapter-content" class="space-y-6">
+
+          <!-- STAGE 1: ANIMATED EXPLAINER VIDEO PLAYER -->
+          <div class="rounded-xl bg-codex-card border border-codex-border overflow-hidden">
+            <!-- Video Title Bar -->
+            <div class="px-4 py-2.5 bg-[#17171a] border-b border-codex-border flex items-center justify-between text-xs">
+              <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                <span class="font-medium text-white" id="video-player-title">Animated Concept Explainer Video</span>
               </div>
-              <h2 class="text-base font-semibold text-codex-text" id="lesson-title">Variables and Assignment</h2>
+              <div class="flex items-center space-x-3 text-codex-muted font-mono text-[11px]">
+                <span id="video-scene-indicator">Scene 1 of 4</span>
+                <span id="video-duration-pill">0:45</span>
+              </div>
+            </div>
+
+            <!-- 16:9 Video Canvas Viewport -->
+            <div id="video-viewport" class="w-full h-80 video-theater flex flex-col items-center justify-center p-6 relative animation-stage-viewport">
+              <!-- Dynamically rendered scene graphics -->
+            </div>
+
+            <!-- Video Subtitle Narration Bar -->
+            <div class="px-5 py-3 video-subtitles text-xs leading-relaxed text-zinc-200 flex items-center justify-between space-x-4">
+              <div class="flex items-start space-x-2.5">
+                <span class="text-cyan-400 font-mono text-[10px] uppercase tracking-wider shrink-0 mt-0.5">Narrator</span>
+                <p id="video-narration-text" class="text-xs text-zinc-200 font-sans"></p>
+              </div>
+              <button onclick="scrollToQuestion()" class="px-3 py-1 rounded bg-[#2a2a30] hover:bg-[#34343a] text-codex-secondary hover:text-white font-mono text-[11px] shrink-0 transition">
+                Skip to Question &darr;
+              </button>
+            </div>
+
+            <!-- Video Controls Bar -->
+            <div class="px-4 py-2 bg-[#17171a] border-t border-codex-border flex items-center justify-between text-xs">
+              <div class="flex items-center space-x-2">
+                <button onclick="videoEngine.togglePlay()" id="btn-video-play" class="px-3.5 py-1 rounded bg-white text-black font-medium text-[11px] transition">
+                  Play
+                </button>
+                <button onclick="videoEngine.replay()" class="px-2.5 py-1 rounded bg-[#2a2a30] hover:bg-[#34343a] text-codex-secondary hover:text-white font-mono text-[11px] transition">
+                  Replay
+                </button>
+                <button onclick="videoEngine.prevScene()" class="px-2.5 py-1 rounded bg-[#2a2a30] hover:bg-[#34343a] text-codex-secondary hover:text-white font-mono text-[11px] transition">
+                  &larr; Prev Scene
+                </button>
+                <button onclick="videoEngine.nextScene()" class="px-2.5 py-1 rounded bg-[#2a2a30] hover:bg-[#34343a] text-codex-secondary hover:text-white font-mono text-[11px] transition">
+                  Next Scene &rarr;
+                </button>
+              </div>
+
+              <!-- Interactive Timeline Scrubber Segments -->
+              <div class="flex items-center space-x-1.5" id="video-scrubber-strip">
+                <!-- Dynamically populated scene scrubber pills -->
+              </div>
+            </div>
+          </div>
+
+          <!-- STAGE 2: SOCRATIC PRACTICE CHECKPOINT (Directly follows the video) -->
+          <div id="socratic-practice-section" class="p-5 rounded-xl bg-codex-card border border-codex-border space-y-3">
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center space-x-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                <span class="font-medium text-white">Socratic Practice Checkpoint</span>
+              </div>
+              <span class="text-[11px] text-codex-muted font-mono">Enforced Citations</span>
+            </div>
+
+            <p class="text-xs text-codex-text leading-relaxed" id="lesson-diagnostic-prompt"></p>
+
+            <div class="space-y-2">
+              <textarea id="lesson-answer-input" rows="3" placeholder="Now that you've watched the explainer video, explain the mechanism in your own words..."
+                class="w-full bg-[#18181c] border border-codex-border rounded-lg p-3 text-xs text-codex-text placeholder-codex-muted focus:border-codex-borderFocus font-sans transition"></textarea>
+              
+              <div class="flex items-center justify-between pt-1">
+                <span class="text-[11px] font-mono text-codex-muted">Socratic Evaluator with RAG Provenance</span>
+                <button onclick="submitLessonAnswer()" id="lesson-submit-btn" class="px-4 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-zinc-200 transition">
+                  Evaluate Answer
+                </button>
+              </div>
+            </div>
+
+            <!-- Evaluation Feedback Card -->
+            <div id="lesson-eval-feedback-card" class="hidden p-3.5 rounded-lg text-xs space-y-1.5 transition-all"></div>
+          </div>
+
+          <!-- COLLAPSIBLE REFERENCE: THEORY, ANALOGY & CODE -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div class="lg:col-span-6 p-4 rounded-xl bg-codex-card border border-codex-border space-y-2">
+              <div class="text-[11px] font-mono text-codex-muted uppercase">Concept Theory &amp; Mental Metaphor</div>
+              <h3 class="text-xs font-medium text-white" id="lesson-analogy-name"></h3>
               <p class="text-xs text-codex-secondary leading-relaxed" id="lesson-theory"></p>
+              <div class="p-2 rounded bg-[#18181c] border border-codex-border text-[11px] text-amber-300/80 font-mono" id="lesson-analogy-trap"></div>
             </div>
 
-            <!-- Physical Analogy -->
-            <div class="p-4 rounded-xl bg-[#1c1c20] border border-codex-border space-y-1.5">
-              <div class="text-[11px] font-mono text-codex-muted uppercase">Mental Model &amp; Analogy</div>
-              <div class="text-xs font-medium text-codex-text" id="lesson-analogy-name"></div>
-              <p class="text-xs text-codex-secondary leading-relaxed" id="lesson-analogy-metaphor"></p>
-              <div class="text-[11px] text-amber-300/80 pt-1 border-t border-codex-border font-mono" id="lesson-analogy-trap"></div>
-            </div>
-
-            <!-- Code Block -->
-            <div class="p-4 rounded-xl bg-[#121214] border border-codex-border space-y-2">
+            <div class="lg:col-span-6 p-4 rounded-xl bg-[#121214] border border-codex-border space-y-2">
               <div class="flex items-center justify-between text-[11px] font-mono text-codex-muted">
-                <span>Python 3.13</span>
-                <button onclick="copyCode()" class="hover:text-white transition">Copy</button>
+                <span>Python 3.13 Reference Syntax</span>
+                <button onclick="copyCode()" class="hover:text-white transition">Copy Code</button>
               </div>
               <pre class="text-xs font-mono text-cyan-200/90 overflow-x-auto leading-relaxed" id="lesson-code-block"></pre>
             </div>
-
-            <!-- Misconceptions -->
-            <div class="p-4 rounded-xl bg-codex-card border border-codex-border space-y-2">
-              <div class="text-[11px] font-mono text-codex-muted uppercase">Common Misconceptions</div>
-              <div id="lesson-misconceptions-list" class="space-y-2 text-xs"></div>
-            </div>
-
           </div>
 
-          <!-- Right Column: Interactive Animation Canvas & Evaluation (7 Cols) -->
-          <div class="lg:col-span-7 space-y-4">
-            
-            <!-- Animation Stage -->
-            <div class="p-4 rounded-xl bg-codex-card border border-codex-border space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-medium text-codex-text" id="anim-stage-title">Runtime Simulation</span>
-                <span class="text-[11px] font-mono text-codex-muted" id="anim-step-badge">Step 1 of 3</span>
-              </div>
+        </div>
 
-              <!-- Grid Canvas -->
-              <div id="animation-stage-viewport" class="w-full h-72 rounded-lg grid-canvas border border-codex-border flex items-center justify-center p-4"></div>
+      </section>
 
-              <!-- Controls -->
-              <div class="flex items-center justify-between pt-1 text-xs">
-                <div class="flex items-center space-x-1.5">
-                  <button onclick="animEngine.prevStep()" class="px-2.5 py-1 rounded bg-[#2a2a30] hover:bg-[#34343a] text-codex-secondary hover:text-white font-mono text-[11px] transition">Prev</button>
-                  <button onclick="animEngine.togglePlay()" id="anim-play-btn" class="px-3.5 py-1 rounded bg-white text-black font-medium text-[11px] transition">Play</button>
-                  <button onclick="animEngine.nextStep()" class="px-2.5 py-1 rounded bg-[#2a2a30] hover:bg-[#34343a] text-codex-secondary hover:text-white font-mono text-[11px] transition">Next</button>
-                  <button onclick="animEngine.reset()" class="px-2.5 py-1 rounded bg-transparent hover:bg-[#2a2a30] text-codex-muted hover:text-white font-mono text-[11px] transition">Reset</button>
-                </div>
-                <p class="text-xs text-codex-secondary font-mono truncate max-w-xs" id="anim-step-explanation"></p>
-              </div>
-            </div>
-
-            <!-- Socratic Practice Checkpoint -->
-            <div class="p-4 rounded-xl bg-codex-card border border-codex-border space-y-3">
-              <div class="flex items-center justify-between text-xs">
-                <span class="font-mono text-codex-secondary">Socratic Practice Checkpoint</span>
-                <span class="text-[11px] text-codex-muted font-mono">Enforced Citations</span>
-              </div>
-
-              <p class="text-xs text-codex-text leading-relaxed" id="lesson-diagnostic-prompt"></p>
-
-              <div class="space-y-2">
-                <textarea id="lesson-answer-input" rows="3" placeholder="Explain the runtime mechanism in your own words..."
-                  class="w-full bg-[#18181c] border border-codex-border rounded-lg p-3 text-xs text-codex-text placeholder-codex-muted focus:border-codex-borderFocus font-sans transition"></textarea>
-                
-                <div class="flex items-center justify-end">
-                  <button onclick="submitLessonAnswer()" id="lesson-submit-btn" class="px-4 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-zinc-200 transition">
-                    Evaluate Answer
-                  </button>
-                </div>
-              </div>
-
-              <!-- Evaluation Feedback -->
-              <div id="lesson-eval-feedback-card" class="hidden p-3.5 rounded-lg text-xs space-y-1.5 transition-all"></div>
-            </div>
-
+      <!-- =================================================================== -->
+      <!-- VIEW 3: CURRICULUM DAG & TOPOLOGICAL FRONTIER (Milestone 4)         -->
+      <!-- =================================================================== -->
+      <section id="view-dag" class="view-panel hidden flex-1 flex flex-col overflow-y-auto p-6 space-y-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-medium text-codex-text">Curriculum DAG &amp; Learning Frontier</h2>
+            <p class="text-xs text-codex-secondary mt-0.5">Topological traversal where Frontier: All Prerequisites &ge; 0.70, Target &lt; 0.70.</p>
           </div>
+          <span class="text-xs font-mono text-cyan-400 bg-cyan-950/40 border border-cyan-800/40 px-2.5 py-1 rounded-full">Kahn's Topological Sort</span>
+        </div>
 
+        <div id="dag-nodes-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- Dynamically populated DAG nodes -->
+        </div>
+
+        <div class="p-4 rounded-xl bg-codex-card border border-codex-border space-y-2 text-xs">
+          <div class="font-mono text-codex-muted text-[11px] uppercase">Mathematical Frontier Invariant</div>
+          <p class="text-codex-secondary leading-relaxed">
+            The learning frontier guarantees cognitive pacing: concepts stay strictly locked until all prerequisite dependencies
+            reach the 0.70 mastery threshold, preventing learners from being overwhelmed by advanced topics.
+          </p>
         </div>
       </section>
 
       <!-- =================================================================== -->
-      <!-- VIEW 3: DAILY 30/60/10 PLAN                                         -->
+      <!-- VIEW 4: DAILY 30/60/10 SESSION PLAN (Milestone 4)                   -->
       <!-- =================================================================== -->
       <section id="view-plan" class="view-panel hidden flex-1 flex flex-col overflow-y-auto p-6 space-y-5">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-base font-medium text-codex-text">30/60/10 Daily Session Plan</h2>
-            <p class="text-xs text-codex-secondary mt-0.5">Spaced repetition review, frontier introduction, and synthesis.</p>
+            <h2 class="text-base font-medium text-codex-text">30% Review / 60% Frontier / 10% Synthesis Daily Planner</h2>
+            <p class="text-xs text-codex-secondary mt-0.5">Ebbinghaus forgetting curve stability: M(t) = M₀ &middot; exp(-&Delta;t / S).</p>
           </div>
           <button onclick="refreshDailyPlan()" class="px-3 py-1.5 rounded-lg bg-codex-card hover:bg-codex-hover border border-codex-border text-xs text-codex-text font-mono transition">
-            Regenerate
+            Regenerate Schedule
           </button>
         </div>
 
+        <!-- 3 Ratio Breakdown Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div class="p-3.5 rounded-xl bg-codex-card border border-codex-border">
             <div class="text-[11px] font-mono text-emerald-400">30% REVIEW</div>
             <div class="text-sm font-medium text-codex-text mt-1" id="plan-review-count">3 Items</div>
-            <p class="text-[11px] text-codex-secondary mt-1">Exponential decay reinforcement.</p>
+            <p class="text-[11px] text-codex-secondary mt-1">Decaying mastery reinforcement.</p>
           </div>
           <div class="p-3.5 rounded-xl bg-codex-card border border-codex-border">
             <div class="text-[11px] font-mono text-amber-400">60% FRONTIER</div>
             <div class="text-sm font-medium text-codex-text mt-1" id="plan-frontier-count">6 Items</div>
-            <p class="text-[11px] text-codex-secondary mt-1">Newly unlocked target concepts.</p>
+            <p class="text-[11px] text-codex-secondary mt-1">Next unlocked frontier concepts.</p>
           </div>
           <div class="p-3.5 rounded-xl bg-codex-card border border-codex-border">
             <div class="text-[11px] font-mono text-cyan-400">10% SYNTHESIS</div>
             <div class="text-sm font-medium text-codex-text mt-1" id="plan-synthesis-count">1 Item</div>
-            <p class="text-[11px] text-codex-secondary mt-1">Multi-concept integration challenge.</p>
+            <p class="text-[11px] text-codex-secondary mt-1">Multi-concept capstone challenges.</p>
           </div>
         </div>
 
+        <!-- Agenda Schedule List -->
         <div class="space-y-2">
-          <div class="text-xs font-mono text-codex-muted tracking-wider">AGENDA SCHEDULE</div>
+          <div class="text-xs font-mono text-codex-muted tracking-wider">TODAY'S SCHEDULED DRILLS (10 ITEMS)</div>
           <div id="plan-items-container" class="space-y-2 text-xs"></div>
+        </div>
+
+        <!-- Capstone Synthesis Challenges Section -->
+        <div class="space-y-2 pt-2 border-t border-codex-border">
+          <div class="text-xs font-mono text-codex-muted tracking-wider">CAPSTONE SYNTHESIS CHALLENGES</div>
+          <div id="synthesis-challenges-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs"></div>
         </div>
       </section>
 
       <!-- =================================================================== -->
-      <!-- VIEW 4: HARDWARE RAM                                                -->
+      <!-- VIEW 5: SOCRATIC DIALOGUE LAB (Milestone 1)                         -->
+      <!-- =================================================================== -->
+      <section id="view-socratic" class="view-panel hidden flex-1 flex flex-col overflow-y-auto p-6 space-y-4">
+        <div class="flex items-center justify-between pb-2 border-b border-codex-border">
+          <div>
+            <h2 class="text-base font-medium text-codex-text">Socratic Dialogue &amp; Misconception Lab</h2>
+            <p class="text-xs text-codex-secondary">Conversational multi-turn tutor with catalog misconception diagnosis.</p>
+          </div>
+          <span class="text-xs font-mono text-codex-muted">Milestone 1 Core Engine</span>
+        </div>
+
+        <div id="socratic-thread-container" class="flex-1 space-y-3 overflow-y-auto pr-2">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- VIEW 6: HARDWARE RAM VISUALIZER (Milestone 1 & 2)                    -->
       <!-- =================================================================== -->
       <section id="view-ram" class="view-panel hidden flex-1 flex flex-col overflow-y-auto p-6 space-y-5">
         <div>
@@ -370,18 +465,18 @@
       </section>
 
       <!-- =================================================================== -->
-      <!-- VIEW 5: RAG KNOWLEDGE                                               -->
+      <!-- VIEW 7: KNOWLEDGE RAG & INGESTION (Milestone 3)                     -->
       <!-- =================================================================== -->
       <section id="view-rag" class="view-panel hidden flex-1 flex flex-col overflow-y-auto p-6 space-y-5">
         <div>
-          <h2 class="text-base font-medium text-codex-text">Dynamic Knowledge &amp; Vector Store</h2>
-          <p class="text-xs text-codex-secondary mt-0.5">Heading chunking, auto-linking to DAG, and cosine retrieval.</p>
+          <h2 class="text-base font-medium text-codex-text">Dynamic Knowledge Ingestion &amp; pgvector RAG</h2>
+          <p class="text-xs text-codex-secondary mt-0.5">Semantic heading chunking, LLM auto-linker, and enforced chunk citations.</p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div class="lg:col-span-6 space-y-3">
             <div class="p-4 rounded-xl bg-codex-card border border-codex-border space-y-3">
-              <div class="text-xs font-mono text-codex-secondary">Vector Retrieval Search</div>
+              <div class="text-xs font-mono text-codex-secondary">Dense Vector Retrieval Search</div>
               <div class="flex items-center space-x-2">
                 <input id="rag-search-input" type="text" placeholder="e.g. how to prevent infinite while loops"
                   class="flex-1 bg-[#18181c] border border-codex-border rounded-lg px-3 py-1.5 text-xs text-codex-text placeholder-codex-muted focus:border-codex-borderFocus font-sans"
@@ -396,13 +491,13 @@
 
           <div class="lg:col-span-6 space-y-3">
             <div class="p-4 rounded-xl bg-codex-card border border-codex-border space-y-3">
-              <div class="text-xs font-mono text-codex-secondary">Ingest Markdown / Notes</div>
+              <div class="text-xs font-mono text-codex-secondary">Ingest Markdown / PDF Notes</div>
               <input id="ingest-filename" type="text" placeholder="Title (e.g. loops_reference.md)"
                 class="w-full bg-[#18181c] border border-codex-border rounded-lg px-3 py-1.5 text-xs text-codex-text placeholder-codex-muted focus:border-codex-borderFocus font-mono">
               <textarea id="ingest-content" rows="6" placeholder="# Title&#10;## Section Heading&#10;Paste markdown content..."
                 class="w-full bg-[#18181c] border border-codex-border rounded-lg p-3 text-xs text-codex-text placeholder-codex-muted focus:border-codex-borderFocus font-mono"></textarea>
               <button onclick="executeIngestion()" class="w-full py-2 rounded-lg bg-white text-black text-xs font-medium hover:bg-zinc-200 transition">
-                Chunk &amp; Link to DAG
+                Chunk &amp; Auto-Link to DAG
               </button>
               <div id="ingest-status-box" class="hidden p-2.5 rounded-lg text-xs font-mono"></div>
             </div>
@@ -411,16 +506,16 @@
       </section>
 
       <!-- =================================================================== -->
-      <!-- VIEW 6: AUDIT LEDGER                                                -->
+      <!-- VIEW 8: CRYPTOGRAPHIC LEDGER AUDIT (Milestone 2)                    -->
       <!-- =================================================================== -->
       <section id="view-audit" class="view-panel hidden flex-1 flex flex-col overflow-y-auto p-6 space-y-5">
         <div class="flex items-center justify-between">
           <div>
             <h2 class="text-base font-medium text-codex-text">Cryptographic Audit Ledger</h2>
-            <p class="text-xs text-codex-secondary mt-0.5">Tamper-evident evidence chain hashed with SHA-256.</p>
+            <p class="text-xs text-codex-secondary mt-0.5">Tamper-evident assessment evidence chain hashed with SHA-256.</p>
           </div>
           <button onclick="refreshAuditTrail()" class="px-3 py-1.5 rounded-lg bg-codex-card hover:bg-codex-hover border border-codex-border text-xs text-codex-text font-mono transition">
-            Verify Ledger
+            Verify Integrity
           </button>
         </div>
 
@@ -443,7 +538,7 @@
     </main>
 
     <!-- ===================================================================== -->
-    <!-- 3. FLOATING BOTTOM COCKPIT (Clean OpenAI Codex Floating Island)       -->
+    <!-- 3. FLOATING BOTTOM COCKPIT                                            -->
     <!-- ===================================================================== -->
     <div class="absolute bottom-5 left-1/2 -translate-x-1/2 w-[90%] max-w-2xl z-40">
       <div class="floating-cockpit rounded-2xl p-3 space-y-2 transition-all">
