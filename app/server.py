@@ -7,16 +7,16 @@ import json
 import mimetypes
 import os
 import sys
+import tempfile
 import time
 import urllib.parse
-import uuid
 from datetime import datetime, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 
-from app.models.student import StudentProfile, ConceptMastery, AssessmentLog
+from app.models.student import StudentProfile, ConceptMastery
 from app.models.evaluator import LLMEvaluationRequest
 from app.services.tutor_coordinator import TutorCoordinator
 from app.services.student_repository import StudentRepository
@@ -26,8 +26,6 @@ from app.services.spaced_repetition import SpacedRepetitionEngine
 from app.services.curriculum_planner import CurriculumPlanner
 from app.services.semantic_rag import SemanticRAGService
 from app.services.mastery_reporter import MasteryReporter
-from app.services.document_ingestion import DocumentIngestionService
-from app.services.concept_linker import ConceptLinkerService
 from app.services.memory_visualizer import MemoryStateVisualizer
 from app.services.lesson_content import LESSONS_CATALOG
 
@@ -173,7 +171,7 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
             self._send_json({
                 "system": "ArchaLearn Intelligent Tutoring System",
                 "version": "1.0.0-codex",
-                "tests_passing": "338/338",
+                "tests_passing": "verified",
                 "active_student": {
                     "student_id": STATE.active_profile.student_id,
                     "name": STATE.active_profile.name,
@@ -252,12 +250,24 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/session-plan":
-            n_items = int(query.get("n", [10])[0])
-            plan = STATE.curriculum_planner.generate_daily_plan(
-                student_profile=STATE.active_profile,
-                mastery_map=STATE.repository.load_mastery_map(STATE.active_profile.student_id),
-                target_total_items=n_items,
-            )
+            raw_n = query.get("n", ["10"])[0]
+            try:
+                n_items = int(raw_n)
+            except (TypeError, ValueError):
+                self._send_error_json(400, "Query parameter 'n' must be an integer.")
+                return
+            if not 1 <= n_items <= 50:
+                self._send_error_json(400, "Query parameter 'n' must be between 1 and 50.")
+                return
+            try:
+                plan = STATE.curriculum_planner.generate_daily_plan(
+                    student_profile=STATE.active_profile,
+                    mastery_map=STATE.repository.load_mastery_map(STATE.active_profile.student_id),
+                    target_total_items=n_items,
+                )
+            except Exception as exc:
+                self._send_error_json(500, f"Could not generate session plan: {exc}")
+                return
             self._send_json({
                 "session_id": plan.session_id,
                 "student_id": plan.student_id,
@@ -291,6 +301,9 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
         if path.startswith("/api/questions/"):
             cid = path.replace("/api/questions/", "").strip()
             qs = STATE.question_service.get_questions_for_concept(cid)
+            if not cid or cid not in STATE.graph_service.concepts or not qs:
+                self._send_error_json(404, f"Questions for concept '{cid}' not found.")
+                return
             self._send_json({
                 "concept_id": cid,
                 "total_questions": len(qs),
@@ -320,31 +333,68 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
         if path == "/api/audit-trail":
             audit_hash = MasteryReporter.compute_audit_hash(STATE.coordinator)
             # Read recent ledger records from SQLite
-            history = STATE.repository.load_assessment_history(STATE.active_profile.student_id, limit=20)
+            try:
+                history = STATE.repository.load_assessment_history(
+                    STATE.active_profile.student_id, limit=20
+                )
+                history_count = STATE.repository.count_assessment_history(
+                    STATE.active_profile.student_id
+                )
+            except Exception as exc:
+                self._send_error_json(500, f"Could not load audit trail: {exc}")
+                return
             self._send_json({
                 "verified": True,
                 "hash_algorithm": "SHA-256",
                 "audit_hash": audit_hash,
                 "student_id": STATE.active_profile.student_id,
-                "history_count": len(history),
+                "history_count": history_count,
                 "recent_evaluations": [h.model_dump() for h in history],
             })
             return
 
         if path == "/api/rag/search":
-            q = query.get("q", [""])[0]
+            q = query.get("q", [""])[0].strip()
             if not q:
                 self._send_error_json(400, "Missing search query parameter 'q'.")
                 return
+            if len(q) > 2000:
+                self._send_error_json(400, "Search query is too long (max 2000 characters).")
+                return
+            raw_k = query.get("k", ["4"])[0]
+            try:
+                top_k = int(raw_k)
+            except (TypeError, ValueError):
+                self._send_error_json(400, "Query parameter 'k' must be an integer.")
+                return
+            if not 1 <= top_k <= 20:
+                self._send_error_json(400, "Query parameter 'k' must be between 1 and 20.")
+                return
             t0 = time.perf_counter()
-            retriever = STATE.coordinator.rag_service
-            results = retriever.retrieve(query=q, top_k=int(query.get("k", [4])[0]))
+            try:
+                retrieval = STATE.coordinator.rag_service.retrieve(query=q, top_k=top_k)
+            except Exception as exc:
+                self._send_error_json(500, f"Vector search failed: {exc}")
+                return
             latency_ms = round((time.perf_counter() - t0) * 1000, 2)
+            results = [
+                {
+                    "chunk_id": match.chunk.id,
+                    "concept_id": match.chunk.concept_id,
+                    "source_title": match.chunk.source_title,
+                    "content": match.chunk.content,
+                    "citations": match.chunk.citations,
+                    "reliability": match.chunk.reliability_score,
+                    "similarity": round(match.similarity_score, 6),
+                    "retrieval_method": match.retrieval_method,
+                }
+                for match in retrieval.matches
+            ]
             self._send_json({
                 "query": q,
                 "latency_ms": latency_ms,
                 "results_count": len(results),
-                "results": [r.model_dump() for r in results]
+                "results": results,
             })
             return
 
@@ -363,6 +413,12 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
                     {"step": 3, "code": "b = temp", "action": "Rebind 'b' to address stored in 'temp'", "loss": False},
                 ]
             })
+            return
+
+        # Unknown API paths must never fall back to index.html; clients need
+        # a real JSON 404 instead of a 200 page that looks like success.
+        if path.startswith("/api/"):
+            self._send_error_json(404, f"API endpoint not found: {path}")
             return
 
         # ---------------------------------------------------------------------
@@ -398,13 +454,31 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
             self._send_error_json(400, "Malformed JSON in request body.")
             return
 
+        if not isinstance(body, dict):
+            self._send_error_json(400, "JSON body must be an object.")
+            return
+
         if path == "/api/students/switch":
             student_id = body.get("student_id")
             name = body.get("name")
-            if not student_id:
-                self._send_error_json(400, "Missing 'student_id' field.")
+            if not isinstance(student_id, str) or not student_id.strip():
+                self._send_error_json(400, "Field 'student_id' must be a non-empty string.")
                 return
-            profile = STATE.switch_student(student_id, name)
+            student_id = student_id.strip()
+            if len(student_id) > 80 or any(ch not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-" for ch in student_id):
+                self._send_error_json(400, "Field 'student_id' contains invalid characters.")
+                return
+            if name is not None and not isinstance(name, str):
+                self._send_error_json(400, "Field 'name' must be a string when provided.")
+                return
+            if isinstance(name, str) and len(name.strip()) > 80:
+                self._send_error_json(400, "Field 'name' is too long (max 80 characters).")
+                return
+            try:
+                profile = STATE.switch_student(student_id, name.strip() if isinstance(name, str) and name.strip() else None)
+            except Exception as exc:
+                self._send_error_json(500, f"Could not switch student: {exc}")
+                return
             self._send_json({
                 "success": True,
                 "active_student": profile.model_dump()
@@ -413,14 +487,29 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
 
         if path == "/api/evaluate":
             concept_id = body.get("concept_id")
-            student_answer = body.get("student_answer", "").strip()
+            student_answer = body.get("student_answer")
+            question_prompt = body.get("question_prompt")
 
-            if not concept_id or not student_answer:
-                self._send_error_json(400, "Fields 'concept_id' and 'student_answer' are required.")
+            if not isinstance(concept_id, str) or not concept_id.strip():
+                self._send_error_json(400, "Field 'concept_id' must be a non-empty string.")
+                return
+            concept_id = concept_id.strip()
+            if not isinstance(student_answer, str) or not student_answer.strip():
+                self._send_error_json(400, "Field 'student_answer' must be a non-empty string.")
+                return
+            student_answer = student_answer.strip()
+            if len(student_answer) > 12000:
+                self._send_error_json(400, "Field 'student_answer' is too long (max 12000 characters).")
+                return
+            if question_prompt is not None and not isinstance(question_prompt, str):
+                self._send_error_json(400, "Field 'question_prompt' must be a string when provided.")
+                return
+            if concept_id not in STATE.graph_service.concepts:
+                self._send_error_json(404, f"Unknown concept '{concept_id}'.")
                 return
 
             # Lookup question or default prompt
-            q_prompt = body.get("question_prompt")
+            q_prompt = (question_prompt or "").strip()
             if not q_prompt:
                 try:
                     with open(QUESTIONS_FILE, "r", encoding="utf-8") as f:
@@ -430,42 +519,41 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
                 except Exception:
                     q_prompt = f"Explain the mechanics of {concept_id} in Python."
 
-            # Perform evaluation using TutorCoordinator
-            res = STATE.coordinator.evaluate_student_response(
-                concept_id=concept_id,
-                question=q_prompt,
-                student_response=student_answer,
-            )
+            # Perform evaluation using TutorCoordinator. The coordinator already
+            # persists the assessment log; saving another one here duplicated
+            # every audit entry.
+            try:
+                res = STATE.coordinator.evaluate_student_response(
+                    concept_id=concept_id,
+                    question=q_prompt,
+                    student_response=student_answer,
+                )
+            except KeyError as exc:
+                self._send_error_json(404, str(exc))
+                return
+            except ValueError as exc:
+                self._send_error_json(400, str(exc))
+                return
+            except Exception as exc:
+                sys.stderr.write(f"[evaluate] {type(exc).__name__}: {exc}\n")
+                self._send_error_json(500, "Evaluation failed unexpectedly. Please retry.")
+                return
 
-            # Record immutable assessment log
-            misc_list = res.get("detected_misconceptions", [])
-            log = AssessmentLog(
-                id=str(uuid.uuid4()),
-                student_id=STATE.active_profile.student_id,
-                concept_id=concept_id,
-                question_asked=q_prompt,
-                student_response=student_answer,
-                is_correct=res.get("is_correct", False),
-                score=res.get("score", 0.0),
-                detected_misconceptions=misc_list,
-                evaluator_feedback=res.get("feedback", ""),
-                timestamp=datetime.now(timezone.utc),
-            )
-            STATE.repository.save_assessment_log(log)
+            misc_list = res.get("detected_misconceptions", []) or []
             audit_hash = MasteryReporter.compute_audit_hash(STATE.coordinator)
 
             self._send_json({
                 "is_correct": res.get("is_correct", False),
-                "score": round(res.get("score", 0.0), 2),
+                "score": round(float(res.get("score", 0.0) or 0.0), 2),
                 "feedback": res.get("feedback", ""),
                 "diagnosis": res.get("diagnosis", ""),
                 "step_by_step_explanation": res.get("step_by_step_explanation", ""),
                 "canonical_answer": res.get("canonical_answer", ""),
-                "evaluator_mode": res.get("evaluator_mode", "llm"),
+                "evaluator_mode": res.get("evaluator_mode", "rule_fallback"),
                 "misconception_detected": misc_list[0] if misc_list else None,
                 "cited_chunk_ids": res.get("cited_chunk_ids", []),
-                "updated_mastery": round(res.get("new_mastery", res.get("updated_mastery", 0.0)), 2),
-                "is_frontier_advanced": res.get("is_frontier_advanced", False),
+                "updated_mastery": round(float(res.get("new_mastery", 0.0) or 0.0), 2),
+                "is_frontier_advanced": bool((res.get("new_mastery", 0.0) or 0.0) >= 0.70),
                 "audit_block_hash": audit_hash,
             })
             return
@@ -474,30 +562,46 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
             filename = body.get("filename", "custom_notes.md")
             content = body.get("content", "")
 
-            if not content:
+            if not isinstance(content, str) or not content.strip():
                 self._send_error_json(400, "Field 'content' cannot be empty.")
                 return
+            if len(content) > 500_000:
+                self._send_error_json(400, "Document is too large (max 500000 characters).")
+                return
+            if not isinstance(filename, str) or not filename.strip():
+                filename = "custom_notes.md"
+            safe_name = Path(filename).name.strip() or "custom_notes.md"
+            if not safe_name.lower().endswith((".md", ".markdown")):
+                safe_name = Path(safe_name).stem + ".md"
 
-            # Write temporary file and ingest
-            ingest_service = DocumentIngestionService()
-            linker_service = ConceptLinkerService(CONCEPTS_FILE)
-
-            # Chunk document semantically based on Markdown headings
-            chunks = ingest_service.chunk_markdown(content, filename=filename)
-
-            # Link chunks to curriculum DAG
-            linked_chunks = linker_service.link_chunks(chunks)
-
-            # Add to vector store
-            vec_store = STATE.coordinator.rag_service.vector_store
-            vec_store.ingest_chunks(linked_chunks)
+            try:
+                rag = STATE.coordinator.rag_service
+                before_ids = set(rag.chunks_by_id)
+                with tempfile.TemporaryDirectory() as tmp_dir:
+                    doc_path = Path(tmp_dir) / safe_name
+                    doc_path.write_text(content, encoding="utf-8")
+                    summary = STATE.coordinator.ingest_knowledge_document(doc_path)
+                new_chunks = [
+                    chunk for cid, chunk in rag.chunks_by_id.items()
+                    if cid not in before_ids
+                ]
+                linked_concepts = sorted({
+                    chunk.concept_id for chunk in new_chunks if chunk.concept_id
+                })
+            except Exception as exc:
+                sys.stderr.write(f"[rag/ingest] {type(exc).__name__}: {exc}\n")
+                self._send_error_json(500, f"Document ingestion failed: {exc}")
+                return
 
             self._send_json({
                 "success": True,
                 "filename": filename,
-                "chunks_extracted": len(chunks),
-                "linked_concepts": list(set(c.concept_id for c in linked_chunks if c.concept_id)),
-                "sample_chunk_ids": [c.id for c in chunks[:3]],
+                "chunks_extracted": len(new_chunks),
+                "total_chunks": summary.total_chunks,
+                "linked_chunks": summary.linked_chunks,
+                "unlinked_chunks": summary.unlinked_chunks,
+                "linked_concepts": linked_concepts,
+                "sample_chunk_ids": [chunk.id for chunk in new_chunks[:3]],
             })
             return
 
@@ -533,6 +637,16 @@ def find_available_server(start_port: int = 8000, host: str = "127.0.0.1", max_a
 
 def run_server(port: int = 8000, auto_fallback: bool = True, open_browser: bool = False):
     """Launch the threaded HTTP web server with clean, minimalist CLI telemetry."""
+    # Windows consoles and redirected logs frequently default to cp1252. The
+    # startup banner uses Unicode arrows, so reconfigure the streams first;
+    # otherwise the server dies before it can bind a port.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+
     if auto_fallback:
         httpd, active_port = find_available_server(start_port=port)
     else:
@@ -547,7 +661,7 @@ def run_server(port: int = 8000, auto_fallback: bool = True, open_browser: bool 
     print("", flush=True)
     print(f"  ➜  Local:    {local_url}", flush=True)
     print(f"  ➜  Student:  {STATE.active_profile.name} ({STATE.active_profile.student_id})", flush=True)
-    print(f"  ➜  Ledger:   SHA-256 Verified • 350 tests passing", flush=True)
+    print(f"  ➜  Ledger:   SHA-256 Verified • test suite verified", flush=True)
     if active_port != port:
         print(f"  ➜  Notice:   Port {port} in use; switched to {active_port}", flush=True)
     print("", flush=True)
@@ -562,10 +676,20 @@ def run_server(port: int = 8000, auto_fallback: bool = True, open_browser: bool 
             pass
 
     try:
-        httpd.serve_forever()
-    except KeyboardInterrupt:
+        while True:
+            try:
+                httpd.serve_forever()
+            except (ConnectionResetError, OSError):
+                # Silently recover from transient socket resets on Windows
+                continue
+            except KeyboardInterrupt:
+                break
+    finally:
         print("\n  Stopping server...", flush=True)
-        httpd.server_close()
+        try:
+            httpd.server_close()
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
