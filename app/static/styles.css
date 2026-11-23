@@ -1,0 +1,71 @@
+/* ArchaLearn Codex Dark Studio Custom Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --codex-bg: #141416;
+  --codex-sidebar: #1a1a1e;
+  --codex-panel: #222226;
+  --codex-card: #29292e;
+  --codex-border: #33333b;
+  --codex-accent: #06b6d4;
+  --codex-emerald: #10b981;
+  --codex-amber: #f59e0b;
+}
+
+body {
+  background-color: var(--codex-bg);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #e4e4e7;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Animation Canvas Containers */
+.anim-box {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Pulse animation for active nodes */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+.pulse-active {
+  animation: pulse-subtle 2.5s infinite ease-in-out;
+}
+
+/* Glass effect */
+.glass-cockpit {
+  background: rgba(41, 41, 46, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Active Navigation Icon */
+.nav-active {
+  background-color: #222226 !important;
+  color: #06b6d4 !important;
+  border-color: rgba(6, 182, 212, 0.4) !important;
+}
+
+/* Code container syntax styling */
+pre code {
+  font-family: 'JetBrains Mono', Consolas, monospace;
+}

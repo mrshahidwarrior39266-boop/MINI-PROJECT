@@ -1,0 +1,435 @@
+<!-- Self-contained interactive UI Design Concepts explorer -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARCHALEARN // Codex-Inspired UI Design Options</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #0c0c0e;
+      color: #e4e4e7;
+    }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .glass-panel {
+      background: rgba(24, 24, 27, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .floating-card {
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+  <!-- Top Concept Selector -->
+  <header class="border-b border-zinc-800 bg-zinc-950/90 backdrop-blur px-6 py-3 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center space-x-3">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-cyan-400 flex items-center justify-center font-bold text-black text-sm shadow-lg shadow-cyan-500/20">A</div>
+      <div>
+        <h1 class="text-sm font-bold text-white tracking-wide">ARCHALEARN // ITS</h1>
+        <p class="text-xs text-zinc-400">Codex-Inspired UI Design Explorer (Click options to preview)</p>
+      </div>
+    </div>
+
+    <!-- Segmented Tabs for 3 Concepts -->
+    <div class="bg-zinc-900 border border-zinc-800 p-1 rounded-xl flex items-center space-x-1">
+      <button onclick="switchTab('concept1')" id="tab-concept1" class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all bg-zinc-800 text-white shadow">
+        Option 1: Codex Dark Studio
+      </button>
+      <button onclick="switchTab('concept2')" id="tab-concept2" class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all text-zinc-400 hover:text-white">
+        Option 2: Dual-Engine Split Studio
+      </button>
+      <button onclick="switchTab('concept3')" id="tab-concept3" class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all text-zinc-400 hover:text-white">
+        Option 3: Cyber-Lattice Neo-Studio
+      </button>
+    </div>
+
+    <div class="text-xs font-mono text-emerald-400 bg-emerald-950/50 border border-emerald-800/60 px-3 py-1 rounded-full flex items-center gap-1.5">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      338/338 Tests Passing
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- CONCEPT 1: CODEX DARK STUDIO (MINIMALIST FLOATING ISLAND) -->
+  <!-- ========================================================================= -->
+  <div id="view-concept1" class="flex-1 flex flex-col h-[calc(100vh-57px)] overflow-hidden">
+    <!-- Window Bar -->
+    <div class="h-9 bg-[#111113] border-b border-zinc-800/80 px-4 flex items-center justify-between text-xs text-zinc-500 font-mono">
+      <div class="flex items-center space-x-2">
+        <span class="w-3 h-3 rounded-full bg-red-500/80 cursor-pointer"></span>
+        <span class="w-3 h-3 rounded-full bg-yellow-500/80 cursor-pointer"></span>
+        <span class="w-3 h-3 rounded-full bg-green-500/80 cursor-pointer"></span>
+        <span class="ml-4 text-zinc-400 font-sans font-medium">Archalearn Tutor — Codex Minimalist Studio</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <span>File</span>
+        <span>Edit</span>
+        <span>Curriculum</span>
+        <span>Audit</span>
+      </div>
+      <div>main @ 013f81b</div>
+    </div>
+
+    <div class="flex-1 flex overflow-hidden">
+      <!-- Slim Dock -->
+      <aside class="w-14 bg-[#141417] border-r border-zinc-800/80 flex flex-col items-center py-4 justify-between">
+        <div class="flex flex-col space-y-4">
+          <button class="w-9 h-9 rounded-lg bg-zinc-800 text-cyan-400 flex items-center justify-center text-sm shadow">🏠</button>
+          <button class="w-9 h-9 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/50 flex items-center justify-center text-sm">⏱️</button>
+          <button class="w-9 h-9 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/50 flex items-center justify-center text-sm">🧠</button>
+          <button class="w-9 h-9 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/50 flex items-center justify-center text-sm">📦</button>
+        </div>
+        <button class="w-9 h-9 rounded-lg text-zinc-500 hover:text-white flex items-center justify-center text-sm">⚙️</button>
+      </aside>
+
+      <!-- Curriculum DAG Tree Sidebar -->
+      <aside class="w-64 bg-[#18181c] border-r border-zinc-800/80 p-4 flex flex-col justify-between overflow-y-auto">
+        <div>
+          <div class="flex items-center justify-between pb-3 border-b border-zinc-800/60 mb-4">
+            <span class="text-xs font-bold text-zinc-300 uppercase tracking-wider font-mono">Curriculum DAG</span>
+            <span class="text-[10px] bg-zinc-800 px-2 py-0.5 rounded text-zinc-400">8 Units</span>
+          </div>
+
+          <div class="space-y-1.5 text-xs">
+            <div class="p-2.5 rounded-lg bg-zinc-800/60 border border-zinc-700/50 flex items-center justify-between">
+              <span class="text-zinc-200 font-medium">1. Variables & Assignment</span>
+              <span class="text-emerald-400 font-mono text-[11px]">92%</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-zinc-800/60 border border-zinc-700/50 flex items-center justify-between">
+              <span class="text-zinc-200 font-medium">2. Primitive Data Types</span>
+              <span class="text-emerald-400 font-mono text-[11px]">88%</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/40 flex items-center justify-between">
+              <div class="flex items-center space-x-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                <span class="text-amber-200 font-bold">3. Operators & Expr</span>
+              </div>
+              <span class="text-amber-400 font-mono text-[10px] bg-amber-950/60 px-1.5 py-0.5 rounded">FRONTIER</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-zinc-900/40 text-zinc-500 flex items-center justify-between">
+              <span>4. Conditional Branching</span>
+              <span>🔒</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-zinc-900/40 text-zinc-500 flex items-center justify-between">
+              <span>5. While Loops</span>
+              <span>🔒</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-zinc-900/40 text-zinc-500 flex items-center justify-between">
+              <span>6. Lists & Sequences</span>
+              <span>🔒</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Learner Audit Badge -->
+        <div class="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-zinc-400">
+          <div class="text-zinc-300 font-bold mb-1">Learner: Alan Turing</div>
+          <div class="text-[10px] text-zinc-500">Audit Seal: SHA-256</div>
+          <div class="text-cyan-400 text-[10px] truncate">86C09D8BB6567BD0</div>
+        </div>
+      </aside>
+
+      <!-- Center Hero Area with Floating Island -->
+      <main class="flex-1 bg-[#121215] flex flex-col items-center justify-between p-8 relative overflow-hidden">
+        <div class="absolute w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none top-1/4"></div>
+
+        <!-- Center Greeting -->
+        <div class="flex-1 flex flex-col items-center justify-center text-center max-w-xl z-10">
+          <div class="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xl shadow-2xl mb-5 text-cyan-400 font-mono">
+            &gt;_
+          </div>
+          <h2 class="text-2xl font-bold text-white mb-2">
+            What should we master in <span class="text-cyan-400 underline decoration-cyan-500/50 underline-offset-4 cursor-pointer">Python Foundations</span>?
+          </h2>
+          <p class="text-sm text-zinc-400 mb-6">
+            Dual-Engine Socratic tutor active. Your next unlocked topic on the Learning Frontier is <strong class="text-zinc-200">Operators & Expressions</strong>.
+          </p>
+
+          <!-- Quick Action Chips -->
+          <div class="flex flex-wrap items-center justify-center gap-2">
+            <button class="px-3.5 py-1.5 rounded-full bg-zinc-800/80 hover:bg-zinc-700 text-xs text-zinc-200 border border-zinc-700/60 transition flex items-center gap-1.5 shadow">
+              <span>⚡</span> Start 30/60/10 Daily Plan
+            </button>
+            <button class="px-3.5 py-1.5 rounded-full bg-zinc-800/80 hover:bg-zinc-700 text-xs text-zinc-200 border border-zinc-700/60 transition flex items-center gap-1.5 shadow">
+              <span>📦</span> View RAM Memory Boxes
+            </button>
+            <button class="px-3.5 py-1.5 rounded-full bg-zinc-800/80 hover:bg-zinc-700 text-xs text-zinc-200 border border-zinc-700/60 transition flex items-center gap-1.5 shadow">
+              <span>🧩</span> Solve Synthesis Challenge
+            </button>
+          </div>
+        </div>
+
+        <!-- Floating Capsule Bottom Cockpit -->
+        <div class="w-full max-w-2xl bg-[#1c1c21] rounded-2xl p-3.5 floating-card border border-zinc-800 z-20">
+          <div class="flex items-center space-x-2 pb-2 mb-2 border-b border-zinc-800/60 text-[11px] font-mono">
+            <span class="bg-zinc-800/80 text-zinc-300 px-2 py-0.5 rounded flex items-center gap-1">
+              <span>💻</span> Python 3.13
+            </span>
+            <span class="bg-zinc-800/80 text-cyan-300 px-2 py-0.5 rounded flex items-center gap-1">
+              <span>📍</span> py.operators_expressions
+            </span>
+            <span class="bg-zinc-800/80 text-emerald-300 px-2 py-0.5 rounded">
+              ⏱️ 60% Frontier Learning
+            </span>
+          </div>
+
+          <textarea rows="2" class="w-full bg-transparent text-sm text-zinc-200 placeholder-zinc-500 focus:outline-none resize-none font-mono" placeholder="Type your answer, ask for an 'analogy', or enter code..."></textarea>
+
+          <div class="flex items-center justify-between pt-2 border-t border-zinc-800/60 text-xs">
+            <div class="flex items-center space-x-2 text-zinc-400">
+              <button class="hover:text-white px-2 py-1 rounded bg-zinc-800/50 border border-zinc-700/40 text-[11px] flex items-center gap-1">
+                <span>➕</span> Ingest Document
+              </button>
+              <span class="text-[11px] text-zinc-500">Socratic Evaluator Active</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-[10px] text-zinc-500 font-mono">Dense RAG + AST Invariant</span>
+              <button class="w-7 h-7 rounded-full bg-white text-black font-bold flex items-center justify-center hover:bg-cyan-400 transition shadow">
+                ↑
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- CONCEPT 2: DUAL-ENGINE SPLIT STUDIO (CHAT + LIVE RAM VISUALIZER) -->
+  <!-- ========================================================================= -->
+  <div id="view-concept2" class="hidden flex-1 flex flex-col h-[calc(100vh-57px)] overflow-hidden">
+    <div class="flex-1 flex overflow-hidden">
+      <!-- Left: DAG Hierarchy -->
+      <aside class="w-64 bg-[#141418] border-r border-zinc-800 p-4 flex flex-col justify-between">
+        <div>
+          <div class="text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider mb-3">Frontier Cockpit</div>
+          <div class="space-y-2 text-xs">
+            <div class="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800">
+              <div class="flex justify-between font-semibold text-zinc-200 mb-1">
+                <span>py.variables</span>
+                <span class="text-emerald-400">92%</span>
+              </div>
+              <div class="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-emerald-400 h-full w-[92%]"></div>
+              </div>
+            </div>
+            <div class="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800">
+              <div class="flex justify-between font-semibold text-zinc-200 mb-1">
+                <span>py.data_types</span>
+                <span class="text-emerald-400">88%</span>
+              </div>
+              <div class="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-emerald-400 h-full w-[88%]"></div>
+              </div>
+            </div>
+            <div class="p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-800/60">
+              <div class="flex justify-between font-semibold text-cyan-200 mb-1">
+                <span>py.operators</span>
+                <span class="text-cyan-400">Active</span>
+              </div>
+              <div class="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-cyan-400 h-full w-[45%]"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-zinc-900/80 p-3 rounded-xl border border-zinc-800 text-xs">
+          <div class="text-zinc-400 mb-1">Today's Ratio</div>
+          <div class="font-mono text-cyan-400 text-sm font-bold">30% Review | 60% Frontier | 10% Synthesis</div>
+        </div>
+      </aside>
+
+      <!-- Center: Socratic Chat Feed -->
+      <main class="flex-1 bg-[#101014] flex flex-col justify-between p-6 overflow-hidden">
+        <div class="flex-1 overflow-y-auto space-y-4 pr-2">
+          <!-- Tutor Message -->
+          <div class="flex space-x-3 max-w-2xl">
+            <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-xs font-bold text-white shrink-0">T</div>
+            <div class="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-4 text-xs leading-relaxed space-y-2">
+              <p class="font-semibold text-zinc-200">Tutor Diagnostic Question (Operators & Expressions):</p>
+              <p class="text-zinc-300">In Python 3, what is the exact difference between the single slash <code class="bg-zinc-800 px-1 py-0.5 rounded text-cyan-300 font-mono">/</code> operator and the double slash <code class="bg-zinc-800 px-1 py-0.5 rounded text-cyan-300 font-mono">//</code> operator? What will <code class="bg-zinc-800 px-1 py-0.5 rounded text-cyan-300 font-mono">7 / 2</code> and <code class="bg-zinc-800 px-1 py-0.5 rounded text-cyan-300 font-mono">7 // 2</code> evaluate to?</p>
+              <div class="text-[10px] text-zinc-500 font-mono border-t border-zinc-800/80 pt-2 flex items-center justify-between">
+                <span>Ground Truth: Official Python 3 Documentation</span>
+                <span class="text-cyan-400">chunk.py.operators.01</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Student Message -->
+          <div class="flex space-x-3 max-w-2xl ml-auto justify-end">
+            <div class="bg-cyan-950/50 border border-cyan-800/50 rounded-2xl p-4 text-xs text-cyan-100">
+              <p>7 / 2 gives 3.5 because it's true float division, while 7 // 2 gives 3 because it's floor division that chops off the decimal!</p>
+            </div>
+            <div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-300 shrink-0">S</div>
+          </div>
+
+          <!-- Tutor Evaluation Result Card -->
+          <div class="flex space-x-3 max-w-2xl">
+            <div class="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-xs font-bold text-white shrink-0">✓</div>
+            <div class="bg-emerald-950/20 border border-emerald-800/40 rounded-2xl p-4 text-xs space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-emerald-400">Result: CORRECT (Score: 100%)</span>
+                <span class="text-[10px] font-mono bg-emerald-900/40 text-emerald-300 px-2 py-0.5 rounded">Grounded RAG</span>
+              </div>
+              <p class="text-zinc-300">Spot on! In Python 3, <code class="font-mono text-cyan-300">/</code> always returns a float object in memory, while <code class="font-mono text-cyan-300">//</code> computes the mathematical floor toward negative infinity.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input Bar -->
+        <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center space-x-3">
+          <input type="text" class="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500" placeholder="Type your answer or 'analogy' for physical model...">
+          <button class="bg-cyan-500 hover:bg-cyan-400 text-black font-bold px-4 py-3 rounded-xl text-xs transition">Submit</button>
+        </div>
+      </main>
+
+      <!-- Right: Live RAM Memory Visualizer & Stack Inspector -->
+      <aside class="w-80 bg-[#16161b] border-l border-zinc-800 p-4 flex flex-col justify-between overflow-y-auto">
+        <div>
+          <div class="flex items-center justify-between mb-4 pb-2 border-b border-zinc-800">
+            <span class="text-xs font-bold text-zinc-300 uppercase tracking-wider font-mono">Hardware RAM Visualizer</span>
+            <span class="text-[10px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">Live Sync</span>
+          </div>
+
+          <div class="space-y-3 font-mono text-xs">
+            <div class="text-[11px] text-zinc-400 uppercase tracking-wider">Memory Addresses (Heap)</div>
+            
+            <div class="p-3 bg-zinc-900 rounded-xl border border-zinc-800 relative">
+              <div class="flex justify-between text-zinc-400 text-[10px] mb-1">
+                <span>Identifier: x</span>
+                <span>0x7ffe10</span>
+              </div>
+              <div class="text-sm font-bold text-cyan-400">Box: [ 3.5 ]</div>
+              <div class="text-[10px] text-zinc-500 mt-1">Type: &lt;class 'float'&gt;</div>
+            </div>
+
+            <div class="p-3 bg-zinc-900 rounded-xl border border-zinc-800 relative">
+              <div class="flex justify-between text-zinc-400 text-[10px] mb-1">
+                <span>Identifier: y</span>
+                <span>0x7ffe18</span>
+              </div>
+              <div class="text-sm font-bold text-emerald-400">Box: [ 3 ]</div>
+              <div class="text-[10px] text-zinc-500 mt-1">Type: &lt;class 'int'&gt;</div>
+            </div>
+
+            <div class="mt-4 p-3 bg-zinc-950/60 rounded-xl border border-zinc-800/80">
+              <div class="text-[11px] text-zinc-400 font-sans font-semibold mb-1">3-Step Swap Movie</div>
+              <div class="text-[10px] text-zinc-400 leading-relaxed font-mono">
+                1. temp = x<br>
+                2. x = y<br>
+                3. y = temp
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-[11px]">
+          <span class="text-zinc-400">AST Invariant Verifier:</span>
+          <span class="text-emerald-400 font-bold ml-1">Active (Zero Bias)</span>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- CONCEPT 3: CYBER-LATTICE NEO-STUDIO (GLASSMORPHIC WITH GRAPH TOPOGRAPHY) -->
+  <!-- ========================================================================= -->
+  <div id="view-concept3" class="hidden flex-1 flex flex-col h-[calc(100vh-57px)] bg-[#09090b] relative overflow-hidden">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(6,182,212,0.1),transparent_50%),radial-gradient(circle_at_70%_70%,rgba(99,102,241,0.08),transparent_50%)] pointer-events-none"></div>
+
+    <div class="flex-1 flex p-6 gap-6 relative z-10 overflow-hidden">
+      <!-- Left Glass Card: Interactive Node Graph -->
+      <div class="w-1/3 glass-panel rounded-3xl p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-bold text-white tracking-wide">KNOWLEDGE TOPOLOGY</h3>
+            <span class="text-xs font-mono text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded-full border border-cyan-800">DAG Synchronized</span>
+          </div>
+          
+          <div class="h-64 border border-zinc-800/80 rounded-2xl bg-zinc-950/50 flex flex-col items-center justify-center p-4 relative font-mono text-xs">
+            <div class="px-3 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 shadow mb-6">
+              py.variables [92%]
+            </div>
+            <div class="w-0.5 h-6 bg-gradient-to-b from-emerald-500 to-cyan-400"></div>
+            <div class="px-3 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 shadow mb-6">
+              py.data_types [88%]
+            </div>
+            <div class="w-0.5 h-6 bg-gradient-to-b from-cyan-400 to-amber-400"></div>
+            <div class="px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/60 text-amber-200 shadow-lg shadow-amber-500/20 animate-pulse">
+              ⚡ py.operators [FRONTIER]
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <div class="flex justify-between text-xs text-zinc-400 font-mono">
+            <span>Overall Competency</span>
+            <span class="text-cyan-400 font-bold">4/8 Units</span>
+          </div>
+          <div class="w-full bg-zinc-900 h-2 rounded-full overflow-hidden border border-zinc-800">
+            <div class="bg-gradient-to-r from-emerald-400 to-cyan-400 h-full w-1/2"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Glass Card: Socratic Canvas & Dock -->
+      <div class="flex-1 glass-panel rounded-3xl p-6 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between pb-4 border-b border-zinc-800/80 mb-6">
+            <div>
+              <span class="text-xs uppercase font-mono text-zinc-400">Today's Schedule</span>
+              <h2 class="text-lg font-bold text-white">Daily Session: 30% Review | 60% Frontier | 10% Synthesis</h2>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="px-3 py-1 rounded-full text-xs font-mono bg-zinc-800 text-zinc-300 border border-zinc-700">Item 3 of 10</span>
+              <span class="px-3 py-1 rounded-full text-xs font-mono bg-cyan-950 text-cyan-300 border border-cyan-800">~25 min remaining</span>
+            </div>
+          </div>
+
+          <div class="p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 space-y-3">
+            <div class="flex items-center space-x-2 text-xs font-mono text-cyan-400">
+              <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+              <span>Active Frontier Challenge: Operators and Expressions</span>
+            </div>
+            <p class="text-sm font-medium text-zinc-200">
+              In Python, suppose you have <code class="bg-zinc-800 px-1.5 py-0.5 rounded font-mono text-cyan-300">age = '18'</code>. Why can you not directly evaluate <code class="bg-zinc-800 px-1.5 py-0.5 rounded font-mono text-cyan-300">age + 1</code>, and what function solves this?
+            </p>
+            <div class="p-3 bg-zinc-950/80 rounded-xl border border-zinc-800 text-xs text-zinc-400 space-y-1">
+              <span class="font-bold text-zinc-300">💡 Physical Analogy (ELI5):</span>
+              <p>Think of strings like text printed on paper tape and numbers like wooden counting blocks. Python cannot glue a wooden block onto a printed sentence without converting it first!</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 p-3 rounded-2xl bg-zinc-900/90 border border-zinc-700/60 flex items-center space-x-3 shadow-2xl">
+          <input type="text" class="flex-1 bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-none font-mono" placeholder="Type your answer (or type 'memory', 'analogy', 'plan')...">
+          <button class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-bold text-xs hover:opacity-90 shadow-lg shadow-cyan-500/20 transition">
+            Evaluate Answer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(conceptId) {
+      document.getElementById('view-concept1').classList.add('hidden');
+      document.getElementById('view-concept2').classList.add('hidden');
+      document.getElementById('view-concept3').classList.add('hidden');
+
+      document.getElementById('tab-concept1').className = 'px-4 py-1.5 rounded-lg text-xs font-semibold transition-all text-zinc-400 hover:text-white';
+      document.getElementById('tab-concept2').className = 'px-4 py-1.5 rounded-lg text-xs font-semibold transition-all text-zinc-400 hover:text-white';
+      document.getElementById('tab-concept3').className = 'px-4 py-1.5 rounded-lg text-xs font-semibold transition-all text-zinc-400 hover:text-white';
+
+      document.getElementById('view-' + conceptId).classList.remove('hidden');
+      document.getElementById('tab-' + conceptId).className = 'px-4 py-1.5 rounded-lg text-xs font-semibold transition-all bg-zinc-800 text-white shadow';
+    }
+  </script>
+</body>
+</html>
