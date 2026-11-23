@@ -54,6 +54,10 @@ class LLMEvaluationResponse(BaseModel):
         default=None,
         description="A targeted transfer question or challenge to verify understanding"
     )
+    canonical_answer: Optional[str] = Field(
+        default="",
+        description="Canonical correct solution or mechanism explanation"
+    )
     evaluator_mode: Literal["llm_direct", "llm_rag_grounded", "rule_fallback", "mock"] = "llm_rag_grounded"
     confidence_score: float = Field(default=1.0, ge=0.0, le=1.0)
 

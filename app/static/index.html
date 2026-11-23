@@ -301,30 +301,54 @@
 
           <!-- STAGE 2: SOCRATIC PRACTICE CHECKPOINT (Directly follows the video) -->
           <div id="socratic-practice-section" class="p-5 rounded-xl bg-codex-card border border-codex-border space-y-3">
-            <div class="flex items-center justify-between text-xs">
+            <div class="flex items-center justify-between text-xs pb-1.5 border-b border-codex-border">
               <div class="flex items-center space-x-2">
                 <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                 <span class="font-medium text-white">Socratic Practice Checkpoint</span>
+                <div class="flex items-center space-x-1">
+                  <button onclick="prevQuestion()" id="btn-prev-question" title="Previous Question" class="px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-[10px] font-mono transition">&lt;</button>
+                  <span id="question-counter-pill" class="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 border border-cyan-800/40 px-2 py-0.5 rounded">Question 1 of 1</span>
+                  <button onclick="nextQuestion()" id="btn-next-question" title="Next Question" class="px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-[10px] font-mono transition">&gt;</button>
+                </div>
               </div>
-              <span class="text-[11px] text-codex-muted font-mono">Enforced Citations</span>
+              <div class="flex items-center space-x-3 text-[11px] font-mono">
+                <button onclick="toggleHint()" id="btn-show-hint" class="text-amber-400/90 hover:text-amber-300 transition flex items-center space-x-1">
+                  <span>💡</span><span>Need a Hint?</span>
+                </button>
+                <span class="text-codex-muted hidden sm:inline">Enforced Citations</span>
+              </div>
             </div>
 
-            <p class="text-xs text-codex-text leading-relaxed" id="lesson-diagnostic-prompt"></p>
+            <!-- Optional Collapsible Hint Box -->
+            <div id="question-hint-box" class="hidden p-3 rounded-lg bg-amber-950/30 border border-amber-500/40 text-xs text-amber-200/90 font-sans leading-relaxed">
+              <span class="font-mono text-amber-400 font-bold text-[10px] uppercase">Guidance Hint:</span>
+              <p id="question-hint-text" class="mt-0.5"></p>
+            </div>
+
+            <p class="text-xs text-codex-text leading-relaxed font-medium" id="lesson-diagnostic-prompt"></p>
 
             <div class="space-y-2">
               <textarea id="lesson-answer-input" rows="3" placeholder="Now that you've watched the explainer video, explain the mechanism in your own words..."
                 class="w-full bg-[#18181c] border border-codex-border rounded-lg p-3 text-xs text-codex-text placeholder-codex-muted focus:border-codex-borderFocus font-sans transition"></textarea>
               
               <div class="flex items-center justify-between pt-1">
-                <span class="text-[11px] font-mono text-codex-muted">Socratic Evaluator with RAG Provenance</span>
-                <button onclick="submitLessonAnswer()" id="lesson-submit-btn" class="px-4 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-zinc-200 transition">
-                  Evaluate Answer
-                </button>
+                <div class="flex items-center space-x-2">
+                  <span class="text-[11px] font-mono text-codex-muted">Socratic Evaluator with RAG Provenance</span>
+                  <span class="text-[10px] font-mono text-zinc-500 hidden sm:inline">(Ctrl+Enter to evaluate)</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <button onclick="nextQuestion()" id="btn-skip-question" class="px-3 py-1.5 rounded-lg bg-[#24242a] hover:bg-[#2e2e36] text-zinc-400 hover:text-white text-xs font-mono transition">
+                    Skip to Next &rarr;
+                  </button>
+                  <button onclick="submitLessonAnswer()" id="lesson-submit-btn" class="px-4 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-zinc-200 transition">
+                    Evaluate Answer
+                  </button>
+                </div>
               </div>
             </div>
 
             <!-- Evaluation Feedback Card -->
-            <div id="lesson-eval-feedback-card" class="hidden p-3.5 rounded-lg text-xs space-y-1.5 transition-all"></div>
+            <div id="lesson-eval-feedback-card" class="hidden p-4 rounded-xl text-xs space-y-3 transition-all"></div>
           </div>
 
           <!-- COLLAPSIBLE REFERENCE: THEORY, ANALOGY & CODE -->

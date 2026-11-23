@@ -288,6 +288,26 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
                 self._send_error_json(404, f"Lesson for concept '{cid}' not found.")
             return
 
+        if path.startswith("/api/questions/"):
+            cid = path.replace("/api/questions/", "").strip()
+            qs = STATE.question_service.get_questions_for_concept(cid)
+            self._send_json({
+                "concept_id": cid,
+                "total_questions": len(qs),
+                "questions": [
+                    {
+                        "id": q.id,
+                        "prompt": q.prompt,
+                        "hint": q.hint,
+                        "canonical_answer": q.canonical_answer,
+                        "explanation": q.explanation,
+                        "has_followup": q.followup is not None,
+                    }
+                    for q in qs
+                ]
+            })
+            return
+
         if path == "/api/synthesis-challenges":
             try:
                 with open(SYNTHESIS_FILE, "r", encoding="utf-8") as f:
@@ -438,6 +458,9 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
                 "is_correct": res.get("is_correct", False),
                 "score": round(res.get("score", 0.0), 2),
                 "feedback": res.get("feedback", ""),
+                "diagnosis": res.get("diagnosis", ""),
+                "step_by_step_explanation": res.get("step_by_step_explanation", ""),
+                "canonical_answer": res.get("canonical_answer", ""),
                 "evaluator_mode": res.get("evaluator_mode", "llm"),
                 "misconception_detected": misc_list[0] if misc_list else None,
                 "cited_chunk_ids": res.get("cited_chunk_ids", []),

@@ -238,6 +238,7 @@ class TutorCoordinator:
             "diagnosis": eval_response.diagnosis,
             "feedback": eval_response.feedback,
             "step_by_step_explanation": eval_response.step_by_step_explanation,
+            "canonical_answer": getattr(eval_response, "canonical_answer", ""),
             "cited_chunk_ids": eval_response.cited_chunk_ids,
             "follow_up_challenge": eval_response.follow_up_challenge,
             "evaluator_mode": eval_response.evaluator_mode,

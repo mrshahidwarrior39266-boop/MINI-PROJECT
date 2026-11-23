@@ -17,7 +17,19 @@ const state = {
   auditHash: '',
   swapStep: 1,
   socraticChat: [],
+  conceptQuestions: [],
+  currentQuestionIdx: 0,
 };
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 // ---------------------------------------------------------------------------
 // 1. INITIALIZATION & LIFECYCLE
@@ -29,6 +41,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   await fetchRamState();
   initSwapStage();
   initSocraticLab();
+
+  // Keyboard shortcut: Ctrl+Enter or Cmd+Enter to evaluate answer
+  const lessonInput = document.getElementById('lesson-answer-input');
+  if (lessonInput) {
+    lessonInput.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        submitLessonAnswer();
+      }
+    });
+  }
 });
 
 async function fetchSystemStatus() {
@@ -295,11 +318,33 @@ async function loadLesson(conceptId) {
       window.videoEngine.loadStoryboard(conceptId);
     }
 
-    // 2. Populate Socratic Diagnostic Question
-    const promptEl = document.getElementById('lesson-diagnostic-prompt');
-    if (promptEl) {
-      promptEl.innerText = lesson.diagnostic_prompt || `Explain how ${concept.title} operates in Python memory.`;
+    // 2. Fetch Concept Questions for Multi-Question Progression
+    try {
+      const qRes = await fetch(`/api/questions/${conceptId}`);
+      if (qRes.ok) {
+        const qData = await qRes.json();
+        state.conceptQuestions = (qData && qData.questions && qData.questions.length > 0) ? qData.questions : [];
+      } else {
+        state.conceptQuestions = [];
+      }
+    } catch (qErr) {
+      console.warn('Could not fetch questions, falling back to lesson prompt:', qErr);
+      state.conceptQuestions = [];
     }
+
+    // Fallback to lesson diagnostic prompt if no questions returned
+    if (!state.conceptQuestions || state.conceptQuestions.length === 0) {
+      state.conceptQuestions = [{
+        id: `${conceptId}_q1`,
+        prompt: lesson.diagnostic_prompt || `Explain how ${concept.title} operates in Python memory.`,
+        hint: "Review the theory and mental metaphor above.",
+        canonical_answer: lesson.code_example || "Refer to reference syntax above.",
+        explanation: lesson.theory || "Review the lesson material."
+      }];
+    }
+
+    state.currentQuestionIdx = 0;
+    displayCurrentQuestion();
 
     // 3. Populate Reference Details
     const theoryEl = document.getElementById('lesson-theory');
@@ -314,21 +359,147 @@ async function loadLesson(conceptId) {
     const analogyTrapEl = document.getElementById('lesson-analogy-trap');
     if (analogyTrapEl && lesson.analogy) analogyTrapEl.innerText = `Mental Trap: ${lesson.analogy.trap}`;
 
-    // Reset feedback & input
-    const inputEl = document.getElementById('lesson-answer-input');
-    if (inputEl) inputEl.value = '';
-
-    const feedbackCard = document.getElementById('lesson-eval-feedback-card');
-    if (feedbackCard) feedbackCard.classList.add('hidden');
-
   } catch (err) {
     console.error('Error loading lesson content:', err);
   }
 }
 
 // ---------------------------------------------------------------------------
-// 4. CHAPTER NAVIGATION CONTROLS
+// 4. QUESTION & CHAPTER NAVIGATION CONTROLS
 // ---------------------------------------------------------------------------
+function displayCurrentQuestion() {
+  if (!state.conceptQuestions || state.conceptQuestions.length === 0) return;
+  const total = state.conceptQuestions.length;
+  if (state.currentQuestionIdx >= total) state.currentQuestionIdx = 0;
+  if (state.currentQuestionIdx < 0) state.currentQuestionIdx = 0;
+
+  const q = state.conceptQuestions[state.currentQuestionIdx];
+  if (!q) return;
+
+  // Question Prompt
+  const promptEl = document.getElementById('lesson-diagnostic-prompt');
+  if (promptEl) {
+    promptEl.innerText = q.prompt || '';
+  }
+
+  // Counter Pill
+  const counterPill = document.getElementById('question-counter-pill');
+  if (counterPill) {
+    counterPill.innerText = `Question ${state.currentQuestionIdx + 1} of ${total}`;
+  }
+
+  // Prev / Next Mini Navigation Buttons
+  const prevBtn = document.getElementById('btn-prev-question');
+  if (prevBtn) {
+    prevBtn.disabled = state.currentQuestionIdx === 0;
+    prevBtn.className = state.currentQuestionIdx === 0
+      ? 'px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-600 text-[10px] font-mono cursor-not-allowed'
+      : 'px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-[10px] font-mono transition';
+  }
+
+  const nextBtn = document.getElementById('btn-next-question');
+  if (nextBtn) {
+    nextBtn.disabled = state.currentQuestionIdx >= total - 1;
+    nextBtn.className = state.currentQuestionIdx >= total - 1
+      ? 'px-1.5 py-0.5 rounded bg-zinc-900 text-zinc-600 text-[10px] font-mono cursor-not-allowed'
+      : 'px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-[10px] font-mono transition';
+  }
+
+  // Hint Box & Toggle
+  const hintText = document.getElementById('question-hint-text');
+  if (hintText) {
+    hintText.innerText = q.hint || 'Think about how Python allocates heap memory and binds variable labels.';
+  }
+
+  const hintBox = document.getElementById('question-hint-box');
+  if (hintBox) {
+    hintBox.classList.add('hidden');
+  }
+
+  const hintBtn = document.getElementById('btn-show-hint');
+  if (hintBtn) {
+    hintBtn.innerHTML = '<span>💡</span><span>Need a Hint?</span>';
+  }
+
+  // Input Field
+  const inputEl = document.getElementById('lesson-answer-input');
+  if (inputEl) {
+    inputEl.value = '';
+    inputEl.placeholder = `[Question ${state.currentQuestionIdx + 1} of ${total}] Explain the mechanism in your own words...`;
+  }
+
+  // Reset Feedback Card
+  const feedbackCard = document.getElementById('lesson-eval-feedback-card');
+  if (feedbackCard) {
+    feedbackCard.classList.add('hidden');
+    feedbackCard.innerHTML = '';
+  }
+
+  // Reset Submit Button
+  const submitBtn = document.getElementById('lesson-submit-btn');
+  if (submitBtn) {
+    submitBtn.innerText = 'Evaluate Answer';
+    submitBtn.disabled = false;
+  }
+}
+
+function toggleHint() {
+  const hintBox = document.getElementById('question-hint-box');
+  const hintBtn = document.getElementById('btn-show-hint');
+  if (!hintBox) return;
+
+  const isHidden = hintBox.classList.contains('hidden');
+  if (isHidden) {
+    hintBox.classList.remove('hidden');
+    if (hintBtn) hintBtn.innerHTML = '<span>💡</span><span>Hide Hint</span>';
+  } else {
+    hintBox.classList.add('hidden');
+    if (hintBtn) hintBtn.innerHTML = '<span>💡</span><span>Need a Hint?</span>';
+  }
+}
+
+function nextQuestion() {
+  const total = state.conceptQuestions ? state.conceptQuestions.length : 0;
+  if (state.currentQuestionIdx + 1 < total) {
+    state.currentQuestionIdx++;
+    displayCurrentQuestion();
+    scrollToQuestion();
+  } else {
+    // End of questions reached
+    const c = state.curriculum.find(item => item.id === state.activeConcept);
+    if (c && (c.mastery >= 0.70 || c.status === 'mastered')) {
+      navNextChapter();
+    } else {
+      state.currentQuestionIdx = 0;
+      displayCurrentQuestion();
+      scrollToQuestion();
+    }
+  }
+}
+
+function prevQuestion() {
+  if (state.currentQuestionIdx > 0) {
+    state.currentQuestionIdx--;
+    displayCurrentQuestion();
+    scrollToQuestion();
+  }
+}
+
+function tryAgainCurrentQuestion() {
+  const input = document.getElementById('lesson-answer-input');
+  if (input) {
+    input.focus();
+    input.select();
+  }
+  scrollToQuestion();
+}
+
+function restartChapterQuestions() {
+  state.currentQuestionIdx = 0;
+  displayCurrentQuestion();
+  scrollToQuestion();
+}
+
 function navPrevChapter() {
   const currentIdx = state.curriculum.findIndex(c => c.id === state.activeConcept);
   if (currentIdx > 0) {
@@ -379,6 +550,7 @@ async function submitLessonAnswer() {
   try {
     const promptEl = document.getElementById('lesson-diagnostic-prompt');
     const qPrompt = promptEl ? promptEl.innerText.trim() : '';
+    const q = (state.conceptQuestions && state.conceptQuestions[state.currentQuestionIdx]) || {};
 
     const res = await fetch('/api/evaluate', {
       method: 'POST',
@@ -391,39 +563,175 @@ async function submitLessonAnswer() {
     });
     const result = await res.json();
 
+    // Refresh state to update lock status & sidebar
+    await fetchSystemStatus();
+    await fetchCurriculum();
+
+    const activeConceptObj = state.curriculum.find(c => c.id === state.activeConcept);
+    const updatedMastery = activeConceptObj ? activeConceptObj.mastery : (result.updated_mastery || 0);
+
+    // Update lesson status pill
+    const statusPill = document.getElementById('lesson-status-pill');
+    if (statusPill) {
+      if (updatedMastery >= 0.70) {
+        statusPill.className = 'font-mono text-[10px] px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/40';
+        statusPill.innerText = `Mastered (${Math.round(updatedMastery * 100)}%)`;
+      } else {
+        statusPill.className = 'font-mono text-[10px] px-2 py-0.5 rounded bg-cyan-950/60 text-cyan-400 border border-cyan-800/40';
+        statusPill.innerText = `Active Frontier (${Math.round(updatedMastery * 100)}%)`;
+      }
+    }
+
     // Render evaluation feedback card
     const feedbackCard = document.getElementById('lesson-eval-feedback-card');
     if (feedbackCard) {
       feedbackCard.classList.remove('hidden');
 
-      const isCorrect = result.is_correct;
-      feedbackCard.className = isCorrect
-        ? 'p-3.5 rounded-lg bg-emerald-950/20 border border-emerald-500/30 text-xs space-y-1.5 transition-all'
-        : 'p-3.5 rounded-lg bg-amber-950/20 border border-amber-500/30 text-xs space-y-1.5 transition-all';
+      const totalQ = state.conceptQuestions ? state.conceptQuestions.length : 1;
+      const currentQNumber = state.currentQuestionIdx + 1;
+      const hasNextQ = currentQNumber < totalQ;
+      const isMastered = updatedMastery >= 0.70;
+      const scorePct = Math.round(result.score * 100);
 
-      feedbackCard.innerHTML = `
-        <div class="flex items-center justify-between font-mono text-[11px]">
-          <span class="${isCorrect ? 'text-emerald-400 font-medium' : 'text-amber-400 font-medium'}">
-            ${isCorrect ? '✓ Correct Assessment' : '⚠ Misconception Detected'} (${Math.round(result.score * 100)}%)
-          </span>
-          <span class="text-codex-muted font-mono">Mode: ${result.evaluator_mode || 'llm'}</span>
-        </div>
-        <p class="text-codex-text leading-relaxed text-xs">${result.feedback}</p>
-        ${result.misconception_detected ? `
-          <div class="text-[11px] font-mono text-amber-300/90 bg-[#1c1c20] p-2 rounded border border-amber-500/20">
-            <strong>Misconception Diagnosed:</strong> ${result.misconception_detected}
+      const explanationText = result.step_by_step_explanation || q.explanation || "Python completely evaluates the right-hand side first, allocates memory, and binds the variable name on the left to that address.";
+      const canonicalText = result.canonical_answer || q.canonical_answer || "";
+
+      if (result.is_correct) {
+        // CORRECT ASSESSMENT
+        feedbackCard.className = 'p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/40 text-xs space-y-3.5 transition-all scene-enter';
+        feedbackCard.innerHTML = `
+          <!-- Header -->
+          <div class="flex items-center justify-between font-mono text-[11px] pb-2 border-b border-emerald-500/20">
+            <span class="text-emerald-400 font-semibold flex items-center space-x-1.5">
+              <span>✓</span>
+              <span>Question ${currentQNumber} of ${totalQ} Solved</span>
+              <span class="bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded text-[10px]">${scorePct}%</span>
+            </span>
+            <span class="text-zinc-500 font-mono text-[10px]">Evaluator: ${result.evaluator_mode || 'llm'}</span>
           </div>
-        ` : ''}
-        <div class="flex items-center justify-between pt-1 border-t border-codex-border text-[10px] font-mono text-codex-muted">
-          <span>Enforced Citations: [${(result.cited_chunk_ids || []).join(', ') || 'chunk.py.var.01'}]</span>
-          <span class="text-emerald-400">Mastery: ${Math.round((result.updated_mastery || 0) * 100)}%</span>
-        </div>
-      `;
-    }
 
-    // Refresh state to update lock status & sidebar
-    await fetchSystemStatus();
-    await fetchCurriculum();
+          <!-- Direct Feedback -->
+          <p class="text-emerald-100 font-medium leading-relaxed">${escapeHtml(result.feedback)}</p>
+
+          <!-- Step-by-Step Mechanical Confirmation -->
+          <div class="p-3 rounded-lg bg-[#0e1612] border border-emerald-500/30 text-xs space-y-1.5">
+            <div class="font-mono text-[10px] text-emerald-400 font-bold uppercase tracking-wider flex items-center space-x-1">
+              <span>🧠</span><span>How Python Executes This in Memory:</span>
+            </div>
+            <div class="text-zinc-300 whitespace-pre-line leading-relaxed font-sans text-xs">
+              ${escapeHtml(explanationText)}
+            </div>
+          </div>
+
+          <!-- Canonical Solution Reference -->
+          ${canonicalText ? `
+            <div class="p-2.5 rounded-lg bg-[#090e0c] border border-emerald-500/20 text-xs space-y-1">
+              <div class="font-mono text-[10px] text-emerald-400 font-bold uppercase">Canonical Reference:</div>
+              <pre class="font-mono text-emerald-200/90 text-xs overflow-x-auto whitespace-pre-wrap">${escapeHtml(canonicalText)}</pre>
+            </div>
+          ` : ''}
+
+          <!-- Footer Metadata & Navigation Controls -->
+          <div class="flex flex-col sm:flex-row items-center justify-between pt-2 border-t border-emerald-500/20 gap-2">
+            <div class="flex items-center space-x-3 text-[10px] font-mono text-zinc-400">
+              <span>Citations: [${(result.cited_chunk_ids || []).join(', ') || 'chunk.py.var.01'}]</span>
+              <span class="text-emerald-400 font-bold">Chapter Mastery: ${Math.round(updatedMastery * 100)}%</span>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              ${hasNextQ ? `
+                <button onclick="nextQuestion()" class="px-4 py-2 rounded-lg bg-emerald-400 hover:bg-emerald-300 text-black font-semibold text-xs transition flex items-center space-x-1.5 shadow-lg shadow-emerald-950 cursor-pointer">
+                  <span>Next Question (${currentQNumber + 1} of ${totalQ})</span>
+                  <span>➔</span>
+                </button>
+              ` : (isMastered ? `
+                <button onclick="navNextChapter()" class="px-4 py-2 rounded-lg bg-emerald-400 hover:bg-emerald-300 text-black font-bold text-xs transition flex items-center space-x-1.5 shadow-lg shadow-emerald-950 animate-pulse cursor-pointer">
+                  <span>🎉 Chapter Mastered (${Math.round(updatedMastery * 100)}%)! Next Chapter</span>
+                  <span>➔</span>
+                </button>
+              ` : `
+                <button onclick="restartChapterQuestions()" class="px-3.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-mono text-xs transition cursor-pointer">
+                  <span>↻ Practice Chapter Questions Again</span>
+                </button>
+              `)}
+            </div>
+          </div>
+        `;
+      } else {
+        // WRONG OR PARTIAL ANSWER: RICH EDUCATIONAL EXPLANATION
+        feedbackCard.className = 'p-4 rounded-xl bg-amber-950/30 border border-amber-500/40 text-xs space-y-3.5 transition-all scene-enter';
+        feedbackCard.innerHTML = `
+          <!-- Header -->
+          <div class="flex items-center justify-between font-mono text-[11px] pb-2 border-b border-amber-500/20">
+            <span class="text-amber-400 font-semibold flex items-center space-x-1.5">
+              <span>⚠</span>
+              <span>${scorePct > 0 ? `Partial Understanding (${scorePct}%)` : 'Misconception Diagnosed'}</span>
+              <span class="text-zinc-400 text-[10px]">Question ${currentQNumber} of ${totalQ}</span>
+            </span>
+            <span class="text-zinc-500 font-mono text-[10px]">Evaluator: ${result.evaluator_mode || 'llm'}</span>
+          </div>
+
+          <!-- Diagnosed Misconception / Gap -->
+          <div class="p-3 rounded-lg bg-[#201914] border border-amber-500/30 text-xs space-y-1">
+            <div class="font-mono text-[10px] text-amber-400 font-bold uppercase tracking-wider flex items-center space-x-1.5">
+              <span>🔍</span><span>Why This Needs Correction:</span>
+            </div>
+            <p class="text-zinc-200 leading-relaxed">${escapeHtml(result.diagnosis || result.feedback || "Your explanation does not accurately describe the memory mechanism.")}</p>
+            ${result.misconception_detected ? `
+              <div class="mt-1.5 text-[11px] font-mono text-amber-300 flex items-center space-x-1">
+                <span class="text-zinc-500">Misconception pattern:</span>
+                <span class="px-1.5 py-0.5 rounded bg-black/40 text-amber-300 border border-amber-500/30 font-semibold">${escapeHtml(result.misconception_detected)}</span>
+              </div>
+            ` : ''}
+          </div>
+
+          <!-- STEP-BY-STEP EXPLANATION OF WHAT PYTHON DOES IN MEMORY -->
+          <div class="p-3.5 rounded-lg bg-[#141416] border border-zinc-700/60 text-xs space-y-2">
+            <div class="font-mono text-[11px] text-amber-300 font-bold uppercase tracking-wider flex items-center space-x-1.5">
+              <span>🔬</span><span>What Python Does in Memory (Step-by-Step):</span>
+            </div>
+            <div class="text-zinc-300 whitespace-pre-line leading-relaxed font-sans text-xs pl-1">
+              ${escapeHtml(explanationText)}
+            </div>
+          </div>
+
+          <!-- Canonical Expected Solution / Code -->
+          ${canonicalText ? `
+            <div class="p-3 rounded-lg bg-[#0e0f12] border border-cyan-500/30 text-xs space-y-1.5">
+              <div class="font-mono text-[10px] text-cyan-400 font-bold uppercase tracking-wider flex items-center space-x-1.5">
+                <span>💡</span><span>Verified Correct Mechanism / Solution:</span>
+              </div>
+              <pre class="font-mono text-cyan-200/90 bg-black/60 p-2.5 rounded border border-zinc-800 text-xs overflow-x-auto whitespace-pre-wrap">${escapeHtml(canonicalText)}</pre>
+            </div>
+          ` : ''}
+
+          <!-- Footer Metadata & Action Buttons -->
+          <div class="flex flex-col sm:flex-row items-center justify-between pt-2 border-t border-amber-500/20 gap-2">
+            <div class="flex items-center space-x-3 text-[10px] font-mono text-zinc-400">
+              <span>Citations: [${(result.cited_chunk_ids || []).join(', ') || 'chunk.py.var.01'}]</span>
+              <span class="text-amber-400">Chapter Mastery: ${Math.round(updatedMastery * 100)}%</span>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <button onclick="tryAgainCurrentQuestion()" class="px-3.5 py-1.5 rounded-lg bg-[#2a2a30] hover:bg-[#34343a] text-amber-300 hover:text-white font-mono text-xs transition border border-amber-500/30 flex items-center space-x-1.5 cursor-pointer">
+                <span>✏️</span><span>Try Again With This Explanation</span>
+              </button>
+
+              ${hasNextQ ? `
+                <button onclick="nextQuestion()" class="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-semibold text-xs transition flex items-center space-x-1.5 shadow-md cursor-pointer">
+                  <span>Next Question (${currentQNumber + 1} of ${totalQ})</span>
+                  <span>➔</span>
+                </button>
+              ` : `
+                <button onclick="restartChapterQuestions()" class="px-3.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-mono text-xs transition cursor-pointer">
+                  <span>↻ Retry Question Set</span>
+                </button>
+              `}
+            </div>
+          </div>
+        `;
+      }
+    }
 
   } catch (err) {
     console.error('Error evaluating answer:', err);
