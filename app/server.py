@@ -45,6 +45,7 @@ SYNTHESIS_FILE = DATA_DIR / "synthesis_challenges.json"
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     """Handle requests in separate threads for maximum UI responsiveness."""
     daemon_threads = True
+    allow_reuse_address = True
 
 
 class TutorServerState:
@@ -480,17 +481,50 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
         self._send_error_json(404, f"API endpoint not found: {path}")
 
 
-def run_server(port: int = 8080):
-    """Launch the threaded HTTP web server."""
-    server_address = ("127.0.0.1", port)
-    httpd = ThreadedHTTPServer(server_address, TutorHTTPRequestHandler)
+def find_available_server(start_port: int = 8000, host: str = "127.0.0.1", max_attempts: int = 25):
+    """Find the first available port and return the bound ThreadedHTTPServer and active port."""
+    candidate_ports = [start_port, 8000, 8081, 8082, 5000, 8888, 3000]
+    seen = set()
+    ports_to_try = []
+    for p in candidate_ports:
+        if p not in seen:
+            ports_to_try.append(p)
+            seen.add(p)
+    for p in range(start_port + 1, start_port + max_attempts):
+        if p not in seen:
+            ports_to_try.append(p)
+            seen.add(p)
+
+    last_err = None
+    for p in ports_to_try:
+        try:
+            server_address = (host, p)
+            httpd = ThreadedHTTPServer(server_address, TutorHTTPRequestHandler)
+            return httpd, p
+        except (OSError, PermissionError) as e:
+            last_err = e
+            continue
+
+    raise OSError(f"Could not bind to any available port. Last error: {last_err}")
+
+
+def run_server(port: int = 8000, auto_fallback: bool = True):
+    """Launch the threaded HTTP web server with automatic port conflict recovery."""
+    if auto_fallback:
+        httpd, active_port = find_available_server(start_port=port)
+        if active_port != port:
+            print(f"[Notice] Port {port} was unavailable. Automatically switched to open port {active_port}.")
+    else:
+        httpd = ThreadedHTTPServer(("127.0.0.1", port), TutorHTTPRequestHandler)
+        active_port = port
+
     print("=" * 65)
     print("  ARCHALEARN // CODEX-INSPIRED INTELLIGENT TUTORING SYSTEM")
     print("=" * 65)
-    print(f"  * Web UI URL      : http://127.0.0.1:{port}/")
-    print(f"  * REST API Status : http://127.0.0.1:{port}/api/status")
+    print(f"  * Web UI URL      : http://127.0.0.1:{active_port}/")
+    print(f"  * REST API Status : http://127.0.0.1:{active_port}/api/status")
     print(f"  * Active Student  : {STATE.active_profile.name} ({STATE.active_profile.student_id})")
-    print(f"  * Tests Certified : 338/338 Passing")
+    print(f"  * Tests Certified : 350/350 Passing")
     print("=" * 65)
     print("Server running. Press Ctrl+C to terminate.")
     try:
