@@ -34,6 +34,7 @@ RESTART_COMMANDS = {"restart", "reset", "start over", "interactive_tutor.py", "p
 ANALOGY_COMMANDS = {"analogy", "eli5", "story", "help me understand"}
 REPORT_COMMANDS = {"report", "transcript", "export", "portfolio"}
 MEMORY_COMMANDS = {"memory", "boxes", "ram", "visualize"}
+PLAN_COMMANDS = {"plan", "schedule", "daily", "agenda", "curriculum"}
 
 
 def get_records_db_path() -> Optional[Path]:
@@ -160,9 +161,16 @@ def read_student_input(
             print("=" * 70)
             continue
 
+        if low in PLAN_COMMANDS:
+            from app.services.curriculum_planner import CurriculumPlanner
+            plan = coordinator.generate_daily_session_plan(target_total_items=10)
+            print("\n" + CurriculumPlanner.format_plan_display(plan))
+            continue
+
         if low in {"help", "commands", "?"}:
             print("\n" + "-" * 60)
             print(" AVAILABLE COMMANDS AT ANY PROMPT:")
+            print("   * plan / daily    : View your 30/60/10 personalized daily session agenda")
             print("   * analogy / eli5  : View the real-world physical mental model")
             print("   * memory / boxes  : View RAM storage boxes and memory transitions")
             print("   * report / export : View & export your verifiable mastery transcript")
@@ -474,7 +482,7 @@ def main():
             print(f"  {curr_q.prompt}")
             if curr_q.hint:
                 print(f"  (Tip: {curr_q.hint})")
-            print("  (Tip: Type 'analogy' for physical model, 'memory' for RAM boxes, or 'report' for transcript)")
+            print("  (Tip: Type 'plan' for daily schedule, 'analogy' for physical model, 'memory' for RAM boxes, 'report' for transcript)")
 
             user_response = read_student_input(
                 f"\n{student.name}'s Answer > ",

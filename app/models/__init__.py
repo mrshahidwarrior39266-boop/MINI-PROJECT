@@ -1,6 +1,13 @@
 from app.models.concept import Concept, Misconception, KnowledgeChunk
 from app.models.student import StudentProfile, ConceptMastery, AssessmentLog
-from app.models.curriculum import LearningFrontier, ConceptState, SessionGoal
+from app.models.curriculum import (
+    LearningFrontier,
+    ConceptState,
+    SessionGoal,
+    SynthesisChallenge,
+    PlannedExercise,
+    DailySessionPlan,
+)
 from app.models.question import (
     CurriculumQuestion,
     FollowupQuestion,
@@ -31,6 +38,9 @@ __all__ = [
     "LearningFrontier",
     "ConceptState",
     "SessionGoal",
+    "SynthesisChallenge",
+    "PlannedExercise",
+    "DailySessionPlan",
     "CurriculumQuestion",
     "FollowupQuestion",
     "ScaffoldStep",

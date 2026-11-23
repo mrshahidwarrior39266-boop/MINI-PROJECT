@@ -200,3 +200,12 @@ def test_cli_ingest_command():
     assert "control_flow_and_data_structures.md" in out
 
 
+def test_cli_plan_command():
+    res = run_tutor("Student\nplan\nquit\n")
+    out = clean_output(res)
+    assert "PERSONALIZED DAILY STUDY PLAN" in out
+    assert "FRONTIER" in out
+    assert "SYNTHESIS" in out
+
+
+

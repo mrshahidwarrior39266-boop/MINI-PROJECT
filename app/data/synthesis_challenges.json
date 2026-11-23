@@ -1,0 +1,62 @@
+[
+  {
+    "id": "syn_variables_conditionals_01",
+    "title": "Ordered Pair Normalization (Conditional Swap)",
+    "required_concept_ids": ["py.variables", "py.conditionals", "py.operators"],
+    "prompt": "Write a Python snippet that checks two integer variables 'a' and 'b'. If 'a' is strictly greater than 'b', swap their values using an intermediate variable 'temp' so that 'a' is guaranteed to hold the smaller value. Otherwise, leave them unchanged.",
+    "hint": "Check with an 'if a > b:' block, then execute the 3-step swap inside the indented body.",
+    "canonical_answer": "if a > b:\n    temp = a\n    a = b\n    b = temp",
+    "rubric_keywords": ["if", "temp", "a = b", "b = temp", "temp = a"],
+    "explanation": "Combines relational comparison (a > b) with state-preserving memory swapping so values are ordered without losing either initial value."
+  },
+  {
+    "id": "syn_loops_lists_01",
+    "title": "Sentinel List Traversal (While Loop with Early Break)",
+    "required_concept_ids": ["py.while_loops", "py.lists_sequences", "py.conditionals"],
+    "prompt": "Given a list 'numbers', write a while loop using an index counter 'i' that accumulates elements into 'total' until it reaches either the end of the list or encounters a negative number (< 0), where it must stop immediately.",
+    "hint": "Loop while 'i < len(numbers)'. Inside, check if numbers[i] < 0 to break; otherwise add numbers[i] to total and increment i.",
+    "canonical_answer": "i = 0\ntotal = 0\nwhile i < len(numbers):\n    if numbers[i] < 0:\n        break\n    total = total + numbers[i]\n    i = i + 1",
+    "rubric_keywords": ["while", "len(numbers)", "break", "total", "i = i + 1"],
+    "explanation": "Synthesizes zero-based list indexing (numbers[i]), sequential while iteration with boundary protection (i < len), and conditional early exit."
+  },
+  {
+    "id": "syn_for_lists_functions_01",
+    "title": "Modular List Filtering Function",
+    "required_concept_ids": ["py.functions", "py.for_loops", "py.lists_sequences"],
+    "prompt": "Define a function 'filter_evens(nums)' that accepts a list of integers, uses a for loop to iterate over the sequence, and returns a new list containing only the even integers (where n % 2 == 0).",
+    "hint": "Create an empty result list inside the function, append matching elements during the for loop, and return the result at the end.",
+    "canonical_answer": "def filter_evens(nums):\n    result = []\n    for n in nums:\n        if n % 2 == 0:\n            result.append(n)\n    return result",
+    "rubric_keywords": ["def filter_evens", "for", "append", "% 2 == 0", "return"],
+    "explanation": "Integrates modular function definitions with parameters/return values, sequence traversal, and conditional sequence building."
+  },
+  {
+    "id": "syn_operators_loops_01",
+    "title": "Software Arithmetic via Repeated Subtraction",
+    "required_concept_ids": ["py.operators", "py.while_loops", "py.variables"],
+    "prompt": "Using only addition and subtraction in a while loop, calculate how many times divisor 'b' fits into dividend 'a' (integer division). Store the quotient in 'quotient' and the remainder in 'remainder'.",
+    "hint": "Initialize quotient = 0 and remainder = a. While remainder >= b, subtract b from remainder and increment quotient by 1.",
+    "canonical_answer": "quotient = 0\nremainder = a\nwhile remainder >= b:\n    remainder = remainder - b\n    quotient = quotient + 1",
+    "rubric_keywords": ["while remainder >= b", "remainder = remainder - b", "quotient = quotient + 1"],
+    "explanation": "Illustrates how high-level operators (// and %) are executed in fundamental ALU micro-code via iterative arithmetic loops."
+  },
+  {
+    "id": "syn_functions_scope_01",
+    "title": "Function Scope Isolation and Shadowing",
+    "required_concept_ids": ["py.functions", "py.variables", "py.data_types"],
+    "prompt": "Suppose we execute:\ncount = 10\ndef increment():\n    count = 20\nincrement()\nprint(count)\nWhat gets printed to the console, and why?",
+    "hint": "Remember that assigning to a variable inside a function without a 'global' statement creates a brand new local variable.",
+    "canonical_answer": "10 is printed. The assignment 'count = 20' inside increment() creates a local variable within that function call's stack frame. It does not overwrite the global variable 'count'.",
+    "rubric_keywords": ["10", "local", "scope", "global", "stack frame"],
+    "explanation": "Tests comprehension of memory stack frame isolation: local variables shadow outer names but do not mutate global bindings unless explicitly declared."
+  },
+  {
+    "id": "syn_full_stack_01",
+    "title": "Aggregating Filtered Sequences",
+    "required_concept_ids": ["py.variables", "py.conditionals", "py.for_loops", "py.lists_sequences"],
+    "prompt": "Given a list 'scores = [85, 92, 45, 78, 60]', write code that loops through 'scores', counts how many are >= 70 (passing), and computes their average stored in 'passing_avg'.",
+    "hint": "Keep two variables: passing_count and passing_sum. At the end, calculate passing_avg = passing_sum / passing_count.",
+    "canonical_answer": "passing_count = 0\npassing_sum = 0\nfor s in scores:\n    if s >= 70:\n        passing_count = passing_count + 1\n        passing_sum = passing_sum + s\npassing_avg = passing_sum / passing_count if passing_count > 0 else 0",
+    "rubric_keywords": ["for s in scores", "if s >= 70", "passing_count", "passing_sum", "passing_avg"],
+    "explanation": "Synthesizes iterative sequence traversal, conditional filtering, multi-accumulator state tracking, and arithmetic division."
+  }
+]

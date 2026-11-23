@@ -52,6 +52,11 @@ python -m venv .venv
 & ".\.venv\Scripts\python.exe" run_milestone3_demo.py
 ```
 
+### Milestone 4: Curriculum Planner & DAG Traversal (30/60/10 Session Engine)
+```powershell
+& ".\.venv\Scripts\python.exe" run_milestone4_demo.py
+```
+
 ## Running the Test Suite
 
 ```powershell
@@ -76,6 +81,18 @@ python -m venv .venv
 - **LLM Concept Auto-Linker**: The `ConceptLinkerService` executes an extraction pass over unlinked document chunks, using LLM structured extraction to map each section to the correct curriculum DAG node with pedagogical rationale and confidence scoring.
 - **pgvector Vector Store**: Implements the `PGVectorStore` backend with native PostgreSQL `vector(128)` and HNSW cosine similarity indexing (`vector_cosine_ops`), accompanied by `SQLiteVectorStore` for zero-dependency local execution.
 - **Enforced Source Citations**: The Socratic `LLMEvaluator` enforces that evaluations must cite specific `chunk_id` foreign keys from the ingested knowledge base, ensuring evidence grounding and verifiable provenance.
+
+---
+
+## How Milestone 4 Operates (Curriculum Planner & DAG Traversal)
+
+- **Graph Traversal & Learning Frontier**: The `ConceptGraphService` uses Kahn's topological sort and prerequisite resolution to identify the exact Learning Frontier ($\ge 0.70$ prerequisites satisfied, $< 0.70$ target mastery), ensuring learners are never presented with concepts before foundations are solid.
+- **Spaced Repetition & Ebbinghaus Forgetting Curves**: The `SpacedRepetitionEngine` models memory retention decay: $M(t) = M_0 \cdot \exp(-\Delta t / S)$, where memory stability $S$ expands with successful recalls. Identifies decayed concepts before they are forgotten.
+- **Personalized 30% Review / 60% Frontier / 10% Synthesis Session Engine**: The `CurriculumPlanner` partitions each study session into a strict pedagogical split:
+  - **30% Review**: Spaced repetition drills on decayed concepts or active misconceptions.
+  - **60% Frontier Learning**: Introduction and deep practice on next unlocked concepts in the DAG.
+  - **10% Synthesis Challenge**: Multi-concept capstone challenges requiring coordinated application of 2+ concepts.
+- **Interactive Session Plan Command**: Students can type `plan` at any prompt in `interactive_tutor.py` to view their personalized daily study agenda with time estimates and target ratios.
 
 ---
 

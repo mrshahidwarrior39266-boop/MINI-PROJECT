@@ -39,6 +39,8 @@ from app.services.vector_store import (
     PGVectorStore,
     create_vector_store,
 )
+from app.services.spaced_repetition import SpacedRepetitionEngine
+from app.services.curriculum_planner import CurriculumPlanner
 
 __all__ = [
     "ConceptGraphService",
@@ -76,4 +78,6 @@ __all__ = [
     "SQLiteVectorStore",
     "PGVectorStore",
     "create_vector_store",
+    "SpacedRepetitionEngine",
+    "CurriculumPlanner",
 ]

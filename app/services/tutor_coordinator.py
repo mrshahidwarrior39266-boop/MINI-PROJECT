@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List, Union
 
 from app.models.student import StudentProfile, ConceptMastery
-from app.models.curriculum import LearningFrontier, SessionGoal
+from app.models.curriculum import LearningFrontier, SessionGoal, DailySessionPlan
 from app.models.evaluator import LLMEvaluationRequest, LLMEvaluationResponse
 from app.models.rag import RetrievalResult, IngestionSummary
 from app.services.concept_graph import ConceptGraphService
@@ -253,4 +253,32 @@ class TutorCoordinator:
             llm_client=self.evaluator.llm_client if self.evaluator else None,
         )
         return self.rag_service.ingest_document(file_path=file_path, linker=linker)
+
+    def generate_daily_session_plan(
+        self,
+        target_total_items: int = 10,
+        simulated_days_elapsed: Optional[Dict[str, float]] = None,
+        question_service: Optional[Any] = None,
+    ) -> DailySessionPlan:
+        """Generate a personalized daily study plan strictly partitioned into 30% Review, 60% Frontier, 10% Synthesis."""
+        from app.services.curriculum_planner import CurriculumPlanner
+        from app.services.question_service import QuestionService
+
+        q_service = question_service or (
+            self.evaluator.question_service
+            if self.evaluator and self.evaluator.question_service
+            else QuestionService(Path(__file__).resolve().parent.parent / "data" / "curriculum_questions.json")
+        )
+        planner = CurriculumPlanner(
+            graph_service=self.graph_service,
+            question_service=q_service,
+            mastery_threshold=self.mastery_threshold,
+        )
+        return planner.generate_daily_plan(
+            student_profile=self.student_service.profile,
+            mastery_map=self.student_service.mastery_map,
+            target_total_items=target_total_items,
+            simulated_days_elapsed=simulated_days_elapsed,
+        )
+
 

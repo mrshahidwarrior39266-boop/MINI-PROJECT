@@ -116,6 +116,32 @@ class ConceptGraphService:
             stack.extend(self.prerequisites_of.get(prerequisite, set()))
         return transitive
 
+    def topological_sort(self) -> List[str]:
+        """Return a valid linear curriculum ordering where prerequisites precede dependents."""
+        in_degree = {cid: len(prereqs) for cid, prereqs in self.prerequisites_of.items()}
+        queue = [cid for cid, deg in in_degree.items() if deg == 0]
+        order = []
+
+        while queue:
+            node = queue.pop(0)
+            order.append(node)
+            for dependent in self.dependents_of.get(node, []):
+                in_degree[dependent] -= 1
+                if in_degree[dependent] == 0:
+                    queue.append(dependent)
+
+        if len(order) != len(self.concepts):
+            raise ConceptGraphError("Circular dependency detected! Cannot topologically sort graph.")
+        return order
+
+    def calculate_frontier(
+        self,
+        mastery_map: Dict[str, ConceptMastery],
+        mastery_threshold: float = 0.70
+    ) -> LearningFrontier:
+        """Alias for compute_learning_frontier."""
+        return self.compute_learning_frontier(mastery_map, mastery_threshold)
+
     def compute_learning_frontier(
         self,
         mastery_map: Dict[str, ConceptMastery],
