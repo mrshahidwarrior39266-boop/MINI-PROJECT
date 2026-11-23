@@ -46,6 +46,10 @@ class LLMEvaluationResponse(BaseModel):
         ...,
         description="Clear explanation of the underlying mechanics"
     )
+    cited_chunk_ids: List[str] = Field(
+        default_factory=list,
+        description="IDs of reference knowledge chunks cited in this pedagogical explanation"
+    )
     follow_up_challenge: Optional[str] = Field(
         default=None,
         description="A targeted transfer question or challenge to verify understanding"

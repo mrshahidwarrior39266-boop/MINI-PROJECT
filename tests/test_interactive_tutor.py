@@ -191,3 +191,12 @@ def test_cli_report_command():
     assert "EXPORT COMPLETE" in out
     assert "TRANSCRIPT-" in out
 
+
+def test_cli_ingest_command():
+    sample_file = "app/data/sample_documents/control_flow_and_data_structures.md"
+    res = run_tutor(f"Student\ningest {sample_file}\nquit\n")
+    out = clean_output(res)
+    assert "Ingest Success" in out
+    assert "control_flow_and_data_structures.md" in out
+
+

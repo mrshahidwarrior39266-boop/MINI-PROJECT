@@ -47,6 +47,11 @@ python -m venv .venv
 & ".\.venv\Scripts\python.exe" run_milestone2_demo.py
 ```
 
+### Milestone 3: Dynamic Knowledge Ingestion & pgvector RAG
+```powershell
+& ".\.venv\Scripts\python.exe" run_milestone3_demo.py
+```
+
 ## Running the Test Suite
 
 ```powershell
@@ -62,6 +67,15 @@ python -m venv .venv
 - **Socratic LLM Evaluator**: When configured with `GEMINI_API_KEY` or `OPENAI_API_KEY`, evaluations are performed using structured Pydantic schemas (`LLMEvaluationResponse`), grounding explanations in retrieved textbook excerpts and categorizing mistakes into formal cataloged misconceptions.
 - **Logic Invariant Guarantee**: The AST Logic Verifier checks computational state transitions in memory. A student who writes `t=x,x=y,y=t` is guaranteed 100% credit regardless of variable names, preventing LLM optimism or formatting bias.
 - **Fault-Tolerant Fallback**: If network is unavailable or no API keys are present, the system seamlessly routes to the deterministic rule and AST verifier with zero crashes.
+
+---
+
+## How Milestone 3 Operates (Dynamic Ingestion & pgvector RAG)
+
+- **Semantic Heading-Based Chunking**: The `DocumentIngestionService` parses Markdown (`#`, `##`, `###`) and PDF section structures, splitting texts into meaningful pedagogical units while preserving code blocks and breadcrumb heading hierarchies rather than slicing across arbitrary character boundaries.
+- **LLM Concept Auto-Linker**: The `ConceptLinkerService` executes an extraction pass over unlinked document chunks, using LLM structured extraction to map each section to the correct curriculum DAG node with pedagogical rationale and confidence scoring.
+- **pgvector Vector Store**: Implements the `PGVectorStore` backend with native PostgreSQL `vector(128)` and HNSW cosine similarity indexing (`vector_cosine_ops`), accompanied by `SQLiteVectorStore` for zero-dependency local execution.
+- **Enforced Source Citations**: The Socratic `LLMEvaluator` enforces that evaluations must cite specific `chunk_id` foreign keys from the ingested knowledge base, ensuring evidence grounding and verifiable provenance.
 
 ---
 

@@ -4,12 +4,12 @@ The central orchestration layer for Milestone 1.
 Coordinates the Subject Concept Graph, the Knowledge Base, and the Student State.
 """
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Union
 
 from app.models.student import StudentProfile, ConceptMastery
 from app.models.curriculum import LearningFrontier, SessionGoal
 from app.models.evaluator import LLMEvaluationRequest, LLMEvaluationResponse
-from app.models.rag import RetrievalResult
+from app.models.rag import RetrievalResult, IngestionSummary
 from app.services.concept_graph import ConceptGraphService
 from app.services.knowledge_base import KnowledgeBaseService
 from app.services.student_state import StudentStateService
@@ -231,6 +231,7 @@ class TutorCoordinator:
             "diagnosis": eval_response.diagnosis,
             "feedback": eval_response.feedback,
             "step_by_step_explanation": eval_response.step_by_step_explanation,
+            "cited_chunk_ids": eval_response.cited_chunk_ids,
             "follow_up_challenge": eval_response.follow_up_challenge,
             "evaluator_mode": eval_response.evaluator_mode,
             "detected_misconceptions": eval_response.detected_misconceptions,
@@ -242,3 +243,14 @@ class TutorCoordinator:
     ) -> RetrievalResult:
         """Query the dense semantic knowledge base."""
         return self.rag_service.retrieve(query=query, concept_id=concept_id, top_k=top_k)
+
+    def ingest_knowledge_document(self, file_path: Union[str, Path]) -> IngestionSummary:
+        """Ingest a dynamic Markdown or PDF document, auto-link to DAG concepts, and index."""
+        from app.services.concept_linker import ConceptLinkerService
+
+        linker = ConceptLinkerService(
+            concepts_catalog=self.graph_service.concepts,
+            llm_client=self.evaluator.llm_client if self.evaluator else None,
+        )
+        return self.rag_service.ingest_document(file_path=file_path, linker=linker)
+

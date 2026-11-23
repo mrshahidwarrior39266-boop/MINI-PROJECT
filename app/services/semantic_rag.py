@@ -12,10 +12,10 @@ import hashlib
 import json
 import time
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union, Any
 
 from app.models.concept import KnowledgeChunk
-from app.models.rag import ScoredChunk, RetrievalQuery, RetrievalResult
+from app.models.rag import ScoredChunk, RetrievalQuery, RetrievalResult, IngestionSummary
 from app.services.embedding_service import (
     BaseEmbeddingService,
     get_default_embedding_service,
@@ -189,3 +189,41 @@ class SemanticRAGService:
             lines.append(f"- Factual Content: {c.content}")
 
         return "\n".join(lines)
+
+    def ingest_document(
+        self,
+        file_path: Union[str, Path],
+        linker: Optional[Any] = None,
+        default_concept_id: str = "py.variables",
+    ) -> IngestionSummary:
+        """Dynamically ingest a Markdown or PDF document, auto-link to DAG concepts, and index."""
+        from app.services.document_ingestion import DocumentIngestionService
+
+        ingestion_service = DocumentIngestionService()
+        chunks, summary = ingestion_service.ingest_file(file_path)
+
+        if linker is not None:
+            linker.link_batch(chunks)
+
+        # Convert to KnowledgeChunks
+        knowledge_chunks = [c.to_knowledge_chunk(fallback_concept_id=default_concept_id) for c in chunks]
+
+        # Compute embeddings
+        contents = [kc.content for kc in knowledge_chunks]
+        embeddings = self.embedding_service.embed_batch(contents)
+
+        for kc, emb in zip(knowledge_chunks, embeddings):
+            self.chunks_by_id[kc.id] = kc
+            if kc.concept_id not in self.chunks_by_concept:
+                self.chunks_by_concept[kc.concept_id] = []
+            self.chunks_by_concept[kc.concept_id].append(kc)
+            self.chunk_vectors[kc.id] = emb
+
+            if self.repository is not None:
+                h = self._hash_content(kc)
+                self.repository.save_chunk_embedding(kc.id, h, emb)
+
+        summary.linked_chunks = sum(1 for c in chunks if c.concept_id)
+        summary.unlinked_chunks = sum(1 for c in chunks if not c.concept_id)
+        return summary
+

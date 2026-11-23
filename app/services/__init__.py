@@ -29,6 +29,16 @@ from app.services.llm_client import (
 )
 from app.services.llm_evaluator import LLMEvaluator
 from app.services.beginner_pedagogy import BeginnerPedagogyService
+from app.services.memory_visualizer import MemoryStateVisualizer
+from app.services.mastery_reporter import MasteryReporter
+from app.services.document_ingestion import DocumentIngestionService
+from app.services.concept_linker import ConceptLinkerService
+from app.services.vector_store import (
+    BaseVectorStore,
+    SQLiteVectorStore,
+    PGVectorStore,
+    create_vector_store,
+)
 
 __all__ = [
     "ConceptGraphService",
@@ -58,4 +68,12 @@ __all__ = [
     "get_default_llm_client",
     "LLMEvaluator",
     "BeginnerPedagogyService",
+    "MemoryStateVisualizer",
+    "MasteryReporter",
+    "DocumentIngestionService",
+    "ConceptLinkerService",
+    "BaseVectorStore",
+    "SQLiteVectorStore",
+    "PGVectorStore",
+    "create_vector_store",
 ]

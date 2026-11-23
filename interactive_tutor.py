@@ -166,9 +166,25 @@ def read_student_input(
             print("   * analogy / eli5  : View the real-world physical mental model")
             print("   * memory / boxes  : View RAM storage boxes and memory transitions")
             print("   * report / export : View & export your verifiable mastery transcript")
+            print("   * ingest <path>   : Dynamically ingest Markdown/PDF into RAG")
             print("   * restart / reset : Restart tutoring from scratch")
             print("   * quit / exit     : Exit the session safely")
             print("-" * 60)
+            continue
+
+        if low.startswith("ingest "):
+            path_str = raw[7:].strip().strip('"\'')
+            p = Path(path_str)
+            if not p.exists():
+                print(f"\n [Ingest Error] File not found: {p}")
+            else:
+                try:
+                    summary = coordinator.ingest_knowledge_document(p)
+                    print(f"\n [Ingest Success] Ingested {summary.total_chunks} chunks from '{p.name}'!")
+                    print(f"   * Auto-linked concepts: {summary.linked_chunks}")
+                    print(f"   * Total searchable chunks now: {len(coordinator.rag_service.chunks_by_id)}")
+                except Exception as exc:
+                    print(f"\n [Ingest Error] Failed to ingest: {exc}")
             continue
 
         return raw

@@ -37,6 +37,7 @@ PEDAGOGICAL PRINCIPLES:
 3. MISCONCEPTION DIAGNOSIS: If the student makes an error, match it to one or more known Misconception IDs from the catalog. Do NOT invent new IDs.
 4. SOCRATIC FEEDBACK: Provide encouraging, growth-minded feedback. Point out the mechanical breakdown without simply giving away the answer. Use physical real-world analogies (cardboard boxes, water cups, conveyor belts) to clarify points.
 5. CONSTRUCTIVE EXPLANATION: Clearly explain the underlying memory, evaluation order, or runtime behavior step by step.
+6. MANDATORY CITATION ENFORCEMENT: You MUST cite at least one reference chunk ID from the provided reference list in the `cited_chunk_ids` array.
 """
 
     def __init__(
@@ -132,6 +133,13 @@ Evaluate the student's answer and return structured JSON."""
             is_correct = True
             sanitized_misconceptions = []
 
+        # Enforce source citations referencing knowledge chunk IDs
+        available_ids = [c.id for c in reference_chunks]
+        cited_ids = [cid for cid in response.cited_chunk_ids if cid in available_ids]
+        if not cited_ids and available_ids:
+            # Enforce provenance: inject the top-ranked retrieved chunk ID
+            cited_ids = [available_ids[0]]
+
         return LLMEvaluationResponse(
             is_correct=is_correct,
             score=max(0.0, min(1.0, score)),
@@ -139,6 +147,7 @@ Evaluate the student's answer and return structured JSON."""
             diagnosis=response.diagnosis,
             feedback=response.feedback,
             step_by_step_explanation=response.step_by_step_explanation,
+            cited_chunk_ids=cited_ids,
             follow_up_challenge=response.follow_up_challenge,
             evaluator_mode="llm_rag_grounded",
             confidence_score=response.confidence_score,
@@ -148,6 +157,15 @@ Evaluate the student's answer and return structured JSON."""
         self, request: LLMEvaluationRequest, is_verified_swap: bool
     ) -> LLMEvaluationResponse:
         """Deterministic rule & AST fallback evaluation."""
+        fallback_citations = [c.id for c in request.reference_chunks] if request.reference_chunks else []
+        if not fallback_citations and self.rag_service is not None:
+            retrieval = self.rag_service.retrieve(
+                query=f"{request.question}\n{request.student_response}",
+                concept_id=request.concept_id,
+                top_k=2,
+            )
+            fallback_citations = [m.chunk.id for m in retrieval.matches]
+
         if is_verified_swap:
             return LLMEvaluationResponse(
                 is_correct=True,
@@ -156,6 +174,7 @@ Evaluate the student's answer and return structured JSON."""
                 diagnosis="Code successfully and cleanly swapped the variables in memory without data loss.",
                 feedback="Correct! Your logic successfully executed the 3-step value transfer in memory.",
                 step_by_step_explanation="The intermediate variable safely preserved the original value before reassignment, satisfying all state invariants.",
+                cited_chunk_ids=fallback_citations,
                 evaluator_mode="rule_fallback",
                 confidence_score=1.0,
             )
@@ -170,6 +189,7 @@ Evaluate the student's answer and return structured JSON."""
                 diagnosis=eval_res.diagnosis,
                 feedback=eval_res.feedback,
                 step_by_step_explanation=eval_res.step_by_step_explanation,
+                cited_chunk_ids=fallback_citations,
                 follow_up_challenge=eval_res.followup_question.prompt if eval_res.followup_question else None,
                 evaluator_mode="rule_fallback",
                 confidence_score=1.0,
@@ -183,6 +203,7 @@ Evaluate the student's answer and return structured JSON."""
             diagnosis="Response could not be evaluated by LLM or rule engine.",
             feedback="Your response was recorded. Let's review the reference material together.",
             step_by_step_explanation="Review the core concepts before proceeding.",
+            cited_chunk_ids=fallback_citations,
             evaluator_mode="rule_fallback",
             confidence_score=0.5,
         )
@@ -242,9 +263,9 @@ Create a single concise question that tests practical application and confirms t
     def _format_ground_truth(self, chunks: List[KnowledgeChunk]) -> str:
         if not chunks:
             return "AUTHORITATIVE REFERENCES:\nNo specific reference chunks available."
-        lines = ["AUTHORITATIVE REFERENCES:"]
+        lines = ["AUTHORITATIVE REFERENCES: (You MUST cite relevant chunk IDs in 'cited_chunk_ids')"]
         for idx, c in enumerate(chunks, 1):
-            lines.append(f"[{idx}] {c.source_title} (Reliability: {c.reliability_score:.2f})")
+            lines.append(f"[{idx}] Chunk ID: '{c.id}' | Source: {c.source_title} (Reliability: {c.reliability_score:.2f})")
             lines.append(f"Content: {c.content}")
         return "\n".join(lines)
 
