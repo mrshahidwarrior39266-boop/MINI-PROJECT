@@ -441,7 +441,7 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
                 "evaluator_mode": res.get("evaluator_mode", "llm"),
                 "misconception_detected": misc_list[0] if misc_list else None,
                 "cited_chunk_ids": res.get("cited_chunk_ids", []),
-                "updated_mastery": round(res.get("updated_mastery", 0.0), 2),
+                "updated_mastery": round(res.get("new_mastery", res.get("updated_mastery", 0.0)), 2),
                 "is_frontier_advanced": res.get("is_frontier_advanced", False),
                 "audit_block_hash": audit_hash,
             })

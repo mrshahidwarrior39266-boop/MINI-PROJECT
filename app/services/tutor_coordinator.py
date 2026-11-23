@@ -47,6 +47,10 @@ class TutorCoordinator:
         self.knowledge_service.validate(set(self.graph_service.concepts))
 
         # Milestone 2: Dense Semantic RAG & LLM Evaluator
+        from app.services.question_service import QuestionService
+        questions_file = Path(__file__).resolve().parent.parent / "data" / "curriculum_questions.json"
+        self.question_service = QuestionService(questions_file)
+
         self.rag_service = rag_service or SemanticRAGService(
             knowledge_file=knowledge_file,
             repository=repository,
@@ -54,7 +58,10 @@ class TutorCoordinator:
         self.evaluator = evaluator or LLMEvaluator(
             rag_service=self.rag_service,
             pedagogy_service=self.pedagogy_service,
+            question_service=self.question_service,
         )
+        if self.evaluator and self.evaluator.question_service is None:
+            self.evaluator.question_service = self.question_service
 
     def get_frontier(self) -> LearningFrontier:
         """Compute the active learning frontier for the student."""

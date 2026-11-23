@@ -224,9 +224,14 @@ class UniversalEvaluationResult(BaseModel):
     canonical_answer: str
     explanation: str
     feedback: str
+    step_by_step_explanation: Optional[str] = None
     detected_misconceptions: List[str] = Field(default_factory=list)
     has_followup: bool = False
     followup_question: Optional[FollowupQuestion] = None
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.step_by_step_explanation is None:
+            self.step_by_step_explanation = self.explanation
 
 
 class QuestionService:
@@ -335,6 +340,45 @@ class QuestionService:
                         f"Question {q.id} references unknown misconception "
                         f"'{mistake.misconception_id}' for {q.concept_id}."
                     )
+
+    # ------------------------------------------------------------------
+    # Concept-level universal evaluation entry point
+    # ------------------------------------------------------------------
+    def evaluate(
+        self,
+        concept_id: str,
+        student_answer: str,
+        question_prompt: Optional[str] = None
+    ) -> UniversalEvaluationResult:
+        """Evaluate a student's answer against the best matching question for a concept."""
+        questions = self.get_questions_for_concept(concept_id)
+        if not questions:
+            return UniversalEvaluationResult(
+                is_correct=False,
+                score=0.0,
+                diagnosis="No registered diagnostic question found for this concept.",
+                canonical_answer="",
+                explanation="Please review the lesson material.",
+                feedback="No diagnostic question registered for this concept."
+            )
+
+        target_q = questions[0]
+        if question_prompt and len(questions) > 1:
+            prompt_lower = question_prompt.lower()
+            best_overlap = -1
+            for q in questions:
+                q_lower = q.prompt.lower()
+                if "swap" in prompt_lower and ("swap" in q_lower or "x = y" in q_lower):
+                    target_q = q
+                    break
+                q_words = set(re.findall(r"\w+", q_lower))
+                target_words = set(re.findall(r"\w+", prompt_lower))
+                overlap = len(q_words & target_words)
+                if overlap > best_overlap:
+                    best_overlap = overlap
+                    target_q = q
+
+        return self.evaluate_main_question(target_q, student_answer)
 
     # ------------------------------------------------------------------
     # Main question evaluation

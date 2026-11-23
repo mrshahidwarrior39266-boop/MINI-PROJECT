@@ -153,8 +153,48 @@ class CurriculumPlanner:
 
         # If learner is cold-start (no previous concepts learned to review),
         # allocate surplus items to Frontier Learning
-        surplus_slots = target_rev - len(review_items)
-        allocated_frontier_slots = target_fro + surplus_slots
+        has_prior_practice = any(m.attempts_count > 0 for m in mastery_map.values()) if mastery_map else False
+        if not has_prior_practice:
+            surplus_slots = target_rev - len(review_items)
+            allocated_frontier_slots = target_fro + surplus_slots
+        else:
+            # Learner has prior practice: fill review items to meet the 30% quota
+            if len(review_items) < target_rev:
+                fallback_review_pool = [cid for cid in mastery_map.keys() if mastery_map[cid].attempts_count > 0]
+                if not fallback_review_pool:
+                    fallback_review_pool = self.graph.topological_sort()[:3]
+
+                pool_idx = 0
+                while len(review_items) < target_rev and pool_idx < 10:
+                    cid = fallback_review_pool[pool_idx % len(fallback_review_pool)]
+                    pool_idx += 1
+                    concept = self.graph.concepts.get(cid)
+                    c_questions = self.questions.get_questions_for_concept(cid)
+                    if not c_questions or not concept:
+                        continue
+                    q = c_questions[0]
+                    m = mastery_map.get(cid)
+                    eff_mastery = self.spaced_engine.calculate_decayed_mastery(
+                        m, simulated_days_elapsed=simulated_days_elapsed.get(cid) if simulated_days_elapsed else None
+                    ) if m else 0.0
+
+                    ex = PlannedExercise(
+                        item_index=item_idx,
+                        bucket="REVIEW",
+                        concept_id=cid,
+                        concept_title=concept.title,
+                        exercise_prompt=f"[Foundational Review] {q.prompt}",
+                        hint=q.hint,
+                        canonical_answer=q.canonical_answer,
+                        estimated_minutes=2,
+                        rationale=f"Reinforcement review to prime memory for '{concept.title}'.",
+                        decay_score=eff_mastery,
+                    )
+                    review_items.append(ex)
+                    item_idx += 1
+
+            surplus_slots = max(0, target_rev - len(review_items))
+            allocated_frontier_slots = target_fro + surplus_slots
 
         # -------------------------------------------------------------
         # BUCKET 2: 60% FRONTIER LEARNING (Next Unlocked in DAG)

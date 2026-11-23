@@ -181,14 +181,14 @@ Evaluate the student's answer and return structured JSON."""
 
         if self.question_service is not None:
             # Match against question service catalog
-            eval_res = self.question_service.evaluate(request.concept_id, request.student_response)
+            eval_res = self.question_service.evaluate(request.concept_id, request.student_response, request.question)
             return LLMEvaluationResponse(
                 is_correct=eval_res.is_correct,
                 score=eval_res.score,
                 detected_misconceptions=eval_res.detected_misconceptions,
-                diagnosis=eval_res.diagnosis,
+                diagnosis=eval_res.diagnosis or ("Correct conceptual understanding." if eval_res.is_correct else "Incorrect understanding of mechanism."),
                 feedback=eval_res.feedback,
-                step_by_step_explanation=eval_res.step_by_step_explanation,
+                step_by_step_explanation=eval_res.step_by_step_explanation or eval_res.explanation or "Review the step-by-step mechanism.",
                 cited_chunk_ids=fallback_citations,
                 follow_up_challenge=eval_res.followup_question.prompt if eval_res.followup_question else None,
                 evaluator_mode="rule_fallback",

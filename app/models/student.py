@@ -34,6 +34,10 @@ class ConceptMastery(BaseModel):
         description="IDs of currently observed misconceptions that need remediation"
     )
 
+    @property
+    def last_practiced_at(self) -> Optional[datetime]:
+        return self.last_practiced
+
 
 class AssessmentLog(BaseModel):
     """Immutable audit log of an assessment interaction (the proof of learning)."""

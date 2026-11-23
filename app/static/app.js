@@ -377,12 +377,16 @@ async function submitLessonAnswer() {
   }
 
   try {
+    const promptEl = document.getElementById('lesson-diagnostic-prompt');
+    const qPrompt = promptEl ? promptEl.innerText.trim() : '';
+
     const res = await fetch('/api/evaluate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         concept_id: state.activeConcept,
         student_answer: answer,
+        question_prompt: qPrompt,
       })
     });
     const result = await res.json();

@@ -47,9 +47,10 @@ class SpacedRepetitionEngine:
 
         if simulated_days_elapsed is not None:
             days_elapsed = max(0.0, simulated_days_elapsed)
-        elif mastery.last_practiced_at:
+        elif getattr(mastery, "last_practiced", None) or getattr(mastery, "last_practiced_at", None):
+            last_ts = getattr(mastery, "last_practiced", None) or getattr(mastery, "last_practiced_at", None)
             now = current_time or datetime.now(timezone.utc)
-            delta = now - mastery.last_practiced_at
+            delta = now - last_ts
             days_elapsed = max(0.0, delta.total_seconds() / 86400.0)
         else:
             # Never practiced or no timestamp recorded yet
