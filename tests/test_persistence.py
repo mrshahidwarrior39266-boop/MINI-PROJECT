@@ -1,8 +1,9 @@
 import pytest
+from datetime import datetime, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from app.models.student import StudentProfile
+from app.models.student import AssessmentLog, StudentProfile
 from app.services.student_repository import StudentRepository
 from app.services.student_state import StudentStateService
 from app.services.tutor_coordinator import TutorCoordinator
@@ -147,3 +148,29 @@ def test_reset_student():
         assert repo.load_profile("stu_charlie") is None
         assert len(repo.load_mastery_map("stu_charlie")) == 0
         assert len(repo.load_assessment_history("stu_charlie")) == 0
+
+
+def test_load_assessment_history_limit_returns_most_recent():
+    with TemporaryDirectory() as tmp_dir:
+        repo = StudentRepository(Path(tmp_dir) / "test_records.db")
+        repo.save_profile(StudentProfile(student_id="stu_history", name="History"))
+
+        for i in range(5):
+            repo.save_assessment_log(AssessmentLog(
+                id=f"log_{i}",
+                student_id="stu_history",
+                concept_id="py.variables",
+                question_asked="q",
+                student_response=f"a{i}",
+                is_correct=i % 2 == 0,
+                score=1.0 if i % 2 == 0 else 0.0,
+                detected_misconceptions=[],
+                evaluator_feedback=f"feedback {i}",
+                timestamp=datetime(2026, 1, 1, 0, i, tzinfo=timezone.utc),
+            ))
+
+        all_logs = repo.load_assessment_history("stu_history")
+        recent = repo.load_assessment_history("stu_history", limit=2)
+        assert [log.id for log in all_logs] == [f"log_{i}" for i in range(5)]
+        assert [log.id for log in recent] == ["log_3", "log_4"]
+        assert repo.load_assessment_history("stu_history", limit=0) == []

@@ -179,3 +179,17 @@ code, pre, .font-mono {
 input:focus, textarea:focus, button:focus {
   outline: none;
 }
+
+/* Narrow screens: the fixed 256px curriculum column otherwise overlaps the
+   lesson workspace and makes the Evaluate button unclickable. Keep the icon
+   rail and let the main workspace use the remaining width. */
+main {
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  #curriculum-sidebar {
+    display: none;
+  }
+}
+

@@ -221,7 +221,14 @@ class SemanticRAGService:
 
             if self.repository is not None:
                 h = self._hash_content(kc)
-                self.repository.save_chunk_embedding(kc.id, h, emb)
+                self.repository.save_chunk_embedding(
+                    chunk_id=kc.id,
+                    concept_id=kc.concept_id,
+                    provider_name=self.embedding_service.provider_name,
+                    dimension=self.embedding_service.dimension,
+                    embedding=emb,
+                    content_hash=h,
+                )
 
         summary.linked_chunks = sum(1 for c in chunks if c.concept_id)
         summary.unlinked_chunks = sum(1 for c in chunks if not c.concept_id)

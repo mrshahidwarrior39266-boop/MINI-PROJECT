@@ -131,10 +131,23 @@ def _mistake_matches(mistake: QuestionMistakePattern, plain: str, compact: str) 
                 return True
             continue
 
-        # Fall back to punctuation-insensitive matching for code-shaped triggers.
+        # Fall back to punctuation-insensitive matching for code-shaped
+        # triggers only. Pure-language triggers were already handled by the
+        # boundary-aware pattern above; re-checking them as raw substrings
+        # made "algebra" match inside "algebraic" and produced false
+        # misconception diagnoses for correct explanations.
+        if re.fullmatch(r"[a-z']+(?:\s+[a-z']+)*", _plain(trigger)):
+            continue
+
         trigger_compact = _compact(trigger)
-        if trigger_compact and trigger_compact in compact:
-            return True
+        if trigger_compact:
+            compact_pattern = (
+                r"(?<![A-Za-z0-9_])"
+                + re.escape(trigger_compact)
+                + r"(?![A-Za-z0-9_])"
+            )
+            if re.search(compact_pattern, compact):
+                return True
 
     return False
 

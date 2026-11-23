@@ -43,4 +43,11 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
+        print("\n  ArchaLearn server stopped cleanly.", flush=True)
         sys.exit(0)
+    except Exception as exc:
+        import traceback
+        print("\n[SERVER EXCEPTION]", file=sys.stderr, flush=True)
+        traceback.print_exc(file=sys.stderr)
+        sys.stderr.flush()
+        sys.exit(1)

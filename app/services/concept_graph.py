@@ -121,11 +121,20 @@ class ConceptGraphService:
         in_degree = {cid: len(prereqs) for cid, prereqs in self.prerequisites_of.items()}
         queue = [cid for cid, deg in in_degree.items() if deg == 0]
         order = []
+        # dependents_of is a set; without a stable tie-breaker, independent
+        # branches (e.g. lists and operators) swap places across processes
+        # because Python randomizes string hashing. Use catalog order so the
+        # sidebar's chapter numbers stay consistent across restarts.
+        catalog_rank = {cid: idx for idx, cid in enumerate(self.concepts)}
 
         while queue:
             node = queue.pop(0)
             order.append(node)
-            for dependent in self.dependents_of.get(node, []):
+            dependents = sorted(
+                self.dependents_of.get(node, set()),
+                key=lambda cid: catalog_rank.get(cid, len(catalog_rank)),
+            )
+            for dependent in dependents:
                 in_degree[dependent] -= 1
                 if in_degree[dependent] == 0:
                     queue.append(dependent)

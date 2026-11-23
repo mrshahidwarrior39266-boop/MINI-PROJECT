@@ -23,6 +23,7 @@ MAIN_CASES = [
     ("q_var_01", "the right side x + 1 is calculated first, then the result is assigned to x", "full"),
     ("q_var_01", "x gets 6 if x was 5", "full"),
     ("q_var_01", "it is not algebra: = assigns the value on the right to x", "full"),
+    ("q_var_01", "It evaluates x + 1 using x's current value, then assigns the result back to x. The equals sign is assignment, not algebraic equality.", "full"),
     ("q_var_01", "it means x equals x plus one, impossible", "wrong"),
     ("q_var_01", "no solution", "wrong"),
     ("q_var_01", "assign", "partial"),

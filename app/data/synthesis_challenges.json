@@ -2,7 +2,7 @@
   {
     "id": "syn_variables_conditionals_01",
     "title": "Ordered Pair Normalization (Conditional Swap)",
-    "required_concept_ids": ["py.variables", "py.conditionals", "py.operators"],
+    "required_concept_ids": ["py.variables", "py.conditionals", "py.operators_expressions"],
     "prompt": "Write a Python snippet that checks two integer variables 'a' and 'b'. If 'a' is strictly greater than 'b', swap their values using an intermediate variable 'temp' so that 'a' is guaranteed to hold the smaller value. Otherwise, leave them unchanged.",
     "hint": "Check with an 'if a > b:' block, then execute the 3-step swap inside the indented body.",
     "canonical_answer": "if a > b:\n    temp = a\n    a = b\n    b = temp",
@@ -32,7 +32,7 @@
   {
     "id": "syn_operators_loops_01",
     "title": "Software Arithmetic via Repeated Subtraction",
-    "required_concept_ids": ["py.operators", "py.while_loops", "py.variables"],
+    "required_concept_ids": ["py.operators_expressions", "py.while_loops", "py.variables"],
     "prompt": "Using only addition and subtraction in a while loop, calculate how many times divisor 'b' fits into dividend 'a' (integer division). Store the quotient in 'quotient' and the remainder in 'remainder'.",
     "hint": "Initialize quotient = 0 and remainder = a. While remainder >= b, subtract b from remainder and increment quotient by 1.",
     "canonical_answer": "quotient = 0\nremainder = a\nwhile remainder >= b:\n    remainder = remainder - b\n    quotient = quotient + 1",

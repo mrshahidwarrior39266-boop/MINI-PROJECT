@@ -68,7 +68,7 @@
     <div class="flex items-center space-x-3 text-xs">
       <div class="hidden sm:flex items-center space-x-1.5 text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-2.5 py-0.5 rounded-full text-[11px] font-mono">
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-        <span>350 tests certified</span>
+        <span>test suite verified</span>
       </div>
       <span class="text-codex-muted text-[11px] font-mono" id="top-learner-label">Shahid (stu_shahid)</span>
     </div>
@@ -117,7 +117,7 @@
       </div>
 
       <!-- Settings -->
-      <button onclick="showModal('studentModal')" title="Switch Student Profile"
+      <button onclick="openStudentModal()" title="Switch Student Profile"
         class="w-8 h-8 rounded-lg flex items-center justify-center text-codex-muted hover:text-white hover:bg-codex-card transition smooth-fade">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
       </button>
@@ -536,26 +536,26 @@
       <section id="view-audit" class="view-panel hidden flex-1 flex flex-col overflow-y-auto p-6 space-y-5">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-base font-medium text-codex-text">Cryptographic Audit Ledger</h2>
-            <p class="text-xs text-codex-secondary mt-0.5">Tamper-evident assessment evidence chain hashed with SHA-256.</p>
+            <h2 class="text-base font-medium text-codex-text">SHA-256 Audit Ledger</h2>
+            <p class="text-xs text-codex-secondary mt-0.5">Append-only assessment history with a live SHA-256 fingerprint over recorded entries.</p>
           </div>
           <button onclick="refreshAuditTrail()" class="px-3 py-1.5 rounded-lg bg-codex-card hover:bg-codex-hover border border-codex-border text-xs text-codex-text font-mono transition">
-            Verify Integrity
+            Refresh
           </button>
         </div>
 
         <div class="p-4 rounded-xl bg-codex-card border border-codex-border flex items-center justify-between text-xs">
           <div>
-            <div class="text-[10px] text-codex-muted font-mono uppercase">Session State Fingerprint</div>
+            <div class="text-[10px] text-codex-muted font-mono uppercase">Assessment Ledger Fingerprint</div>
             <div class="text-sm font-mono text-codex-text mt-0.5" id="audit-main-fingerprint">Calculating...</div>
           </div>
-          <div class="text-right font-mono text-[11px] text-emerald-400">
-            ✓ Integrity Verified
+          <div class="text-right font-mono text-[11px] text-codex-secondary">
+            Live SHA-256
           </div>
         </div>
 
         <div class="space-y-2">
-          <div class="text-xs font-mono text-codex-muted tracking-wider">ASSESSMENT LEDGER BLOCKS</div>
+          <div class="text-xs font-mono text-codex-muted tracking-wider">ASSESSMENT LEDGER ENTRIES</div>
           <div id="audit-logs-container" class="space-y-2 text-xs"></div>
         </div>
       </section>

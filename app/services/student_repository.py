@@ -226,12 +226,35 @@ class StudentRepository:
                 timestamp_str
             ))
 
-    def load_assessment_history(self, student_id: str) -> List[AssessmentLog]:
+    def count_assessment_history(self, student_id: str) -> int:
+        """Return the total number of assessment logs for a student."""
+        with self._get_connection() as conn:
+            row = conn.execute(
+                "SELECT COUNT(*) FROM assessment_logs WHERE student_id = ?",
+                (student_id,),
+            ).fetchone()
+        return int(row[0]) if row else 0
+
+    def load_assessment_history(
+        self, student_id: str, limit: Optional[int] = None
+    ) -> List[AssessmentLog]:
+        """Load assessment history in chronological order, optionally only the most recent N."""
+        if limit is not None and limit <= 0:
+            return []
+
         logs: List[AssessmentLog] = []
         with self._get_connection() as conn:
-            rows = conn.execute(
-                "SELECT * FROM assessment_logs WHERE student_id = ? ORDER BY timestamp ASC", (student_id,)
-            ).fetchall()
+            if limit is None:
+                rows = conn.execute(
+                    "SELECT * FROM assessment_logs WHERE student_id = ? ORDER BY timestamp ASC", (student_id,)
+                ).fetchall()
+            else:
+                # Fetch the newest N, then restore chronological order for display.
+                rows = conn.execute(
+                    "SELECT * FROM assessment_logs WHERE student_id = ? "
+                    "ORDER BY timestamp DESC LIMIT ?",
+                    (student_id, limit),
+                ).fetchall()
             for r in rows:
                 logs.append(AssessmentLog(
                     id=r["id"],
@@ -245,6 +268,8 @@ class StudentRepository:
                     evaluator_feedback=r["evaluator_feedback"],
                     timestamp=datetime.fromisoformat(r["timestamp"])
                 ))
+        if limit is not None:
+            logs.reverse()
         return logs
 
     def save_session_cursor(

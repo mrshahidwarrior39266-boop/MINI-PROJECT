@@ -17,6 +17,8 @@ const state = {
   auditHash: '',
   swapStep: 1,
   socraticChat: [],
+  socraticConcept: null,
+  socraticQuestion: '',
   conceptQuestions: [],
   currentQuestionIdx: 0,
 };
@@ -194,7 +196,10 @@ function showView(viewId) {
   if (viewId === 'plan') refreshDailyPlan();
   if (viewId === 'audit') refreshAuditTrail();
   if (viewId === 'ram') fetchRamState();
-  if (viewId === 'socratic') renderSocraticLab();
+  if (viewId === 'socratic') {
+    initSocraticLab();
+    renderSocraticLab();
+  }
 }
 
 function showConceptLesson(conceptId) {
@@ -563,12 +568,27 @@ async function submitLessonAnswer() {
     });
     const result = await res.json();
 
+    if (!res.ok || result.error) {
+      const feedbackCard = document.getElementById('lesson-eval-feedback-card');
+      if (feedbackCard) {
+        feedbackCard.classList.remove('hidden');
+        feedbackCard.className = 'p-4 rounded-xl bg-rose-950/30 border border-rose-500/40 text-xs space-y-1';
+        feedbackCard.innerHTML = `
+          <div class="font-mono text-[11px] text-rose-400 font-semibold">Evaluation error</div>
+          <p class="text-rose-100 leading-relaxed">${escapeHtml(result.message || 'The evaluator could not process that answer. Please try again.')}</p>
+        `;
+      }
+      return;
+    }
+
     // Refresh state to update lock status & sidebar
     await fetchSystemStatus();
     await fetchCurriculum();
 
     const activeConceptObj = state.curriculum.find(c => c.id === state.activeConcept);
-    const updatedMastery = activeConceptObj ? activeConceptObj.mastery : (result.updated_mastery || 0);
+    const updatedMastery = activeConceptObj
+      ? (Number(activeConceptObj.mastery) || 0)
+      : (Number(result.updated_mastery) || 0);
 
     // Update lesson status pill
     const statusPill = document.getElementById('lesson-status-pill');
@@ -591,7 +611,7 @@ async function submitLessonAnswer() {
       const currentQNumber = state.currentQuestionIdx + 1;
       const hasNextQ = currentQNumber < totalQ;
       const isMastered = updatedMastery >= 0.70;
-      const scorePct = Math.round(result.score * 100);
+      const scorePct = Math.round((Number(result.score) || 0) * 100);
 
       const explanationText = result.step_by_step_explanation || q.explanation || "Python completely evaluates the right-hand side first, allocates memory, and binds the variable name on the left to that address.";
       const canonicalText = result.canonical_answer || q.canonical_answer || "";
@@ -607,7 +627,7 @@ async function submitLessonAnswer() {
               <span>Question ${currentQNumber} of ${totalQ} Solved</span>
               <span class="bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded text-[10px]">${scorePct}%</span>
             </span>
-            <span class="text-zinc-500 font-mono text-[10px]">Evaluator: ${result.evaluator_mode || 'llm'}</span>
+            <span class="text-zinc-500 font-mono text-[10px]">Evaluator: ${escapeHtml(result.evaluator_mode || 'rule_fallback')}</span>
           </div>
 
           <!-- Direct Feedback -->
@@ -634,7 +654,7 @@ async function submitLessonAnswer() {
           <!-- Footer Metadata & Navigation Controls -->
           <div class="flex flex-col sm:flex-row items-center justify-between pt-2 border-t border-emerald-500/20 gap-2">
             <div class="flex items-center space-x-3 text-[10px] font-mono text-zinc-400">
-              <span>Citations: [${(result.cited_chunk_ids || []).join(', ') || 'chunk.py.var.01'}]</span>
+              <span>Citations: [${escapeHtml((result.cited_chunk_ids || []).join(', ') || 'chunk.py.var.01')}]</span>
               <span class="text-emerald-400 font-bold">Chapter Mastery: ${Math.round(updatedMastery * 100)}%</span>
             </div>
 
@@ -668,7 +688,7 @@ async function submitLessonAnswer() {
               <span>${scorePct > 0 ? `Partial Understanding (${scorePct}%)` : 'Misconception Diagnosed'}</span>
               <span class="text-zinc-400 text-[10px]">Question ${currentQNumber} of ${totalQ}</span>
             </span>
-            <span class="text-zinc-500 font-mono text-[10px]">Evaluator: ${result.evaluator_mode || 'llm'}</span>
+            <span class="text-zinc-500 font-mono text-[10px]">Evaluator: ${escapeHtml(result.evaluator_mode || 'rule_fallback')}</span>
           </div>
 
           <!-- Diagnosed Misconception / Gap -->
@@ -708,7 +728,7 @@ async function submitLessonAnswer() {
           <!-- Footer Metadata & Action Buttons -->
           <div class="flex flex-col sm:flex-row items-center justify-between pt-2 border-t border-amber-500/20 gap-2">
             <div class="flex items-center space-x-3 text-[10px] font-mono text-zinc-400">
-              <span>Citations: [${(result.cited_chunk_ids || []).join(', ') || 'chunk.py.var.01'}]</span>
+              <span>Citations: [${escapeHtml((result.cited_chunk_ids || []).join(', ') || 'chunk.py.var.01')}]</span>
               <span class="text-amber-400">Chapter Mastery: ${Math.round(updatedMastery * 100)}%</span>
             </div>
 
@@ -825,25 +845,31 @@ async function refreshDailyPlan() {
     if (synthEl) synthEl.innerText = `${data.counts?.synthesis || 1} Item`;
 
     container.innerHTML = (data.items || []).map((item, idx) => {
+      const bucket = String(item.bucket || item.category || '').toLowerCase();
+      const conceptTitle = item.concept_title || item.concept_id || 'Concept';
+      const prompt = item.exercise_prompt || item.prompt || '';
       let tagColor = 'text-codex-muted';
-      if (item.category === 'review') tagColor = 'text-emerald-400';
-      if (item.category === 'frontier') tagColor = 'text-amber-400';
-      if (item.category === 'synthesis') tagColor = 'text-cyan-400';
+      if (bucket === 'review') tagColor = 'text-emerald-400';
+      if (bucket === 'frontier') tagColor = 'text-amber-400';
+      if (bucket === 'synthesis') tagColor = 'text-cyan-400';
+
+      const launchControl = item.concept_id === 'synthesis'
+        ? `<button onclick="document.getElementById('synthesis-challenges-container')?.scrollIntoView({behavior:'smooth', block:'start'})"
+            class="px-2.5 py-1 rounded bg-[#2a2a30] hover:bg-[#34343a] text-xs font-mono text-codex-secondary hover:text-white shrink-0 transition">View Challenge</button>`
+        : `<button onclick="showConceptLesson('${item.concept_id}')"
+            class="px-2.5 py-1 rounded bg-[#2a2a30] hover:bg-[#34343a] text-xs font-mono text-codex-secondary hover:text-white shrink-0 transition">Launch</button>`;
 
       return `
         <div class="p-3 rounded-xl bg-codex-card border border-codex-border hover:bg-codex-hover transition flex items-center justify-between space-x-4">
           <div class="space-y-0.5 max-w-xl">
             <div class="flex items-center space-x-2 text-[11px] font-mono">
               <span class="text-codex-muted">#${idx + 1}</span>
-              <span class="${tagColor} uppercase font-medium">${item.category}</span>
-              <span class="text-codex-secondary">${item.concept_id}</span>
+              <span class="${tagColor} uppercase font-medium">${escapeHtml(bucket)}</span>
+              <span class="text-codex-secondary">${escapeHtml(conceptTitle)}</span>
             </div>
-            <p class="text-xs text-codex-text line-clamp-1">${item.prompt}</p>
+            <p class="text-xs text-codex-text line-clamp-1">${escapeHtml(prompt)}</p>
           </div>
-          <button onclick="showConceptLesson('${item.concept_id}')"
-            class="px-2.5 py-1 rounded bg-[#2a2a30] hover:bg-[#34343a] text-xs font-mono text-codex-secondary hover:text-white shrink-0 transition">
-            Launch
-          </button>
+          ${launchControl}
         </div>
       `;
     }).join('');
@@ -869,13 +895,11 @@ async function loadSynthesisChallenges() {
     container.innerHTML = challenges.map(ch => `
       <div class="p-3.5 rounded-xl bg-codex-card border border-codex-border space-y-2">
         <div class="flex items-center justify-between text-[11px] font-mono">
-          <span class="text-cyan-400 font-medium">${ch.title}</span>
-          <span class="text-codex-muted">${ch.concepts?.join(' + ')}</span>
+          <span class="text-cyan-400 font-medium">${escapeHtml(ch.title)}</span>
+          <span class="text-codex-muted text-right">${escapeHtml((ch.required_concept_ids || ch.concepts || []).join(' + '))}</span>
         </div>
-        <p class="text-xs text-codex-secondary leading-relaxed">${ch.description}</p>
-        <div class="p-2 rounded bg-[#18181c] font-mono text-[11px] text-zinc-300 overflow-x-auto">
-          <code>${ch.starter_code || '# Write synthesis solution here'}</code>
-        </div>
+        <p class="text-xs text-codex-secondary leading-relaxed whitespace-pre-wrap">${escapeHtml(ch.prompt || ch.description || '')}</p>
+        ${ch.hint ? `<p class="text-[11px] text-codex-muted leading-relaxed"><span class="text-cyan-400 font-mono">Hint:</span> ${escapeHtml(ch.hint)}</p>` : ''}
       </div>
     `).join('');
   } catch (err) {
@@ -985,26 +1009,31 @@ async function executeRAGSearch() {
   try {
     const res = await fetch(`/api/rag/search?q=${encodeURIComponent(q)}`);
     const data = await res.json();
+    if (!res.ok || data.error) {
+      throw new Error(data.message || 'Vector search failed.');
+    }
 
+    const results = Array.isArray(data.results) ? data.results : [];
     container.innerHTML = `
       <div class="flex items-center justify-between text-[10px] font-mono text-codex-muted pb-1 border-b border-codex-border">
-        <span>Found ${data.results_count} citations</span>
-        <span>Retrieval Latency: ${data.latency_ms} ms</span>
+        <span>Found ${results.length} citations</span>
+        <span>Retrieval Latency: ${Number(data.latency_ms) || 0} ms</span>
       </div>
-      ${(data.results || []).map(r => `
+      ${results.length === 0 ? '<div class="p-3 text-xs text-codex-muted">No matching chunks found. Try a broader query.</div>' : ''}
+      ${results.map(r => `
         <div class="p-3 rounded-lg bg-codex-card border border-codex-border space-y-1">
           <div class="flex items-center justify-between text-[10px] font-mono text-codex-muted">
-            <span class="text-cyan-400 font-medium">${r.chunk_id}</span>
-            <span>Cosine Sim: ${(r.similarity || 0.85).toFixed(3)}</span>
+            <span class="text-cyan-400 font-medium">${escapeHtml(r.chunk_id || 'unknown')}</span>
+            <span>Cosine Sim: ${(Number(r.similarity) || 0).toFixed(3)}</span>
           </div>
-          <div class="text-xs font-medium text-codex-text">${r.source_title}</div>
-          <p class="text-[11px] text-codex-secondary leading-relaxed">${r.content}</p>
+          <div class="text-xs font-medium text-codex-text">${escapeHtml(r.source_title || 'Untitled source')}</div>
+          <p class="text-[11px] text-codex-secondary leading-relaxed">${escapeHtml(r.content || '')}</p>
         </div>
       `).join('')}
     `;
   } catch (err) {
     console.error('Error executing search:', err);
-    container.innerHTML = '<div class="text-rose-400 text-xs">Error performing vector search.</div>';
+    container.innerHTML = `<div class="text-rose-400 text-xs">${escapeHtml(err.message || 'Error performing vector search.')}</div>`;
   }
 }
 
@@ -1028,15 +1057,17 @@ async function executeIngestion() {
       body: JSON.stringify({ filename, content }),
     });
     const result = await res.json();
+    if (!res.ok || result.error) {
+      throw new Error(result.message || 'Document ingestion failed.');
+    }
 
+    const linked = Array.isArray(result.linked_concepts) ? result.linked_concepts : [];
     statusBox.className = 'p-2.5 rounded-lg text-xs font-mono bg-emerald-950/20 border border-emerald-500/30 text-emerald-300 block';
-    statusBox.innerHTML = `
-      ✓ Ingested '${result.filename}' cleanly. Extracted ${result.chunks_extracted} chunks, auto-linked to [${result.linked_concepts.join(', ')}].
-    `;
+    statusBox.innerText = `✓ Ingested '${result.filename}' cleanly. Extracted ${result.chunks_extracted} chunks, auto-linked to [${linked.join(', ')}].`;
   } catch (err) {
     console.error('Ingestion error:', err);
     statusBox.className = 'p-2.5 rounded-lg text-xs font-mono bg-rose-950/20 border border-rose-500/30 text-rose-300 block';
-    statusBox.innerText = 'Error ingesting document.';
+    statusBox.innerText = err.message || 'Error ingesting document.';
   }
 }
 
@@ -1047,32 +1078,36 @@ async function refreshAuditTrail() {
   try {
     const res = await fetch('/api/audit-trail');
     const data = await res.json();
+    if (!res.ok || data.error) {
+      throw new Error(data.message || 'Could not load audit trail.');
+    }
 
     const fp = document.getElementById('audit-main-fingerprint');
-    if (fp) fp.innerText = data.audit_hash;
+    if (fp) fp.innerText = data.audit_hash || 'unavailable';
 
     const container = document.getElementById('audit-logs-container');
     if (!container) return;
 
-    if (!data.recent_evaluations || data.recent_evaluations.length === 0) {
-      container.innerHTML = '<div class="p-3 text-xs text-codex-muted">No evaluations recorded yet in active session. Solve a Socratic question to generate an immutable cryptographic block.</div>';
+    const evaluations = Array.isArray(data.recent_evaluations) ? data.recent_evaluations : [];
+    if (evaluations.length === 0) {
+      container.innerHTML = '<div class="p-3 text-xs text-codex-muted">No evaluations recorded yet in active session. Solve a Socratic question to generate a ledger entry.</div>';
       return;
     }
 
-    container.innerHTML = data.recent_evaluations.map(log => `
+    container.innerHTML = evaluations.map(log => `
       <div class="p-3 rounded-lg bg-codex-card border border-codex-border space-y-1 font-mono text-xs">
         <div class="flex items-center justify-between text-[10px]">
-          <span class="text-codex-secondary">${log.concept_id}</span>
+          <span class="text-codex-secondary">${escapeHtml(log.concept_id || 'unknown')}</span>
           <span class="${log.is_correct ? 'text-emerald-400' : 'text-amber-400'}">
-            ${log.is_correct ? '✓ Verified' : '⚠ Misconception Logged'} (${Math.round(log.score * 100)}%)
+            ${log.is_correct ? '✓ Verified' : '⚠ Misconception Logged'} (${Math.round((Number(log.score) || 0) * 100)}%)
           </span>
         </div>
-        <p class="text-codex-text font-sans text-xs">${log.question_asked}</p>
+        <p class="text-codex-text font-sans text-xs">${escapeHtml(log.question_asked || '')}</p>
         <div class="p-1.5 rounded bg-black/30 text-codex-secondary text-[11px] truncate">
-          <span class="text-codex-muted">Answer:</span> ${log.student_response}
+          <span class="text-codex-muted">Answer:</span> ${escapeHtml(log.student_response || '')}
         </div>
         <div class="text-[10px] text-codex-muted flex justify-between pt-1 border-t border-codex-border">
-          <span>SHA-256 Block: ${log.id ? log.id.slice(0, 16) : '39a281f7'}...</span>
+          <span>Ledger Entry: ${escapeHtml(String(log.id || 'unknown').slice(0, 16))}...</span>
           <span>${log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : 'now'}</span>
         </div>
       </div>
@@ -1080,17 +1115,34 @@ async function refreshAuditTrail() {
 
   } catch (err) {
     console.error('Error fetching audit trail:', err);
+    const container = document.getElementById('audit-logs-container');
+    if (container) {
+      container.innerHTML = `<div class="p-3 text-xs text-rose-400">${escapeHtml(err.message || 'Could not load audit trail.')}</div>`;
+    }
   }
 }
 
 // ---------------------------------------------------------------------------
 // 11. SOCRATIC LAB MULTI-TURN DIALOGUE (Milestone 1)
 // ---------------------------------------------------------------------------
-function initSocraticLab() {
+function currentSocraticQuestion() {
+  const q = state.conceptQuestions && state.conceptQuestions[0];
+  if (q && q.prompt) return q.prompt;
+  const lesson = state.lessons[state.activeConcept];
+  if (lesson && lesson.diagnostic_prompt) return lesson.diagnostic_prompt;
+  return `Explain the mechanics of ${state.activeConcept} in Python.`;
+}
+
+function initSocraticLab(forceReset = false) {
+  if (!forceReset && state.socraticChat.length > 0 && state.socraticConcept === state.activeConcept) {
+    return;
+  }
+  state.socraticConcept = state.activeConcept;
+  state.socraticQuestion = currentSocraticQuestion();
   state.socraticChat = [
     {
       role: 'tutor',
-      text: "Welcome to the Socratic Diagnostic Lab. I guide you through Python execution order and memory models. Let's start with variables: If x = 10 and y = 20, why does writing 'x = y; y = x' fail to swap their values, and what is the final state of memory?"
+      text: `Welcome to the Socratic Diagnostic Lab. I guide you through Python execution order and memory models. Let's start with ${state.activeConcept}:\n\n${state.socraticQuestion}`
     }
   ];
 }
@@ -1109,7 +1161,7 @@ function renderSocraticLab() {
               : 'bg-codex-card text-zinc-200 border border-codex-border'
           }">
             <div class="text-[10px] font-mono text-codex-muted mb-1 uppercase">${msg.role === 'user' ? 'Student' : 'Socratic Tutor'}</div>
-            <p class="leading-relaxed whitespace-pre-wrap">${msg.text}</p>
+            <p class="leading-relaxed whitespace-pre-wrap">${escapeHtml(msg.text)}</p>
           </div>
         </div>
       `).join('')}
@@ -1147,19 +1199,40 @@ async function sendSocraticMessage() {
       body: JSON.stringify({
         concept_id: state.activeConcept,
         student_answer: text,
+        // Send the exact question displayed in the chat so the evaluator
+        // grades this answer against the same prompt, not a different one.
+        question_prompt: state.socraticQuestion || currentSocraticQuestion(),
       })
     });
     const result = await res.json();
 
-    let responseText = result.feedback;
+    if (!res.ok || result.error) {
+      state.socraticChat.push({
+        role: 'tutor',
+        text: `I could not evaluate that answer: ${result.message || 'the evaluator returned an error.'}`
+      });
+      renderSocraticLab();
+      return;
+    }
+
+    let responseText = result.feedback || result.diagnosis || 'Your answer was recorded.';
     if (result.misconception_detected) {
       responseText += `\n\n[Diagnosed Misconception: ${result.misconception_detected}]`;
     }
     state.socraticChat.push({ role: 'tutor', text: responseText });
     renderSocraticLab();
 
+    // Socratic evaluations update mastery on the server too; keep the sidebar
+    // and frontier in sync instead of showing a stale percentage.
+    try {
+      await fetchSystemStatus();
+      await fetchCurriculum();
+    } catch (refreshErr) {
+      console.warn('Could not refresh mastery after Socratic evaluation:', refreshErr);
+    }
+
   } catch (err) {
-    state.socraticChat.push({ role: 'tutor', text: "Thank you for your answer. Let's break down the memory addresses step by step." });
+    state.socraticChat.push({ role: 'tutor', text: `I could not evaluate that answer: ${err.message || 'connection error'}.` });
     renderSocraticLab();
   }
 }
@@ -1170,42 +1243,32 @@ async function sendSocraticMessage() {
 function submitGlobalCockpit() {
   const input = document.getElementById('global-cockpit-input');
   if (!input) return;
-  const val = input.value.trim().toLowerCase();
+  const rawVal = input.value.trim();
+  if (!rawVal) return;
   input.value = '';
 
-  if (!val) return;
-
-  // Global routing shortcuts
-  if (val.includes('swap') || val.includes('memory') || val.includes('ram')) {
-    showView('ram');
-    return;
-  }
-  if (val.includes('plan') || val.includes('schedule') || val.includes('30/60/10')) {
-    showView('plan');
-    return;
-  }
-  if (val.includes('audit') || val.includes('ledger') || val.includes('hash')) {
-    showView('audit');
-    return;
-  }
-  if (val.includes('dag') || val.includes('graph') || val.includes('topo')) {
-    showView('dag');
-    return;
-  }
-  if (val.includes('socratic') || val.includes('chat') || val.includes('dialogue')) {
-    showView('socratic');
-    return;
-  }
-  if (val.includes('rag') || val.includes('search') || val.includes('ingest')) {
-    showView('rag');
-    return;
+  // Navigation shortcuts only match a complete command. Answer text such as
+  // "x = y overwrites memory" must be graded, not treated as "open RAM".
+  const commands = [
+    [/^(?:open|show|go to|view|jump to)?\s*(?:swap|memory|ram)$/i, 'ram'],
+    [/^(?:open|show|go to|view|jump to)?\s*(?:plan|schedule|30\/60\/10)$/i, 'plan'],
+    [/^(?:open|show|go to|view|jump to)?\s*(?:audit|ledger|hash)$/i, 'audit'],
+    [/^(?:open|show|go to|view|jump to)?\s*(?:dag|graph|topo(?:logical)?)$/i, 'dag'],
+    [/^(?:open|show|go to|view|jump to)?\s*(?:socratic|chat|dialogue)$/i, 'socratic'],
+    [/^(?:open|show|go to|view|jump to)?\s*(?:rag|search|ingest)$/i, 'rag'],
+  ];
+  for (const [pattern, view] of commands) {
+    if (pattern.test(rawVal)) {
+      showView(view);
+      return;
+    }
   }
 
-  // Otherwise route to active lesson
+  // Otherwise send the answer to the active lesson with its original casing.
   showView('lessons');
   const answerInput = document.getElementById('lesson-answer-input');
   if (answerInput) {
-    answerInput.value = val;
+    answerInput.value = rawVal;
     submitLessonAnswer();
   }
 }
@@ -1218,9 +1281,25 @@ function requestAnalogyQuick() {
   }
 }
 
-function copyCode() {
-  const code = document.getElementById('lesson-code-block').innerText;
-  navigator.clipboard.writeText(code);
+async function copyCode() {
+  const codeEl = document.getElementById('lesson-code-block');
+  const code = codeEl ? codeEl.innerText : '';
+  if (!code) return;
+  try {
+    await navigator.clipboard.writeText(code);
+  } catch (err) {
+    // Clipboard API can be unavailable outside a secure context; fall back to
+    // the legacy selection path so the button still works.
+    const helper = document.createElement('textarea');
+    helper.value = code;
+    helper.setAttribute('readonly', '');
+    helper.style.position = 'fixed';
+    helper.style.opacity = '0';
+    document.body.appendChild(helper);
+    helper.select();
+    document.execCommand('copy');
+    document.body.removeChild(helper);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1234,4 +1313,71 @@ function showModal(id) {
 function hideModal(id) {
   const m = document.getElementById(id);
   if (m) m.classList.add('hidden');
+}
+
+async function openStudentModal() {
+  showModal('studentModal');
+  const list = document.getElementById('modal-students-list');
+  if (!list) return;
+
+  list.innerHTML = '<div class="p-2 text-xs text-codex-muted">Loading learner profiles...</div>';
+  try {
+    const res = await fetch('/api/students');
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      throw new Error(data.message || 'Could not load learner profiles.');
+    }
+
+    const profiles = Array.isArray(data.profiles) ? data.profiles : [];
+    if (profiles.length === 0) {
+      list.innerHTML = '<div class="p-2 text-xs text-codex-muted">No learner profiles found.</div>';
+      return;
+    }
+
+    list.innerHTML = profiles.map(p => {
+      const isActive = p.student_id === data.active_student_id;
+      return `
+        <button type="button" data-student-id="${escapeHtml(p.student_id)}"
+          class="student-profile-option w-full text-left px-3 py-2 rounded-lg border ${isActive ? 'border-cyan-500/50 bg-cyan-950/20 text-white' : 'border-codex-border bg-[#18181c] text-codex-text hover:bg-codex-hover'} transition">
+          <span class="flex items-center justify-between gap-2">
+            <span class="truncate">${escapeHtml(p.name || p.student_id)}</span>
+            <span class="text-[10px] font-mono ${isActive ? 'text-cyan-400' : 'text-codex-muted'}">${isActive ? 'ACTIVE' : 'SWITCH'}</span>
+          </span>
+          <span class="block text-[10px] font-mono text-codex-muted mt-0.5 truncate">${escapeHtml(p.student_id)}</span>
+        </button>`;
+    }).join('');
+
+    list.querySelectorAll('.student-profile-option').forEach(btn => {
+      btn.addEventListener('click', () => switchStudent(btn.dataset.studentId));
+    });
+  } catch (err) {
+    list.innerHTML = `<div class="p-2 text-xs text-rose-400">${escapeHtml(err.message || 'Could not load learner profiles.')}</div>`;
+  }
+}
+
+async function switchStudent(studentId) {
+  if (!studentId) return;
+  const list = document.getElementById('modal-students-list');
+  if (list) list.querySelectorAll('button').forEach(btn => { btn.disabled = true; });
+
+  try {
+    const res = await fetch('/api/students/switch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ student_id: studentId })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      throw new Error(data.message || 'Could not switch learner.');
+    }
+
+    hideModal('studentModal');
+    await fetchSystemStatus();
+    await fetchCurriculum();
+    await loadLesson(state.activeConcept);
+  } catch (err) {
+    if (list) {
+      list.innerHTML = `<div class="p-2 text-xs text-rose-400">${escapeHtml(err.message || 'Could not switch learner.')}</div>`;
+    }
+  }
 }

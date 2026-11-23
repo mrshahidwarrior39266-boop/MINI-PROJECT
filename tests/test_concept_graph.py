@@ -32,6 +32,27 @@ def test_prerequisite_traversal():
     assert "py.lists_sequences" in transitive
 
 
+def test_topological_sort_tie_break_is_deterministic():
+    graph = ConceptGraphService(CONCEPTS_FILE)
+    expected = [
+        "py.variables",
+        "py.data_types",
+        "py.operators_expressions",
+        "py.lists_sequences",
+        "py.conditionals",
+        "py.for_loops",
+        "py.while_loops",
+        "py.functions",
+    ]
+    order = graph.topological_sort()
+    assert order == expected
+
+    positions = {concept_id: index for index, concept_id in enumerate(order)}
+    for concept_id, concept in graph.concepts.items():
+        for prerequisite in concept.prerequisites:
+            assert positions[prerequisite] < positions[concept_id]
+
+
 def test_circular_dependency_detected():
     graph = ConceptGraphService()
     # Add a -> b -> a

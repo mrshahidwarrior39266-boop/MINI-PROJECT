@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CONCEPTS = ROOT / "app" / "data" / "python_concepts.json"
 KNOWLEDGE = ROOT / "app" / "data" / "python_knowledge.json"
 QUESTIONS = ROOT / "app" / "data" / "curriculum_questions.json"
+SYNTHESIS = ROOT / "app" / "data" / "synthesis_challenges.json"
 
 
 @pytest.fixture(scope="module")
@@ -76,3 +77,13 @@ def test_missing_knowledge_chunk_is_rejected(knowledge):
 def test_empty_curriculum_is_rejected():
     with pytest.raises(ConceptGraphError, match="No concepts were loaded"):
         ConceptGraphService().validate_graph_integrity()
+
+
+def test_synthesis_challenges_reference_real_concepts(graph):
+    challenges = json.loads(SYNTHESIS.read_text(encoding="utf-8"))
+    for challenge in challenges:
+        required = set(challenge["required_concept_ids"])
+        assert required, challenge["id"]
+        assert required <= set(graph.concepts), (
+            challenge["id"], required - set(graph.concepts)
+        )

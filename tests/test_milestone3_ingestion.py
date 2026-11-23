@@ -20,6 +20,7 @@ from app.services.vector_store import (
     PGVectorStore,
 )
 from app.services.semantic_rag import SemanticRAGService
+from app.services.student_repository import StudentRepository
 from app.services.llm_client import MockLLMClient
 from app.services.llm_evaluator import LLMEvaluator
 
@@ -202,3 +203,29 @@ def test_semantic_rag_dynamic_ingest_document():
     retrieval = rag_service.retrieve("while loops sentinel termination", top_k=3)
     chunk_ids = [m.chunk.id for m in retrieval.matches]
     assert any("control_flow_and_data_structures" in cid for cid in chunk_ids)
+
+
+def test_semantic_rag_ingest_with_repository_persists_embeddings(tmp_path):
+    """Ingestion must use the repository's keyword-only embedding schema."""
+    repo = StudentRepository(tmp_path / "rag_records.db")
+    rag_service = SemanticRAGService(KNOWLEDGE_FILE, repository=repo)
+    graph = ConceptGraphService(CONCEPTS_FILE)
+    linker = ConceptLinkerService(concepts_catalog=graph.concepts)
+
+    doc_path = tmp_path / "sentinel_notes.md"
+    doc_path.write_text(
+        "# Sentinel Flags\n\nA sentinel flag tells a while loop when to stop. "
+        "Update the flag and use break to terminate the loop safely.\n",
+        encoding="utf-8",
+    )
+
+    before_ids = set(rag_service.chunks_by_id)
+    summary = rag_service.ingest_document(doc_path, linker=linker)
+    new_ids = set(rag_service.chunks_by_id) - before_ids
+    assert summary.total_chunks > 0
+    assert new_ids
+
+    # This is the regression: the old positional call raised TypeError and
+    # aborted ingestion after the in-memory chunks had already been added.
+    embeddings = repo.load_chunk_embeddings()
+    assert new_ids <= set(embeddings)

@@ -117,15 +117,18 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
         sys.stderr.write(f"[{time.strftime('%H:%M:%S')}] {args[0]} {args[1]} -> {args[2]}\n")
 
     def _send_json(self, data: Any, status: int = 200):
-        body = json.dumps(data, default=str).encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        self.end_headers()
-        self.wfile.write(body)
+        try:
+            body = json.dumps(data, default=str).encode("utf-8")
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+            self.end_headers()
+            self.wfile.write(body)
+        except (ConnectionResetError, BrokenPipeError, OSError):
+            pass
 
     def _send_file(self, file_path: Path):
         if not file_path.exists() or file_path.is_dir():
@@ -144,8 +147,13 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
             self.send_header("Cache-Control", "no-cache")
             self.end_headers()
             self.wfile.write(content)
+        except (ConnectionResetError, BrokenPipeError, OSError):
+            pass
         except Exception as e:
-            self._send_error_json(500, f"Error reading file: {str(e)}")
+            try:
+                self._send_error_json(500, f"Error reading file: {str(e)}")
+            except Exception:
+                pass
 
     def _send_error_json(self, status: int, message: str):
         self._send_json({"error": True, "status": status, "message": message}, status=status)
@@ -661,7 +669,7 @@ def run_server(port: int = 8000, auto_fallback: bool = True, open_browser: bool 
     print("", flush=True)
     print(f"  ➜  Local:    {local_url}", flush=True)
     print(f"  ➜  Student:  {STATE.active_profile.name} ({STATE.active_profile.student_id})", flush=True)
-    print(f"  ➜  Ledger:   SHA-256 Verified • test suite verified", flush=True)
+    print(f"  ➜  Ledger:   SHA-256 fingerprint • test suite verified", flush=True)
     if active_port != port:
         print(f"  ➜  Notice:   Port {port} in use; switched to {active_port}", flush=True)
     print("", flush=True)
@@ -679,11 +687,17 @@ def run_server(port: int = 8000, auto_fallback: bool = True, open_browser: bool 
         while True:
             try:
                 httpd.serve_forever()
-            except (ConnectionResetError, OSError):
+            except (ConnectionResetError, BrokenPipeError, OSError):
                 # Silently recover from transient socket resets on Windows
+                time.sleep(0.05)
                 continue
             except KeyboardInterrupt:
                 break
+            except Exception as exc:
+                sys.stderr.write(f"\n[SERVER NOTICE] Recovering from: {exc}\n")
+                sys.stderr.flush()
+                time.sleep(0.1)
+                continue
     finally:
         print("\n  Stopping server...", flush=True)
         try:
