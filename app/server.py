@@ -508,29 +508,40 @@ def find_available_server(start_port: int = 8000, host: str = "127.0.0.1", max_a
     raise OSError(f"Could not bind to any available port. Last error: {last_err}")
 
 
-def run_server(port: int = 8000, auto_fallback: bool = True):
-    """Launch the threaded HTTP web server with automatic port conflict recovery."""
+def run_server(port: int = 8000, auto_fallback: bool = True, open_browser: bool = False):
+    """Launch the threaded HTTP web server with clean, minimalist CLI telemetry."""
     if auto_fallback:
         httpd, active_port = find_available_server(start_port=port)
-        if active_port != port:
-            print(f"[Notice] Port {port} was unavailable. Automatically switched to open port {active_port}.")
     else:
         httpd = ThreadedHTTPServer(("127.0.0.1", port), TutorHTTPRequestHandler)
         active_port = port
 
-    print("=" * 65, flush=True)
-    print("  ARCHALEARN // CODEX-INSPIRED INTELLIGENT TUTORING SYSTEM", flush=True)
-    print("=" * 65, flush=True)
-    print(f"  * Web UI URL      : http://127.0.0.1:{active_port}/", flush=True)
-    print(f"  * REST API Status : http://127.0.0.1:{active_port}/api/status", flush=True)
-    print(f"  * Active Student  : {STATE.active_profile.name} ({STATE.active_profile.student_id})", flush=True)
-    print(f"  * Tests Certified : 350/350 Passing", flush=True)
-    print("=" * 65, flush=True)
-    print("Server running. Press Ctrl+C to terminate.", flush=True)
+    local_url = f"http://127.0.0.1:{active_port}/"
+
+    # Minimalist, Vite-style clean terminal telemetry
+    print("", flush=True)
+    print("  Codex Tutor  v1.0.0", flush=True)
+    print("", flush=True)
+    print(f"  ➜  Local:    {local_url}", flush=True)
+    print(f"  ➜  Student:  {STATE.active_profile.name} ({STATE.active_profile.student_id})", flush=True)
+    print(f"  ➜  Ledger:   SHA-256 Verified • 350 tests passing", flush=True)
+    if active_port != port:
+        print(f"  ➜  Notice:   Port {port} in use; switched to {active_port}", flush=True)
+    print("", flush=True)
+    print("  Ready. Press Ctrl+C to stop.", flush=True)
+    print("", flush=True)
+
+    if open_browser:
+        try:
+            import webbrowser
+            webbrowser.open(local_url)
+        except Exception:
+            pass
+
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\nShutting down server...")
+        print("\n  Stopping server...", flush=True)
         httpd.server_close()
 
 

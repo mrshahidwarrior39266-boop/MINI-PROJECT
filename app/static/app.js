@@ -1,6 +1,6 @@
 /**
- * ArchaLearn Codex Client Application:
- * Full state orchestration for the OpenAI Codex-inspired Intelligent Tutoring System.
+ * Codex Tutor — Client Application Controller
+ * Minimalist, elegant state orchestration matching the OpenAI Codex aesthetic.
  */
 
 const state = {
@@ -33,27 +33,27 @@ async function fetchSystemStatus() {
     state.frontier = data.frontier;
     state.auditHash = data.ledger_audit.fingerprint || '86C09D8BB6567BD0';
 
-    // Update top header
+    // Top header label
     const learnerLabel = document.getElementById('top-learner-label');
     if (learnerLabel) learnerLabel.innerText = `${data.active_student.name} (${data.active_student.student_id})`;
 
     const fingerprintLabel = document.getElementById('sidebar-fingerprint');
-    if (fingerprintLabel) fingerprintLabel.innerText = `Hash: ${state.auditHash}`;
+    if (fingerprintLabel) fingerprintLabel.innerText = state.auditHash;
 
     const auditMainLabel = document.getElementById('audit-main-fingerprint');
     if (auditMainLabel) auditMainLabel.innerText = state.auditHash;
 
-    // Update cockpit frontier pill
+    // Cockpit pills
     const frontierTarget = data.frontier.ready[0] || data.frontier.in_progress[0] || 'py.operators_expressions';
     const phasePill = document.getElementById('cockpit-phase-pill');
-    if (phasePill) phasePill.innerText = '60% Frontier Learning';
+    if (phasePill) phasePill.innerText = 'Frontier Learning';
 
     const conceptPill = document.getElementById('cockpit-concept-pill');
     if (conceptPill) conceptPill.innerText = frontierTarget;
 
     const homeSub = document.getElementById('home-subtitle');
     if (homeSub) {
-      homeSub.innerHTML = `Dual-Engine Socratic Tutor active • Frontier: <code class="text-amber-400 font-mono text-xs">${frontierTarget}</code>`;
+      homeSub.innerHTML = `Socratic tutor active • Target concept: <code class="text-codex-text font-mono text-xs">${frontierTarget}</code>`;
     }
   } catch (err) {
     console.error('Error fetching status:', err);
@@ -70,43 +70,38 @@ async function fetchCurriculum() {
     if (!container) return;
 
     container.innerHTML = data.concepts.map((c, idx) => {
-      let badgeCol = 'bg-zinc-800 text-zinc-400';
-      let borderCol = 'border-zinc-800';
+      let statusDot = 'bg-zinc-600';
       let statusText = `${Math.round(c.mastery * 100)}%`;
 
       if (c.status === 'mastered') {
-        badgeCol = 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/60';
-        borderCol = 'border-zinc-800';
+        statusDot = 'bg-emerald-400';
       } else if (c.status === 'ready') {
-        badgeCol = 'bg-amber-950/80 text-amber-300 border border-amber-800/80 animate-pulse';
-        borderCol = 'border-amber-500/40 bg-zinc-800/60';
-        statusText = 'READY';
+        statusDot = 'bg-amber-400';
+        statusText = 'Ready';
       } else if (c.status === 'in_progress') {
-        badgeCol = 'bg-cyan-950/80 text-cyan-300 border border-cyan-800/60';
-        statusText = `${Math.round(c.mastery * 100)}%`;
+        statusDot = 'bg-cyan-400';
       } else {
-        badgeCol = 'bg-zinc-900 text-zinc-500';
-        statusText = 'LOCKED';
+        statusDot = 'bg-zinc-600';
+        statusText = 'Locked';
       }
+
+      const isCurrent = c.id === state.activeConcept;
+      const activeClass = isCurrent ? 'bg-codex-card text-white' : 'text-codex-secondary hover:text-white hover:bg-codex-hover';
 
       return `
         <div onclick="showConceptLesson('${c.id}')"
-          class="p-2.5 rounded-lg bg-zinc-900/60 border ${borderCol} hover:border-cyan-500/50 hover:bg-zinc-800/50 cursor-pointer transition flex items-center justify-between text-xs group">
-          <div class="truncate pr-2">
-            <span class="text-zinc-500 font-mono mr-1">${idx + 1}.</span>
-            <span class="text-zinc-200 group-hover:text-white font-medium">${c.title.split('(')[0]}</span>
+          class="px-2 py-1.5 rounded-md ${activeClass} cursor-pointer transition flex items-center justify-between text-xs group">
+          <div class="flex items-center space-x-2 truncate pr-2">
+            <span class="w-1.5 h-1.5 rounded-full ${statusDot} shrink-0"></span>
+            <span class="truncate font-sans">${c.title.split('(')[0]}</span>
           </div>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded ${badgeCol} shrink-0">
+          <span class="text-[10px] font-mono text-codex-muted group-hover:text-codex-secondary shrink-0">
             ${statusText}
           </span>
         </div>
       `;
     }).join('');
 
-    const frontierLabel = document.getElementById('sidebar-frontier-label');
-    if (frontierLabel && data.frontier_target) {
-      frontierLabel.innerText = `next: ${data.frontier_target}`;
-    }
   } catch (err) {
     console.error('Error fetching curriculum:', err);
   }
@@ -128,17 +123,17 @@ function showView(viewId) {
   // Update left slim icon rail active state
   const railBtns = document.querySelectorAll('aside button[id^="nav-btn-"]');
   railBtns.forEach(btn => {
-    btn.classList.remove('bg-codex-panel', 'text-cyan-400', 'shadow-md', 'border', 'border-codex-border/60');
-    btn.classList.add('text-zinc-400');
+    btn.classList.remove('bg-codex-card', 'text-white');
+    btn.classList.add('text-codex-secondary');
   });
 
   const activeBtn = document.getElementById(`nav-btn-${viewId}`);
   if (activeBtn) {
-    activeBtn.classList.remove('text-zinc-400');
-    activeBtn.classList.add('bg-codex-panel', 'text-cyan-400', 'shadow-md', 'border', 'border-codex-border/60');
+    activeBtn.classList.remove('text-codex-secondary');
+    activeBtn.classList.add('bg-codex-card', 'text-white');
   }
 
-  // Auto-refresh data when landing on views
+  // Refresh sub-views
   if (viewId === 'plan') refreshDailyPlan();
   if (viewId === 'audit') refreshAuditTrail();
   if (viewId === 'ram') fetchRamState();
@@ -149,27 +144,22 @@ function showConceptLesson(conceptId) {
   loadLesson(conceptId);
 }
 
-function toggleSidebar() {
-  const sidebar = document.getElementById('curriculum-sidebar');
-  if (sidebar) sidebar.classList.toggle('hidden');
-}
-
 // ---------------------------------------------------------------------------
 // 3. LESSONS & CONCEPT ANIMATIONS CONTROLLER
 // ---------------------------------------------------------------------------
 async function loadLesson(conceptId) {
   state.activeConcept = conceptId;
 
-  // Update active pill in horizontal tab strip
+  // Update horizontal tabs
   const tabs = document.querySelectorAll('.lesson-nav-btn');
   tabs.forEach(t => {
-    t.classList.remove('bg-zinc-800', 'text-white', 'border', 'border-zinc-700');
-    t.classList.add('text-zinc-400');
+    t.classList.remove('bg-codex-card', 'text-white');
+    t.classList.add('text-codex-secondary');
   });
   const currentTab = document.getElementById(`lesson-tab-${conceptId}`);
   if (currentTab) {
-    currentTab.classList.remove('text-zinc-400');
-    currentTab.classList.add('bg-zinc-800', 'text-white', 'border', 'border-zinc-700');
+    currentTab.classList.remove('text-codex-secondary');
+    currentTab.classList.add('bg-codex-card', 'text-white');
   }
 
   // Update cockpit pill
@@ -181,38 +171,40 @@ async function loadLesson(conceptId) {
     const lesson = await res.json();
     state.lessons[conceptId] = lesson;
 
-    // Populate Left Column
+    // Left Column Fields
     document.getElementById('lesson-id-badge').innerText = lesson.concept_id;
     document.getElementById('lesson-title').innerText = lesson.title;
-    document.getElementById('lesson-tagline').innerText = lesson.tagline;
     document.getElementById('lesson-theory').innerText = lesson.theory;
     document.getElementById('lesson-code-block').innerText = lesson.code_example;
 
     // Physical Analogy
     document.getElementById('lesson-analogy-name').innerText = lesson.analogy.name;
     document.getElementById('lesson-analogy-metaphor').innerText = lesson.analogy.metaphor;
-    document.getElementById('lesson-analogy-trap').innerText = `⚠️ Mental Trap: ${lesson.analogy.trap}`;
+    document.getElementById('lesson-analogy-trap').innerText = `Mental Trap: ${lesson.analogy.trap}`;
 
     // Misconceptions
     const miscList = document.getElementById('lesson-misconceptions-list');
     miscList.innerHTML = lesson.misconceptions.map(m => `
-      <div class="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800">
-        <div class="font-semibold text-rose-300 font-mono">${m.name}</div>
-        <div class="text-zinc-400 mt-0.5"><span class="text-zinc-500">Trap:</span> ${m.mistake}</div>
-        <div class="text-emerald-400 mt-1"><span class="text-emerald-500">Correction:</span> ${m.correction}</div>
+      <div class="p-2.5 rounded-lg bg-[#18181c] border border-codex-border space-y-1">
+        <div class="font-medium text-codex-text text-xs">${m.name}</div>
+        <div class="text-[11px] text-codex-secondary"><span class="text-codex-muted">Trap:</span> ${m.mistake}</div>
+        <div class="text-[11px] text-emerald-400/90"><span class="text-emerald-500/70">Correction:</span> ${m.correction}</div>
       </div>
     `).join('');
 
     // Socratic Diagnostic Prompt
     document.getElementById('lesson-diagnostic-prompt').innerText = lesson.diagnostic_prompt;
 
-    // Clear previous feedback and answer input
+    // Reset feedback
     document.getElementById('lesson-answer-input').value = '';
     const feedbackCard = document.getElementById('lesson-eval-feedback-card');
     feedbackCard.classList.add('hidden');
 
     // Trigger Dedicated Interactive Animation
     animEngine.setConcept(conceptId);
+
+    // Refresh sidebar highlighting
+    fetchCurriculum();
 
   } catch (err) {
     console.error('Error loading lesson:', err);
@@ -250,31 +242,27 @@ async function submitLessonAnswer() {
 
     const isCorrect = result.is_correct;
     feedbackCard.className = isCorrect
-      ? 'p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/60 space-y-2 text-xs transition-all'
-      : 'p-4 rounded-xl bg-amber-950/40 border border-amber-500/60 space-y-2 text-xs transition-all';
+      ? 'p-3.5 rounded-lg bg-emerald-950/20 border border-emerald-500/30 text-xs space-y-1.5 transition-all'
+      : 'p-3.5 rounded-lg bg-amber-950/20 border border-amber-500/30 text-xs space-y-1.5 transition-all';
 
     feedbackCard.innerHTML = `
-      <div class="flex items-center justify-between font-mono">
-        <span class="${isCorrect ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}">
-          ${isCorrect ? '✓ ASSESSMENT: CORRECT' : '⚡ ASSESSMENT: NEEDS REFINEMENT'} (Score: ${Math.round(result.score * 100)}%)
+      <div class="flex items-center justify-between font-mono text-[11px]">
+        <span class="${isCorrect ? 'text-emerald-400 font-medium' : 'text-amber-400 font-medium'}">
+          ${isCorrect ? 'Correct Assessment' : 'Needs Refinement'} (${Math.round(result.score * 100)}%)
         </span>
-        <span class="text-[10px] text-zinc-400">Mode: ${result.evaluator_mode}</span>
+        <span class="text-codex-muted">Mode: ${result.evaluator_mode}</span>
       </div>
-      <p class="text-zinc-200 leading-relaxed">${result.feedback}</p>
+      <p class="text-codex-text leading-relaxed text-xs">${result.feedback}</p>
       ${result.misconception_detected ? `
-        <div class="text-[11px] font-mono text-rose-400 bg-rose-950/50 p-2 rounded border border-rose-800/60">
-          ⚠️ Misconception Identified: ${result.misconception_detected}
+        <div class="text-[11px] font-mono text-amber-300/90 bg-[#1c1c20] p-2 rounded border border-amber-500/20">
+          Misconception noted: ${result.misconception_detected}
         </div>
       ` : ''}
-      <div class="flex items-center justify-between pt-1 border-t border-zinc-800/60 text-[11px] font-mono text-zinc-400">
+      <div class="flex items-center justify-between pt-1 border-t border-codex-border text-[10px] font-mono text-codex-muted">
         <span>Citations: [${(result.cited_chunk_ids || []).join(', ') || 'verified'}]</span>
-        <span class="text-cyan-400">Updated Mastery: ${Math.round(result.updated_mastery * 100)}%</span>
+        <span class="text-codex-secondary">Updated Mastery: ${Math.round(result.updated_mastery * 100)}%</span>
       </div>
     `;
-
-    // Also add to Socratic dialogue stream
-    addSocraticMessage('user', answer);
-    addSocraticMessage('tutor', result.feedback, result.cited_chunk_ids, isCorrect, result.score);
 
     // Refresh curriculum to reflect new mastery
     await fetchCurriculum();
@@ -284,7 +272,7 @@ async function submitLessonAnswer() {
     console.error('Error evaluating answer:', err);
   } finally {
     if (submitBtn) {
-      submitBtn.innerText = 'Evaluate Response ↵';
+      submitBtn.innerText = 'Evaluate Answer';
       submitBtn.disabled = false;
     }
   }
@@ -296,7 +284,7 @@ async function submitLessonAnswer() {
 async function refreshDailyPlan() {
   const container = document.getElementById('plan-items-container');
   if (!container) return;
-  container.innerHTML = '<div class="p-4 rounded-xl bg-codex-panel border border-codex-border text-xs text-zinc-400 animate-pulse">Calculating optimal 30/60/10 schedule...</div>';
+  container.innerHTML = '<div class="p-3 text-xs text-codex-muted font-mono">Generating daily schedule...</div>';
 
   try {
     const res = await fetch('/api/session-plan?n=10');
@@ -307,24 +295,24 @@ async function refreshDailyPlan() {
     document.getElementById('plan-synthesis-count').innerText = `${data.counts.synthesis} Item`;
 
     container.innerHTML = data.items.map((item, idx) => {
-      let badgeCol = 'bg-zinc-800 text-zinc-400';
-      if (item.category === 'review') badgeCol = 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/60';
-      if (item.category === 'frontier') badgeCol = 'bg-amber-950/80 text-amber-300 border border-amber-800/60';
-      if (item.category === 'synthesis') badgeCol = 'bg-indigo-950/80 text-indigo-300 border border-indigo-800/60';
+      let tagColor = 'text-codex-muted';
+      if (item.category === 'review') tagColor = 'text-emerald-400';
+      if (item.category === 'frontier') tagColor = 'text-amber-400';
+      if (item.category === 'synthesis') tagColor = 'text-cyan-400';
 
       return `
-        <div class="p-4 rounded-xl bg-codex-panel border border-codex-border hover:border-zinc-600 transition flex items-center justify-between space-x-4">
-          <div class="space-y-1 max-w-xl">
-            <div class="flex items-center space-x-2">
-              <span class="text-xs font-mono text-zinc-500">#${idx + 1}</span>
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded uppercase ${badgeCol}">${item.category}</span>
-              <span class="text-xs font-mono text-cyan-400">${item.concept_id}</span>
+        <div class="p-3 rounded-xl bg-codex-card border border-codex-border hover:bg-codex-hover transition flex items-center justify-between space-x-4">
+          <div class="space-y-0.5 max-w-xl">
+            <div class="flex items-center space-x-2 text-[11px] font-mono">
+              <span class="text-codex-muted">#${idx + 1}</span>
+              <span class="${tagColor} uppercase">${item.category}</span>
+              <span class="text-codex-secondary">${item.concept_id}</span>
             </div>
-            <p class="text-xs text-zinc-200 line-clamp-2">${item.prompt}</p>
+            <p class="text-xs text-codex-text line-clamp-1">${item.prompt}</p>
           </div>
           <button onclick="showConceptLesson('${item.concept_id}')"
-            class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-mono text-zinc-200 shrink-0 transition">
-            Launch Drill ➔
+            class="px-2.5 py-1 rounded bg-[#2a2a30] hover:bg-[#34343a] text-xs font-mono text-codex-secondary hover:text-white shrink-0 transition">
+            Launch
           </button>
         </div>
       `;
@@ -348,15 +336,15 @@ async function fetchRamState() {
     if (!container) return;
 
     container.innerHTML = data.variables.map(v => `
-      <div class="p-4 rounded-xl bg-codex-panel border border-codex-border space-y-2">
-        <div class="flex items-center justify-between text-[11px] font-mono text-zinc-400">
-          <span>LABEL: ${v.label}</span>
-          <span class="text-cyan-400">${v.address}</span>
+      <div class="p-3.5 rounded-xl bg-codex-card border border-codex-border space-y-1.5">
+        <div class="flex items-center justify-between text-[11px] font-mono text-codex-muted">
+          <span>${v.label}</span>
+          <span>${v.address}</span>
         </div>
-        <div class="text-2xl font-bold font-mono text-white">${v.value}</div>
-        <div class="flex items-center justify-between text-[10px] font-mono text-zinc-500 pt-1 border-t border-zinc-800">
+        <div class="text-xl font-mono text-codex-text">${v.value}</div>
+        <div class="flex items-center justify-between text-[10px] font-mono text-codex-muted pt-1 border-t border-codex-border">
           <span>&lt;class '${v.type}'&gt;</span>
-          <span>${v.bytes} Bytes</span>
+          <span>${v.bytes} B</span>
         </div>
       </div>
     `).join('');
@@ -376,46 +364,45 @@ function setSwapStep(step) {
   const expl = document.getElementById('swap-explanation-text');
   if (!viewport || !expl) return;
 
-  // Update button active state
   [1, 2, 3].forEach(s => {
     const btn = document.getElementById(`swap-btn-${s}`);
     if (btn) {
       if (s === step) {
-        btn.className = 'px-3.5 py-1.5 rounded-lg bg-cyan-600 text-white font-mono';
+        btn.className = 'px-2.5 py-1 rounded bg-white text-black font-mono text-[11px]';
       } else {
-        btn.className = 'px-3.5 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white font-mono';
+        btn.className = 'px-2.5 py-1 rounded bg-[#2a2a30] text-codex-secondary hover:text-white font-mono text-[11px]';
       }
     }
   });
 
-  let a_val = 10, b_val = 20, temp_val = '(empty)';
+  let a_val = 10, b_val = 20, temp_val = '-';
   if (step === 1) {
     temp_val = 10;
-    expl.innerText = "Step 1: temp = a  (Copy reference in 'a' into holding box 'temp')";
+    expl.innerText = "temp = a  (Copy reference in 'a' to 'temp')";
   } else if (step === 2) {
     a_val = 20;
     temp_val = 10;
-    expl.innerText = "Step 2: a = b     (Safely rebind 'a' to address of 'b')";
+    expl.innerText = "a = b     (Rebind 'a' to value of 'b')";
   } else if (step === 3) {
     a_val = 20;
     b_val = 10;
     temp_val = 10;
-    expl.innerText = "Step 3: b = temp  (Rebind 'b' to reference in 'temp' -> SWAP COMPLETE)";
+    expl.innerText = "b = temp  (Rebind 'b' to saved 'temp' -> Swap complete)";
   }
 
   viewport.innerHTML = `
-    <div class="grid grid-cols-3 gap-6 w-full max-w-md">
-      <div class="flex flex-col items-center p-3 rounded-xl bg-zinc-900 border ${step === 2 ? 'border-amber-400' : 'border-zinc-700'}">
-        <span class="text-[10px] font-mono text-zinc-400">a (0x7ffe10)</span>
-        <div class="text-3xl font-mono font-bold text-cyan-400 mt-2">${a_val}</div>
+    <div class="grid grid-cols-3 gap-6 w-full max-w-sm">
+      <div class="flex flex-col items-center p-3 rounded-lg bg-[#18181c] border ${step === 2 ? 'border-amber-400/80' : 'border-codex-border'}">
+        <span class="text-[10px] font-mono text-codex-muted">a (0x7ffe10)</span>
+        <div class="text-2xl font-mono text-codex-text mt-1">${a_val}</div>
       </div>
-      <div class="flex flex-col items-center p-3 rounded-xl bg-zinc-900 border ${step === 3 ? 'border-emerald-400' : 'border-zinc-700'}">
-        <span class="text-[10px] font-mono text-zinc-400">b (0x7ffe18)</span>
-        <div class="text-3xl font-mono font-bold text-emerald-400 mt-2">${b_val}</div>
+      <div class="flex flex-col items-center p-3 rounded-lg bg-[#18181c] border ${step === 3 ? 'border-emerald-400/80' : 'border-codex-border'}">
+        <span class="text-[10px] font-mono text-codex-muted">b (0x7ffe18)</span>
+        <div class="text-2xl font-mono text-codex-text mt-1">${b_val}</div>
       </div>
-      <div class="flex flex-col items-center p-3 rounded-xl bg-zinc-900 border ${step === 1 ? 'border-cyan-400' : 'border-dashed border-zinc-700'}">
-        <span class="text-[10px] font-mono text-zinc-400">temp (0x7ffe20)</span>
-        <div class="text-2xl font-mono font-bold text-amber-400 mt-2">${temp_val}</div>
+      <div class="flex flex-col items-center p-3 rounded-lg bg-[#18181c] border ${step === 1 ? 'border-cyan-400/80' : 'border-dashed border-zinc-700'}">
+        <span class="text-[10px] font-mono text-codex-muted">temp (0x7ffe20)</span>
+        <div class="text-2xl font-mono text-codex-secondary mt-1">${temp_val}</div>
       </div>
     </div>
   `;
@@ -430,25 +417,25 @@ async function executeRAGSearch() {
   if (!q) return;
 
   const container = document.getElementById('rag-results-container');
-  container.innerHTML = '<div class="text-xs text-zinc-400 animate-pulse">Running cosine vector retrieval...</div>';
+  container.innerHTML = '<div class="text-xs text-codex-muted font-mono">Retrieving matching chunks...</div>';
 
   try {
     const res = await fetch(`/api/rag/search?q=${encodeURIComponent(q)}`);
     const data = await res.json();
 
     container.innerHTML = `
-      <div class="flex items-center justify-between text-[11px] font-mono text-zinc-400 pb-1 border-b border-zinc-800">
-        <span>Found ${data.results_count} matching chunks</span>
-        <span class="text-emerald-400">Latency: ${data.latency_ms} ms</span>
+      <div class="flex items-center justify-between text-[10px] font-mono text-codex-muted pb-1 border-b border-codex-border">
+        <span>Found ${data.results_count} chunks</span>
+        <span>Latency: ${data.latency_ms} ms</span>
       </div>
       ${data.results.map(r => `
-        <div class="p-3 rounded-xl bg-zinc-900/90 border border-zinc-800 space-y-1">
-          <div class="flex items-center justify-between text-[10px] font-mono">
-            <span class="text-cyan-400">${r.chunk_id}</span>
-            <span class="text-amber-300">Sim: ${(r.similarity || 0.85).toFixed(4)}</span>
+        <div class="p-3 rounded-lg bg-codex-card border border-codex-border space-y-1">
+          <div class="flex items-center justify-between text-[10px] font-mono text-codex-muted">
+            <span>${r.chunk_id}</span>
+            <span>Sim: ${(r.similarity || 0.85).toFixed(3)}</span>
           </div>
-          <div class="text-xs font-semibold text-white">${r.source_title}</div>
-          <p class="text-[11px] text-zinc-300 leading-relaxed">${r.content}</p>
+          <div class="text-xs font-medium text-codex-text">${r.source_title}</div>
+          <p class="text-[11px] text-codex-secondary leading-relaxed">${r.content}</p>
         </div>
       `).join('')}
     `;
@@ -468,8 +455,8 @@ async function executeIngestion() {
     return;
   }
 
-  statusBox.className = 'p-3 rounded-lg text-xs font-mono bg-zinc-900 border border-zinc-700 text-zinc-300 block';
-  statusBox.innerText = 'Semantic chunking & auto-linking to DAG in progress...';
+  statusBox.className = 'p-2.5 rounded-lg text-xs font-mono bg-codex-card border border-codex-border text-codex-secondary block';
+  statusBox.innerText = 'Semantic chunking & auto-linking in progress...';
 
   try {
     const res = await fetch('/api/rag/ingest', {
@@ -479,15 +466,13 @@ async function executeIngestion() {
     });
     const result = await res.json();
 
-    statusBox.className = 'p-3 rounded-lg text-xs font-mono bg-emerald-950/60 border border-emerald-500/60 text-emerald-300 block';
+    statusBox.className = 'p-2.5 rounded-lg text-xs font-mono bg-emerald-950/20 border border-emerald-500/30 text-emerald-300 block';
     statusBox.innerHTML = `
-      ✓ Ingested '${result.filename}' cleanly!
-      <br>• Extracted ${result.chunks_extracted} semantic chunks.
-      <br>• Auto-linked to concepts: [${result.linked_concepts.join(', ')}].
+      ✓ Ingested '${result.filename}' cleanly. Extracted ${result.chunks_extracted} chunks, auto-linked to [${result.linked_concepts.join(', ')}].
     `;
   } catch (err) {
     console.error('Ingestion error:', err);
-    statusBox.className = 'p-3 rounded-lg text-xs font-mono bg-rose-950/60 border border-rose-500/60 text-rose-300 block';
+    statusBox.className = 'p-2.5 rounded-lg text-xs font-mono bg-rose-950/20 border border-rose-500/30 text-rose-300 block';
     statusBox.innerText = 'Error ingesting document.';
   }
 }
@@ -507,24 +492,24 @@ async function refreshAuditTrail() {
     if (!container) return;
 
     if (!data.recent_evaluations || data.recent_evaluations.length === 0) {
-      container.innerHTML = '<div class="p-4 rounded-xl bg-codex-panel border border-codex-border text-xs text-zinc-500">No evaluations recorded yet in active session.</div>';
+      container.innerHTML = '<div class="p-3 text-xs text-codex-muted">No evaluations recorded yet in active session.</div>';
       return;
     }
 
     container.innerHTML = data.recent_evaluations.map(log => `
-      <div class="p-3.5 rounded-xl bg-codex-panel border border-codex-border space-y-1.5 font-mono text-xs">
-        <div class="flex items-center justify-between text-[11px]">
-          <span class="text-cyan-400">${log.concept_id}</span>
-          <span class="${log.is_correct ? 'text-emerald-400' : 'text-rose-400'}">
-            ${log.is_correct ? 'CORRECT' : 'INCORRECT'} (${Math.round(log.score * 100)}%)
+      <div class="p-3 rounded-lg bg-codex-card border border-codex-border space-y-1 font-mono text-xs">
+        <div class="flex items-center justify-between text-[10px]">
+          <span class="text-codex-secondary">${log.concept_id}</span>
+          <span class="${log.is_correct ? 'text-emerald-400' : 'text-amber-400'}">
+            ${log.is_correct ? 'Correct' : 'Needs Review'} (${Math.round(log.score * 100)}%)
           </span>
         </div>
-        <p class="text-zinc-300 font-sans text-xs">${log.question_asked}</p>
-        <div class="p-2 rounded bg-black/40 text-zinc-400 text-[11px] truncate">
-          <span class="text-zinc-500">Student:</span> ${log.student_response}
+        <p class="text-codex-text font-sans text-xs">${log.question_asked}</p>
+        <div class="p-1.5 rounded bg-black/30 text-codex-secondary text-[11px] truncate">
+          <span class="text-codex-muted">Answer:</span> ${log.student_response}
         </div>
-        <div class="text-[10px] text-zinc-500 flex justify-between">
-          <span>Block ID: ${log.id.slice(0, 16)}...</span>
+        <div class="text-[10px] text-codex-muted flex justify-between">
+          <span>Block ID: ${log.id.slice(0, 12)}...</span>
           <span>${new Date(log.timestamp).toLocaleTimeString()}</span>
         </div>
       </div>
@@ -546,7 +531,7 @@ function submitGlobalCockpit() {
 
   if (!val) return;
 
-  // Command Shortcuts
+  // Shortcuts
   if (val.includes('swap') || val.includes('memory') || val.includes('ram')) {
     showView('ram');
     return;
@@ -568,7 +553,7 @@ function submitGlobalCockpit() {
     return;
   }
 
-  // Otherwise, route as an answer to the active lesson
+  // Route to active lesson
   showView('lessons');
   const answerInput = document.getElementById('lesson-answer-input');
   if (answerInput) {
@@ -588,32 +573,6 @@ function requestAnalogyQuick() {
 function copyCode() {
   const code = document.getElementById('lesson-code-block').innerText;
   navigator.clipboard.writeText(code);
-  alert('Code copied to clipboard!');
-}
-
-function addSocraticMessage(sender, text, citations = [], isCorrect = null, score = null) {
-  const container = document.getElementById('socratic-thread-container');
-  if (!container) return;
-
-  const isUser = sender === 'user';
-  const msgEl = document.createElement('div');
-  msgEl.className = isUser ? 'flex justify-end' : 'flex justify-start';
-
-  msgEl.innerHTML = `
-    <div class="max-w-lg p-4 rounded-2xl ${isUser ? 'bg-cyan-950/40 border border-cyan-800/60 text-cyan-100' : 'bg-codex-panel border border-codex-border text-zinc-200'} space-y-1.5 text-xs">
-      <div class="text-[10px] font-mono ${isUser ? 'text-cyan-400' : 'text-amber-400'} font-bold">
-        ${isUser ? '👤 You (Learner)' : '🧠 Socratic Tutor'}
-      </div>
-      <p class="leading-relaxed font-sans">${text}</p>
-      ${citations && citations.length > 0 ? `
-        <div class="text-[10px] font-mono text-cyan-400 pt-1 border-t border-zinc-800/60">
-          📚 Source Chunk Citations: [${citations.join(', ')}]
-        </div>
-      ` : ''}
-    </div>
-  `;
-  container.appendChild(msgEl);
-  msgEl.scrollIntoView({ behavior: 'smooth' });
 }
 
 // ---------------------------------------------------------------------------

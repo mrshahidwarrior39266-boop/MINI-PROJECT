@@ -31,7 +31,8 @@ def test_static_html(live_server):
     with urllib.request.urlopen(f"{live_server}/") as resp:
         assert resp.status == 200
         content = resp.read().decode("utf-8")
-        assert "<title>ArchaLearn // Codex Intelligent Tutoring System</title>" in content
+        assert "Codex Tutor" in content
+        assert "Intelligent Tutoring System" in content
         assert "view-home" in content
         assert "view-lessons" in content
         assert "view-plan" in content

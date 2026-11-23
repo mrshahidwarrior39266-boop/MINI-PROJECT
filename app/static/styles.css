@@ -1,71 +1,83 @@
-/* ArchaLearn Codex Dark Studio Custom Stylesheet */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+/* ==========================================================================
+   Codex Studio — Minimalist Engineering Design System
+   Crafted with calm dark neutrals, subtle hairline borders, and generous space.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  --codex-bg: #141416;
-  --codex-sidebar: #1a1a1e;
-  --codex-panel: #222226;
-  --codex-card: #29292e;
-  --codex-border: #33333b;
-  --codex-accent: #06b6d4;
-  --codex-emerald: #10b981;
-  --codex-amber: #f59e0b;
+  --bg-app: #151517;
+  --bg-sidebar: #1b1b1e;
+  --bg-card: #202024;
+  --bg-card-hover: #26262b;
+  --bg-input: #1d1d21;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-focus: rgba(255, 255, 255, 0.18);
+  --text-primary: #f4f4f6;
+  --text-secondary: #9e9ea7;
+  --text-muted: #5e5e66;
+  --accent-cyan: #38bdf8;
+  --accent-emerald: #34d399;
+  --accent-amber: #fbbf24;
+  --accent-rose: #f87171;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background-color: var(--codex-bg);
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  color: #e4e4e7;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.011em;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom Scrollbar */
+/* Minimalist scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.2);
 }
 
-/* Animation Canvas Containers */
-.anim-box {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+/* Code and monospaced elements */
+code, pre, .font-mono {
+  font-family: 'JetBrains Mono', Consolas, Monaco, monospace !important;
 }
 
-/* Pulse animation for active nodes */
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.02); }
-}
-.pulse-active {
-  animation: pulse-subtle 2.5s infinite ease-in-out;
+/* Subtle dot-grid canvas for animation stages */
+.grid-canvas {
+  background-color: #121214;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
-/* Glass effect */
-.glass-cockpit {
-  background: rgba(41, 41, 46, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+/* Floating Cockpit Island styling */
+.floating-cockpit {
+  background: rgba(32, 32, 36, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
-/* Active Navigation Icon */
-.nav-active {
-  background-color: #222226 !important;
-  color: #06b6d4 !important;
-  border-color: rgba(6, 182, 212, 0.4) !important;
+/* Transitions */
+.smooth-fade {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Code container syntax styling */
-pre code {
-  font-family: 'JetBrains Mono', Consolas, monospace;
+/* Remove default focus outlines and use subtle ring */
+input:focus, textarea:focus, button:focus {
+  outline: none;
 }
