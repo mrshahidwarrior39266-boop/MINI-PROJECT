@@ -150,6 +150,16 @@ class StudentRepository:
                 ) for r in rows
             ]
 
+    def find_profile_by_name(self, name: str) -> Optional[StudentProfile]:
+        """Find a profile by trimmed, case-insensitive display name."""
+        needle = name.strip().casefold()
+        if not needle:
+            return None
+        for profile in self.list_profiles():
+            if profile.name.strip().casefold() == needle:
+                return profile
+        return None
+
     def save_mastery(self, student_id: str, mastery: ConceptMastery) -> None:
         last_prac = mastery.last_practiced.isoformat() if mastery.last_practiced else None
         next_rev = mastery.next_review_due.isoformat() if mastery.next_review_due else None

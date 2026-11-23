@@ -54,7 +54,9 @@ def test_api_status(live_server):
         assert data["system"] == "ArchaLearn Intelligent Tutoring System"
         assert "active_student" in data
         assert "ledger_audit" in data
-        assert data["ledger_audit"]["verified"] is True
+        assert "verified" not in data["ledger_audit"]
+        assert data["ledger_audit"]["mode"] == "live SHA-256 fingerprint"
+        assert data["ledger_audit"]["fingerprint"]
 
 
 def test_api_curriculum(live_server):
@@ -163,9 +165,31 @@ def test_api_unknown_routes_return_json_404(live_server):
 def test_api_audit_trail(live_server):
     status, data = _json_request(f"{live_server}/api/audit-trail")
     assert status == 200
-    assert data["verified"] is True
+    assert "verified" not in data
+    assert data["hash_algorithm"] == "SHA-256"
+    assert data["audit_hash"]
     assert isinstance(data["recent_evaluations"], list)
     assert data["history_count"] >= len(data["recent_evaluations"])
+
+
+def test_api_students_identify_resumes_existing(live_server):
+    existing = STATE.active_profile
+    status, data = _json_request(
+        f"{live_server}/api/students/identify",
+        {"name": existing.name.swapcase()},
+    )
+    assert status == 200
+    assert data["created"] is False
+    assert data["active_student"]["student_id"] == existing.student_id
+
+    status, data = _json_request(
+        f"{live_server}/api/students/identify", {"name": "   "}
+    )
+    assert status == 400
+    status, data = _json_request(
+        f"{live_server}/api/students/identify", {"name": 42}
+    )
+    assert status == 400
 
 
 def test_api_rag_search_shape(live_server):
@@ -267,3 +291,35 @@ def test_api_evaluate_records_one_audit_entry(live_server):
 
     _, after = _json_request(f"{live_server}/api/audit-trail")
     assert after["history_count"] == before["history_count"] + 1
+
+
+def test_api_evaluate_followup_and_matching(live_server):
+    # Test question matching by question_id
+    status, evaluation = _json_request(
+        f"{live_server}/api/evaluate",
+        {
+            "concept_id": "py.variables",
+            "question_id": "q_var_03",
+            "student_answer": "x = y; y = x",
+        },
+    )
+    assert status == 200
+    assert evaluation["question_id"] == "q_var_03"
+    assert evaluation["is_correct"] is False
+    assert evaluation["followup"] is not None
+    assert "swap" in evaluation["followup"]["prompt"].lower() or "first" in evaluation["followup"]["prompt"].lower()
+
+    # Test evaluating the followup question
+    f_status, f_eval = _json_request(
+        f"{live_server}/api/evaluate-followup",
+        {
+            "concept_id": "py.variables",
+            "question_id": "q_var_03",
+            "student_answer": "temp = first\nfirst = second\nsecond = temp",
+        },
+    )
+    assert f_status == 200
+    assert f_eval["is_correct"] is True
+    assert f_eval["score"] == 1.0
+    assert "audit_block_hash" in f_eval
+

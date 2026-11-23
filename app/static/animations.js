@@ -527,24 +527,588 @@ const CONCEPT_VIDEO_STORYBOARDS = {
   }
 };
 
+// ---------------------------------------------------------------------------
+// DEDICATED INDIVIDUAL VIDEO STORYBOARDS PER QUESTION
+// Every single question in the curriculum has its own visual 4-scene video!
+// ---------------------------------------------------------------------------
+const QUESTION_VIDEO_STORYBOARDS = {
+  // Question 1: x = x + 1 Order of Evaluation
+  "q_var_01": {
+    title: "Question 1 Explainer: Action Arrow '=' & Evaluation Order (x = x + 1)",
+    duration: "0:40",
+    scenes: [
+      {
+        id: 1,
+        title: "Scene 1: Equality vs Action Arrow",
+        narration: "In mathematics, 'x = x + 1' is impossible because '=' means simultaneous equality. In Python, '=' is an ACTION ARROW (←) that assigns state across time.",
+        render: () => `
+          <div class="flex items-center justify-center space-x-8 anim-float py-2">
+            <div class="p-3.5 rounded-xl bg-rose-950/30 border border-rose-500/50 text-center">
+              <span class="text-[10px] font-mono text-rose-400 uppercase">Math Algebra</span>
+              <div class="text-xl font-mono text-white mt-1">x = x + 1</div>
+              <span class="text-[10px] text-rose-300 font-mono mt-1 block">❌ Impossible (No solution)</span>
+            </div>
+            <div class="text-2xl text-zinc-500">&ne;</div>
+            <div class="p-3.5 rounded-xl bg-cyan-950/30 border border-cyan-500/50 glow-box-cyan text-center">
+              <span class="text-[10px] font-mono text-cyan-400 uppercase">Python Programming</span>
+              <div class="text-xl font-mono text-cyan-200 mt-1">x &larr; (x + 1)</div>
+              <span class="text-[10px] text-cyan-300 font-mono mt-1 block">✓ Sequential Rebinding</span>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 2,
+        title: "Scene 2: Right-Hand Side Evaluates First",
+        narration: "When Python executes 'x = x + 1', it stops and completely computes the right-hand side first. If x was 10, it fetches 10 and calculates 10 + 1 = 11.",
+        render: () => `
+          <div class="flex flex-col items-center space-y-3 py-1">
+            <div class="px-4 py-1.5 rounded-lg bg-zinc-900 border border-amber-500/50 font-mono text-xs text-amber-300">
+              x = <span class="bg-amber-500/20 px-2 py-0.5 rounded text-white border border-amber-400">x + 1</span>  &larr; Evaluates right side first!
+            </div>
+            <div class="flex items-center space-x-4">
+              <div class="p-3 bg-[#18181c] border border-zinc-700 rounded-lg text-center font-mono">
+                <span class="text-[10px] text-zinc-400">Fetch x</span>
+                <div class="text-lg text-white">10</div>
+              </div>
+              <span class="text-xl font-mono text-amber-400">+ 1 &rarr;</span>
+              <div class="p-3 bg-[#18181c] border border-emerald-500 rounded-lg text-center font-mono glow-box-emerald">
+                <span class="text-[10px] text-emerald-400">Computed Result</span>
+                <div class="text-2xl text-emerald-300 font-bold">11</div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 3,
+        title: "Scene 3: Rebinding the Sticky Label in RAM",
+        narration: "Once 11 is calculated, Python allocates heap memory and moves the yellow sticky label 'x' to point to 11. The old 10 is left behind.",
+        render: () => `
+          <div class="flex items-center space-x-8 py-2">
+            <div class="flex flex-col items-center p-3 rounded-xl bg-[#141416] border border-zinc-800">
+              <span class="text-[10px] text-zinc-500 font-mono">Old Address 0x7ffe10</span>
+              <span class="text-xl font-mono text-zinc-600 line-through mt-1">10</span>
+              <span class="text-[9px] text-zinc-600 font-mono mt-1">Detached</span>
+            </div>
+            <div class="anim-arrow-flow text-cyan-400 text-xl font-mono">&rarr;</div>
+            <div class="flex flex-col items-center p-3.5 rounded-xl bg-[#141416] border border-cyan-400 glow-box-cyan">
+              <span class="text-[10px] text-cyan-300 font-mono">STICKY LABEL: "x"</span>
+              <span class="text-3xl font-mono text-white font-bold mt-1">11</span>
+              <span class="text-[9px] text-cyan-400 font-mono mt-1">New Address 0x7ffe28</span>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 4,
+        title: "Scene 4: Time Invariant Verified",
+        narration: "Summary: Statements execute sequentially in time. 'x = x + 1' is not an assertion of equality; it is an instruction to compute a new value and update the name tag.",
+        render: () => `
+          <div class="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/40 text-center space-y-1.5 max-w-sm">
+            <div class="text-xs font-mono text-emerald-400 font-bold">✓ Mechanism Mastered</div>
+            <p class="text-xs text-zinc-200">
+              1. Right-side computes <code>10 + 1 = 11</code>.<br>
+              2. Label <code>x</code> binds to <code>11</code> in RAM.
+            </p>
+          </div>
+        `
+      }
+    ]
+  },
+
+  // Question 2: Snapshot Copy vs Permanent Link
+  "q_var_02": {
+    title: "Question 2 Explainer: Independent Sticky Labels & Snapshots (a = 10, b = a, a = 20)",
+    duration: "0:45",
+    scenes: [
+      {
+        id: 1,
+        title: "Scene 1: Line 1 — Initializing Label 'a'",
+        narration: "Line 1: 'a = 10'. Python creates an integer object 10 in RAM and binds the label 'a' to that address.",
+        render: () => `
+          <div class="flex items-center justify-center space-x-6 py-2">
+            <div class="flex flex-col items-center p-3.5 rounded-xl bg-[#141416] border border-cyan-500/70 glow-box-cyan">
+              <span class="text-[10px] font-mono text-cyan-300">Label: "a"</span>
+              <div class="text-3xl font-mono text-white font-bold mt-1">10</div>
+              <span class="text-[9px] font-mono text-zinc-500 mt-1">0x7ffe10</span>
+            </div>
+            <div class="p-3 bg-zinc-900 rounded-lg border border-zinc-800 text-xs font-mono text-zinc-300">
+              <code>a = 10</code><br>
+              <span class="text-zinc-500 text-[10px]">Points tag 'a' to 10</span>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 2,
+        title: "Scene 2: Line 2 — Snapshot Copy (b = a)",
+        narration: "Line 2: 'b = a'. Python inspects what 'a' points to at this split-second (10), and binds label 'b' to 10 as well. It does NOT link them together!",
+        render: () => `
+          <div class="flex flex-col items-center space-y-3 py-1">
+            <div class="flex items-center space-x-4">
+              <span class="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-500 text-cyan-300 font-mono text-xs">Label "a"</span>
+              <span class="text-zinc-400 font-mono">&rarr;</span>
+              <div class="w-20 h-16 rounded-xl bg-[#121216] border border-emerald-500 flex flex-col items-center justify-center glow-box-emerald">
+                <span class="text-2xl font-mono text-white font-bold">10</span>
+                <span class="text-[9px] text-zinc-500">0x7ffe10</span>
+              </div>
+              <span class="text-zinc-400 font-mono">&larr;</span>
+              <span class="px-2 py-0.5 rounded bg-amber-950 border border-amber-500 text-amber-300 font-mono text-xs">Label "b"</span>
+            </div>
+            <span class="text-[10px] font-mono text-amber-300">Both labels point to 10 independently.</span>
+          </div>
+        `
+      },
+      {
+        id: 3,
+        title: "Scene 3: Line 3 — Rebinding 'a' Leaves 'b' Untouched",
+        narration: "Line 3: 'a = 20'. Python allocates a new integer 20 and moves tag 'a' to 20. But notice label 'b' never moved—it still points to 10!",
+        render: () => `
+          <div class="flex items-center justify-center space-x-8 py-2">
+            <div class="flex flex-col items-center p-3 rounded-xl bg-[#141416] border border-cyan-500/70 glow-box-cyan">
+              <span class="text-[10px] font-mono text-cyan-300">Label "a" (Moved!)</span>
+              <div class="text-3xl font-mono text-white font-bold mt-1">20</div>
+              <span class="text-[9px] font-mono text-cyan-400 mt-1">0x7ffe28</span>
+            </div>
+            <div class="flex flex-col items-center p-3 rounded-xl bg-[#141416] border border-amber-500/70 glow-box-amber">
+              <span class="text-[10px] font-mono text-amber-300">Label "b" (Untouched)</span>
+              <div class="text-3xl font-mono text-white font-bold mt-1">10</div>
+              <span class="text-[9px] font-mono text-amber-400 mt-1">0x7ffe10</span>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 4,
+        title: "Scene 4: The Snapshot Invariant",
+        narration: "Golden Rule: Assignment in Python captures a snapshot at that instant. Variables are never linked like spreadsheet formulas. 'b' remains 10 forever until reassigned.",
+        render: () => `
+          <div class="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/40 text-center space-y-1 max-w-sm">
+            <div class="text-xs font-mono text-emerald-400 font-bold">✓ b = 10 Confirmed</div>
+            <p class="text-xs text-zinc-200">
+              Modifying <code>a</code> later has zero effect on <code>b</code>.
+            </p>
+          </div>
+        `
+      }
+    ]
+  },
+
+  // Question 3: Swapping Variables Without Data Loss
+  "q_var_03": {
+    title: "Question 3 Explainer: The 3-Cup Swap & Buffer Variables (temp = x, x = y, y = temp)",
+    duration: "0:45",
+    scenes: [
+      {
+        id: 1,
+        title: "Scene 1: Two Full Cups (x = 10, y = 20)",
+        narration: "Suppose Cup x holds Milk (10) and Cup y holds Juice (20). How can you swap their contents without spilling or losing either value?",
+        render: () => `
+          <div class="flex items-center space-x-8 py-2">
+            <div class="p-3.5 rounded-xl bg-[#141416] border border-cyan-500 text-center glow-box-cyan">
+              <span class="text-[10px] font-mono text-cyan-300">Cup x (Milk)</span>
+              <div class="text-3xl font-mono text-white font-bold mt-1">10</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#141416] border border-emerald-500 text-center glow-box-emerald">
+              <span class="text-[10px] font-mono text-emerald-300">Cup y (Juice)</span>
+              <div class="text-3xl font-mono text-white font-bold mt-1">20</div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 2,
+        title: "Scene 2: The Direct Overwrite Trap",
+        narration: "If you execute 'x = y' directly, you pour Juice into Cup x—instantly destroying the Milk forever! Both cups now hold 20. The original value 10 is lost.",
+        render: () => `
+          <div class="flex flex-col items-center space-y-2 py-1">
+            <div class="p-2.5 rounded bg-rose-950/50 border border-rose-500 text-rose-300 text-xs font-mono text-center">
+              ❌ If you do: <code>x = y</code><br>
+              Cup x becomes 20, and 10 is destroyed forever!
+            </div>
+            <div class="flex space-x-6">
+              <div class="p-3 rounded-lg bg-zinc-900 border border-zinc-700 text-center font-mono">
+                <span class="text-[10px] text-zinc-500">x</span>
+                <div class="text-2xl text-rose-400 font-bold">20</div>
+              </div>
+              <div class="p-3 rounded-lg bg-zinc-900 border border-zinc-700 text-center font-mono">
+                <span class="text-[10px] text-zinc-500">y</span>
+                <div class="text-2xl text-rose-400 font-bold">20</div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 3,
+        title: "Scene 3: The 3-Step Safe Solution with 'temp'",
+        narration: "To solve this, use an empty third cup 'temp'. 1) temp = x saves Milk. 2) x = y pours Juice into x safely. 3) y = temp pours Milk into y.",
+        render: () => `
+          <div class="grid grid-cols-3 gap-3 font-mono text-xs text-center py-1">
+            <div class="p-2.5 bg-black/40 border border-amber-500 rounded-lg">
+              <span class="text-amber-400 text-[10px]">1. temp = x</span>
+              <div class="text-sm text-zinc-300 mt-1">Saves 10 into temp</div>
+            </div>
+            <div class="p-2.5 bg-black/40 border border-emerald-500 rounded-lg">
+              <span class="text-emerald-400 text-[10px]">2. x = y</span>
+              <div class="text-sm text-zinc-300 mt-1">Copies 20 into x</div>
+            </div>
+            <div class="p-2.5 bg-black/40 border border-cyan-500 rounded-lg">
+              <span class="text-cyan-400 text-[10px]">3. y = temp</span>
+              <div class="text-sm text-zinc-300 mt-1">Copies 10 into y</div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 4,
+        title: "Scene 4: Swapped Result & Tuple Unpacking",
+        narration: "Done! Now x is 20 and y is 10. Python also provides tuple packing shortcut: 'x, y = y, x'.",
+        render: () => `
+          <div class="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/40 text-center space-y-1.5 max-w-sm">
+            <div class="text-xs font-mono text-emerald-400 font-bold">✓ Successfully Swapped!</div>
+            <div class="font-mono text-xs text-cyan-200">x = 20 &nbsp;•&nbsp; y = 10</div>
+            <div class="text-[11px] text-zinc-400 font-mono">Pythonic syntax: <code>x, y = y, x</code></div>
+          </div>
+        `
+      }
+    ]
+  },
+
+  // Question: Data Types "5" + "5"
+  "q_types_01": {
+    title: "Question 1 Explainer: String Concatenation vs Integer Math ('5' + '5')",
+    duration: "0:40",
+    scenes: [
+      {
+        id: 1,
+        title: "Scene 1: Quotes Mean Text, Not Numbers",
+        narration: "In Python, quotes ' ' denote a string—a sequence of character glyphs stamped on paper tape, not a numerical quantity.",
+        render: () => `
+          <div class="flex items-center space-x-6 py-2">
+            <div class="p-3.5 bg-purple-950/30 border border-purple-500/60 rounded-xl text-center">
+              <span class="text-[10px] font-mono text-purple-400">STRING LITERAL</span>
+              <div class="text-2xl font-mono text-white mt-1">'5'</div>
+            </div>
+            <span class="text-xl text-zinc-500">&ne;</span>
+            <div class="p-3.5 bg-emerald-950/30 border border-emerald-500/60 rounded-xl text-center">
+              <span class="text-[10px] font-mono text-emerald-400">INTEGER NUMBER</span>
+              <div class="text-2xl font-mono text-white mt-1">5</div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 2,
+        title: "Scene 2: Overloaded '+' Operator",
+        narration: "The '+' operator behaves differently depending on type: between integers it adds; between strings it GLUES characters together (concatenation).",
+        render: () => `
+          <div class="flex flex-col items-center space-y-2 py-1 font-mono text-xs">
+            <div class="p-2 rounded bg-black/40 border border-emerald-500 text-emerald-300">
+              5 + 5 &rarr; 10 &nbsp; (Arithmetic Addition)
+            </div>
+            <div class="p-2 rounded bg-black/40 border border-purple-500 text-purple-300">
+              '5' + '5' &rarr; '55' &nbsp; (String Concatenation)
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 3,
+        title: "Scene 3: The Result in RAM",
+        narration: "Evaluating '5' + '5' glues the two text characters into the 2-character string '55'. It will never produce 10.",
+        render: () => `
+          <div class="p-4 rounded-xl bg-purple-950/40 border border-purple-500/60 text-center font-mono space-y-1">
+            <span class="text-[10px] text-purple-300 uppercase">Evaluated Result</span>
+            <div class="text-3xl text-white font-bold">'55'</div>
+            <span class="text-[10px] text-zinc-400">Type: str (length 2)</span>
+          </div>
+        `
+      },
+      {
+        id: 4,
+        title: "Scene 4: Explicit Conversion to Add",
+        narration: "To add mathematically, you must explicitly convert them with int(): int('5') + int('5') equals 10.",
+        render: () => `
+          <div class="p-3 rounded-lg bg-emerald-950/30 border border-emerald-500/40 text-center font-mono text-xs space-y-1">
+            <div class="text-emerald-400 font-bold">int('5') + int('5') == 10</div>
+            <p class="text-[11px] text-zinc-300 font-sans">Explicit casting tells Python to interpret the text as integers.</p>
+          </div>
+        `
+      }
+    ]
+  },
+
+  // Question: Casting age = '18'
+  "q_types_02": {
+    title: "Question 2 Explainer: Strong Typing & Explicit Casting (int(age) + 1)",
+    duration: "0:40",
+    scenes: [
+      {
+        id: 1,
+        title: "Scene 1: Strong Typing Prevents Silent Errors",
+        narration: "Python is strongly typed: it will NEVER silently coerce string '18' into a number when performing addition. Doing '18' + 1 raises a TypeError.",
+        render: () => `
+          <div class="p-3 rounded-xl bg-rose-950/40 border border-rose-500/50 text-center font-mono text-xs space-y-1">
+            <div class="text-rose-400 font-bold">TypeError: can only concatenate str to str, not "int"</div>
+            <p class="text-[10px] text-zinc-300">Python refuses to guess whether you want '181' or 19.</p>
+          </div>
+        `
+      },
+      {
+        id: 2,
+        title: "Scene 2: Explicit Conversion with int()",
+        narration: "To fix this, you must explicitly call int(age). The int() function parses the ASCII digits '1' and '8' and allocates an integer 18.",
+        render: () => `
+          <div class="flex items-center space-x-6 py-2">
+            <span class="font-mono text-purple-300 text-sm">'18'</span>
+            <span class="text-cyan-400 font-mono text-sm">&rarr; int('18') &rarr;</span>
+            <span class="font-mono text-emerald-300 text-lg font-bold">18</span>
+          </div>
+        `
+      },
+      {
+        id: 3,
+        title: "Scene 3: Adding 1 Safely",
+        narration: "Once cast, int(age) + 1 adds 18 + 1 to produce the integer 19 safely.",
+        render: () => `
+          <div class="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/40 font-mono text-xs text-center space-y-1">
+            <div class="text-emerald-400 font-bold">int(age) + 1 &rarr; 19</div>
+            <span class="text-[10px] text-zinc-400">Safe integer arithmetic</span>
+          </div>
+        `
+      },
+      {
+        id: 4,
+        title: "Scene 4: Core Invariant",
+        narration: "Always explicitly cast input text or strings with int() or float() before performing numerical calculations.",
+        render: () => `
+          <div class="p-3 bg-black/40 border border-zinc-700 rounded-lg text-center font-mono text-xs">
+            Explicit is better than implicit.
+          </div>
+        `
+      }
+    ]
+  }
+};
+
+// ---------------------------------------------------------------------------
+// DEDICATED REMEDIAL EXPLAINER STORYBOARDS (Shown ONLY on Wrong Answers!)
+// ---------------------------------------------------------------------------
+const REMEDIAL_VIDEO_STORYBOARDS = {
+  // Remedial for q_var_01: Math vs Programming Rebinding
+  "q_var_01": {
+    title: "Remedial Explainer: Why 'x = x + 1' Is NOT Math — The 2-Step CPU Sequence",
+    duration: "0:45",
+    scenes: [
+      {
+        id: 1,
+        title: "Scene 1: Misconception Identified",
+        narration: "You treated '=' as an algebraic equation balance. In math, x cannot equal x + 1. But in Python, '=' is an assignment command, not an equation!",
+        render: () => `
+          <div class="p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/60 text-center space-y-1.5 font-sans">
+            <div class="text-amber-400 font-mono font-bold text-xs uppercase">⚠ Mental Trap Detected</div>
+            <p class="text-xs text-zinc-200">
+              You are thinking of <code>x = x + 1</code> as an equation to be solved. In Python, there is no equation to solve!
+            </p>
+          </div>
+        `
+      },
+      {
+        id: 2,
+        title: "Scene 2: The 2-Step Mechanical Sequence",
+        narration: "Here is what Python really does: Step 1) It takes the current number in x (10) and calculates 10 + 1 = 11. Step 2) It binds the name tag x to 11.",
+        render: () => `
+          <div class="flex flex-col items-center space-y-2 py-1 font-mono text-xs">
+            <div class="p-2 rounded bg-black/50 border border-cyan-500 text-cyan-300">
+              1. Compute Right Side: <code>x + 1</code> &rarr; <code>10 + 1 = 11</code>
+            </div>
+            <div class="text-amber-400">&darr;</div>
+            <div class="p-2 rounded bg-black/50 border border-emerald-500 text-emerald-300">
+              2. Rebind Label: <code>x = 11</code>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 3,
+        title: "Scene 3: Visual Proof in RAM",
+        narration: "Notice the sequence across time: old value 10 is replaced by 11. Now answer the follow-up transfer challenge below to lock this concept in!",
+        render: () => `
+          <div class="flex items-center space-x-6 py-1">
+            <div class="p-3 bg-[#141416] border border-zinc-700 rounded-lg text-center font-mono">
+              <span class="text-[10px] text-zinc-500">Old</span>
+              <div class="text-lg text-zinc-500 line-through">10</div>
+            </div>
+            <span class="text-cyan-400 font-mono">&rarr;</span>
+            <div class="p-3.5 bg-[#141416] border border-emerald-400 rounded-xl text-center font-mono glow-box-emerald">
+              <span class="text-[10px] text-emerald-400 font-bold">New x</span>
+              <div class="text-2xl text-white font-bold">11</div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 4,
+        title: "Scene 4: Ready for Follow-up",
+        narration: "Now apply this exact two-step rule to the follow-up question directly below!",
+        render: () => `
+          <div class="p-3 rounded-lg bg-cyan-950/30 border border-cyan-500/40 text-center font-mono text-xs">
+            👇 Scroll down to answer the Follow-up Question below!
+          </div>
+        `
+      }
+    ]
+  },
+
+  // Remedial for q_var_02: Mirror Myth
+  "q_var_02": {
+    title: "Remedial Explainer: The Mirror Myth Debunked — Why 'b' Stays 10",
+    duration: "0:45",
+    scenes: [
+      {
+        id: 1,
+        title: "Scene 1: Misconception Identified",
+        narration: "You assumed 'b = a' created a permanent mirror link between variables. In Python, variables are NEVER linked together!",
+        render: () => `
+          <div class="p-3.5 rounded-xl bg-amber-950/40 border border-amber-500/60 text-center space-y-1.5 font-sans">
+            <div class="text-amber-400 font-mono font-bold text-xs uppercase">⚠ The Mirror Myth</div>
+            <p class="text-xs text-zinc-200">
+              <code>b = a</code> does NOT create a live cable or spreadsheet formula. It only takes a one-time photo!
+            </p>
+          </div>
+        `
+      },
+      {
+        id: 2,
+        title: "Scene 2: Independent Name Tags",
+        narration: "When 'b = a' runs, 'a' is 10, so 'b' receives 10. Later, when 'a = 20' runs, only 'a' moves. 'b' remains on 10.",
+        render: () => `
+          <div class="flex items-center space-x-6 py-2 font-mono text-xs">
+            <div class="p-3 bg-[#141416] border border-cyan-500 rounded-lg text-center">
+              <span class="text-cyan-300 text-[10px]">a was reassigned</span>
+              <div class="text-xl text-white font-bold">20</div>
+            </div>
+            <div class="p-3 bg-[#141416] border border-amber-500 rounded-lg text-center">
+              <span class="text-amber-300 text-[10px]">b was NOT touched</span>
+              <div class="text-xl text-amber-200 font-bold">10</div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 3,
+        title: "Scene 3: Proof",
+        narration: "Since no line of code reassigned 'b', 'b' is still 10. Now solve the transfer challenge below!",
+        render: () => `
+          <div class="p-3 bg-emerald-950/30 border border-emerald-500/40 rounded-lg font-mono text-xs text-center text-emerald-300">
+            ✓ Result: b is 10!
+          </div>
+        `
+      },
+      {
+        id: 4,
+        title: "Scene 4: Next Action",
+        narration: "Complete the follow-up question below to prove you understand reference snapshots!",
+        render: () => `
+          <div class="p-3 rounded-lg bg-cyan-950/30 border border-cyan-500/40 text-center font-mono text-xs">
+            👇 Scroll down to answer the Follow-up Question below!
+          </div>
+        `
+      }
+    ]
+  },
+
+  // Remedial for q_var_03: Data Loss Overwrite Trap
+  "q_var_03": {
+    title: "Remedial Explainer: Fatal Data Loss — Why Direct 'x = y' Overwrites Data",
+    duration: "0:45",
+    scenes: [
+      {
+        id: 1,
+        title: "Scene 1: Why Writing 'x = y' First Fails",
+        narration: "If you write 'x = y' without saving x first, x immediately takes y's value (20), and 10 is wiped out from computer memory forever!",
+        render: () => `
+          <div class="p-3.5 rounded-xl bg-rose-950/40 border border-rose-500/60 text-center space-y-1.5">
+            <div class="text-rose-400 font-mono font-bold text-xs uppercase">❌ Irrevocable Data Loss</div>
+            <p class="text-xs text-zinc-200">
+              When you do <code>x = y</code>, the value <code>10</code> inside <code>x</code> is overwritten immediately!
+            </p>
+          </div>
+        `
+      },
+      {
+        id: 2,
+        title: "Scene 2: The Mandatory Buffer 'temp'",
+        narration: "To prevent data loss, you MUST copy x into a temporary holding variable 'temp' first: temp = x. Now x's value is safe!",
+        render: () => `
+          <div class="flex items-center space-x-6 py-2 font-mono text-xs">
+            <div class="p-3 bg-[#141416] border border-amber-500 rounded-lg text-center">
+              <span class="text-amber-400 text-[10px]">Holding Box</span>
+              <div class="text-xl text-white font-bold">temp = 10</div>
+            </div>
+            <span class="text-emerald-400 text-sm">Secured before overwrite!</span>
+          </div>
+        `
+      },
+      {
+        id: 3,
+        title: "Scene 3: The 3-Step Sequence",
+        narration: "Step 1: temp = x. Step 2: x = y. Step 3: y = temp. All values preserved and swapped!",
+        render: () => `
+          <div class="p-3 rounded-xl bg-black/40 border border-emerald-500 font-mono text-xs text-left space-y-1">
+            <div>1. <span class="text-amber-300">temp = x</span>  # save 10</div>
+            <div>2. <span class="text-emerald-300">x = y</span>     # overwrite x with 20</div>
+            <div>3. <span class="text-cyan-300">y = temp</span>  # copy saved 10 into y</div>
+          </div>
+        `
+      },
+      {
+        id: 4,
+        title: "Scene 4: Ready for Follow-up",
+        narration: "Now write the 3 lines of code for the transfer variables below!",
+        render: () => `
+          <div class="p-3 rounded-lg bg-cyan-950/30 border border-cyan-500/40 text-center font-mono text-xs">
+            👇 Scroll down to write the swap code in the Follow-up Question below!
+          </div>
+        `
+      }
+    ]
+  }
+};
+
 
 class ConceptVideoEngine {
   constructor() {
     this.currentConcept = "py.variables";
+    this.currentQuestionId = "q_var_01";
+    this.isRemedial = false;
     this.sceneIndex = 0;
     this.isPlaying = false;
     this.timer = null;
     this.speedMs = 5000;
   }
 
-  loadStoryboard(conceptId) {
-    this.currentConcept = conceptId;
+  loadStoryboard(conceptId, questionId = null, isRemedial = false) {
+    this.currentConcept = conceptId || this.currentConcept;
+    this.currentQuestionId = questionId || this.currentQuestionId;
+    this.isRemedial = !!isRemedial;
     this.sceneIndex = 0;
     this.stop();
     this.render();
   }
 
   getCurrentStoryboard() {
+    // 1. If remedial requested, check remedial storyboards first
+    if (this.isRemedial && this.currentQuestionId && REMEDIAL_VIDEO_STORYBOARDS[this.currentQuestionId]) {
+      return REMEDIAL_VIDEO_STORYBOARDS[this.currentQuestionId];
+    }
+    // 2. Check question-specific storyboards
+    if (this.currentQuestionId && QUESTION_VIDEO_STORYBOARDS[this.currentQuestionId]) {
+      return QUESTION_VIDEO_STORYBOARDS[this.currentQuestionId];
+    }
+    // 3. Fallback to concept-level storyboard
     return CONCEPT_VIDEO_STORYBOARDS[this.currentConcept] || CONCEPT_VIDEO_STORYBOARDS["py.variables"];
   }
 
@@ -621,15 +1185,25 @@ class ConceptVideoEngine {
     const narrationEl = document.getElementById("video-narration-text");
     const scrubberStrip = document.getElementById("video-scrubber-strip");
 
-    if (titleEl) titleEl.innerText = sb.title;
+    if (titleEl) {
+      if (this.isRemedial) {
+        titleEl.innerHTML = `<span class="text-amber-400 font-bold flex items-center space-x-1.5"><span>🎬</span><span>Remedial Explainer:</span></span> <span class="text-zinc-200">${sb.title}</span>`;
+      } else {
+        titleEl.innerHTML = `<span class="text-cyan-400 font-medium">Concept Explainer:</span> <span class="text-white">${sb.title}</span>`;
+      }
+    }
     if (indicatorEl) indicatorEl.innerText = `Scene ${this.sceneIndex + 1} of ${sb.scenes.length}`;
     if (durationEl) durationEl.innerText = sb.duration;
     if (narrationEl) narrationEl.innerText = scene.narration;
 
+    const badgeColor = this.isRemedial
+      ? 'text-amber-400/90 bg-amber-950/60 border border-amber-800/60'
+      : 'text-cyan-400/80 bg-cyan-950/40 border border-cyan-800/40';
+
     if (viewport) {
       viewport.innerHTML = `
         <div class="scene-enter flex flex-col items-center justify-center w-full h-full space-y-3 p-2">
-          <div class="text-[11px] font-mono text-cyan-400/80 uppercase tracking-widest bg-cyan-950/40 px-3 py-0.5 rounded-full border border-cyan-800/40">
+          <div class="text-[11px] font-mono ${badgeColor} uppercase tracking-widest px-3 py-0.5 rounded-full">
             ${scene.title}
           </div>
           <div class="w-full flex items-center justify-center">
@@ -640,12 +1214,13 @@ class ConceptVideoEngine {
     }
 
     if (scrubberStrip) {
+      const activeColor = this.isRemedial ? 'w-8 bg-amber-400 shadow-sm shadow-amber-400/50' : 'w-8 bg-cyan-400 shadow-sm shadow-cyan-400/50';
       scrubberStrip.innerHTML = sb.scenes.map((s, idx) => {
         const isCurrent = idx === this.sceneIndex;
         return `
           <button onclick="videoEngine.goToScene(${idx})"
             title="${s.title}"
-            class="scrubber-segment h-2 rounded-full transition-all ${isCurrent ? 'w-8 bg-cyan-400 shadow-sm shadow-cyan-400/50' : (idx < this.sceneIndex ? 'w-4 bg-zinc-600' : 'w-4 bg-zinc-800')}">
+            class="scrubber-segment h-2 rounded-full transition-all ${isCurrent ? activeColor : (idx < this.sceneIndex ? 'w-4 bg-zinc-600' : 'w-4 bg-zinc-800')}">
           </button>
         `;
       }).join("");

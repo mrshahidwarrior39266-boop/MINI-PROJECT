@@ -610,6 +610,29 @@
 
   </div>
 
+  <!-- Name Gate: shown on every open/refresh. A new name starts at 0%; an existing name resumes. -->
+  <div id="nameGateModal" class="fixed inset-0 bg-codex-base z-[100] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="name-gate-title">
+    <form onsubmit="event.preventDefault(); submitNameGate();" class="bg-codex-card border border-codex-border rounded-xl max-w-md w-full p-6 space-y-4">
+      <div class="space-y-1">
+        <h2 id="name-gate-title" class="text-lg font-semibold text-white">Welcome to ArchaLearn</h2>
+        <p class="text-xs text-codex-secondary leading-relaxed">
+          Enter your name to continue. A new name starts at 0%; an existing name resumes its saved mastery.
+        </p>
+      </div>
+      <div class="space-y-1.5">
+        <label for="name-gate-input" class="block text-[11px] font-mono text-codex-secondary">Your name</label>
+        <input id="name-gate-input" name="name" type="text" maxlength="80" autocomplete="off"
+          placeholder="e.g. Ada Lovelace"
+          class="w-full bg-[#18181c] border border-codex-border rounded-lg px-3 py-2 text-sm text-codex-text placeholder-codex-muted focus:border-codex-borderFocus">
+      </div>
+      <p id="name-gate-error" class="hidden text-xs text-rose-400" role="alert"></p>
+      <button id="name-gate-submit" type="submit"
+        class="w-full py-2.5 rounded-lg bg-white text-black text-xs font-semibold hover:bg-zinc-200 transition disabled:opacity-60 disabled:cursor-wait">
+        Start / Resume
+      </button>
+    </form>
+  </div>
+
   <!-- Student Switcher Modal -->
   <div id="studentModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-codex-card border border-codex-border rounded-xl max-w-sm w-full p-5 space-y-3">

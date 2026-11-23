@@ -36,7 +36,68 @@ function escapeHtml(str) {
 // ---------------------------------------------------------------------------
 // 1. INITIALIZATION & LIFECYCLE
 // ---------------------------------------------------------------------------
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
+  initNameGate();
+});
+
+function initNameGate() {
+  const input = document.getElementById('name-gate-input');
+  if (!input) {
+    // Keep the app usable if an older cached HTML shell is served.
+    initializeApp();
+    return;
+  }
+  input.focus();
+}
+
+async function submitNameGate() {
+  const input = document.getElementById('name-gate-input');
+  const error = document.getElementById('name-gate-error');
+  const button = document.getElementById('name-gate-submit');
+  const name = input ? input.value.trim() : '';
+
+  const showError = (message) => {
+    if (error) {
+      error.innerText = message;
+      error.classList.remove('hidden');
+    }
+    if (input) input.focus();
+  };
+
+  if (!name) {
+    showError('Please enter your name.');
+    return;
+  }
+  if (error) error.classList.add('hidden');
+  if (button) {
+    button.disabled = true;
+    button.innerText = 'Checking...';
+  }
+
+  try {
+    const res = await fetch('/api/students/identify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      throw new Error(data.message || 'Could not start or resume that learner.');
+    }
+
+    hideModal('nameGateModal');
+    await initializeApp();
+  } catch (err) {
+    showError(err.message || 'Could not start or resume that learner.');
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.innerText = 'Start / Resume';
+    }
+  }
+}
+
+async function initializeApp() {
   await fetchSystemStatus();
   await fetchCurriculum();
   await loadLesson(state.activeConcept);
@@ -54,7 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
-});
+}
 
 async function fetchSystemStatus() {
   try {
@@ -62,7 +123,7 @@ async function fetchSystemStatus() {
     const data = await res.json();
     state.activeStudent = data.active_student;
     state.frontier = data.frontier || { ready: [], in_progress: [], mastered: [], locked: [] };
-    state.auditHash = data.ledger_audit?.fingerprint || '86C09D8BB6567BD0';
+    state.auditHash = data.ledger_audit?.fingerprint || 'unavailable';
 
     // Top header label
     const learnerLabel = document.getElementById('top-learner-label');
@@ -381,6 +442,11 @@ function displayCurrentQuestion() {
   const q = state.conceptQuestions[state.currentQuestionIdx];
   if (!q) return;
 
+  // 1. Load Individual Video Explainer for THIS Specific Question!
+  if (window.videoEngine) {
+    window.videoEngine.loadStoryboard(state.activeConcept, q.id, false);
+  }
+
   // Question Prompt
   const promptEl = document.getElementById('lesson-diagnostic-prompt');
   if (promptEl) {
@@ -536,7 +602,293 @@ function scrollToQuestion() {
 }
 
 // ---------------------------------------------------------------------------
-// 5. SOCRATIC EVALUATION SUBMISSION
+// 5. INTERACTIVE MEMORY EXECUTION TRACE STEPPER & FOLLOW-UP CONTROLLER
+// ---------------------------------------------------------------------------
+const MEMORY_STEPS_CATALOG = {
+  "q_var_01": [
+    {
+      step: 1,
+      title: "Initial State in RAM: Variable 'x' is bound to 10",
+      code: "x = 10",
+      desc: "Python creates an integer object 10 at address 0x7ffe10 in RAM and binds the label 'x'.",
+      boxes: [
+        { label: "x", addr: "0x7ffe10", val: "10", type: "int", border: "border-cyan-400 text-cyan-300 glow-box-cyan" }
+      ]
+    },
+    {
+      step: 2,
+      title: "Evaluate Right-Hand Side (x + 1) in CPU ALU",
+      code: "x + 1   # Fetches 10 -> Computes 10 + 1 = 11",
+      desc: "Python reads value 10 from 0x7ffe10 and computes 10 + 1 = 11 in the CPU arithmetic unit.",
+      boxes: [
+        { label: "x (read)", addr: "0x7ffe10", val: "10", type: "int", border: "border-zinc-600 text-zinc-400" },
+        { label: "CPU ALU", addr: "register", val: "11", type: "result", border: "border-amber-400 text-amber-300 animate-pulse glow-box-amber" }
+      ]
+    },
+    {
+      step: 3,
+      title: "Allocate New 28-Byte Integer Object 11 in Heap RAM",
+      code: "int(11)  # Allocates new memory at 0x7ffe28",
+      desc: "Python allocates a brand-new integer object with value 11 at a separate address in memory.",
+      boxes: [
+        { label: "Old (unreferenced)", addr: "0x7ffe10", val: "10", type: "int", border: "border-zinc-800 text-zinc-600" },
+        { label: "New Object", addr: "0x7ffe28", val: "11", type: "int", border: "border-emerald-400 text-emerald-300 glow-box-emerald" }
+      ]
+    },
+    {
+      step: 4,
+      title: "Rebind Label 'x' to the New Address 0x7ffe28",
+      code: "x = 11   # Sticky label moves to 0x7ffe28",
+      desc: "The yellow sticky label 'x' is moved to 0x7ffe28. The operation is sequential across time!",
+      boxes: [
+        { label: "x", addr: "0x7ffe28", val: "11", type: "int", border: "border-cyan-400 text-cyan-300 glow-box-cyan" }
+      ]
+    }
+  ],
+  "q_var_02": [
+    {
+      step: 1,
+      title: "Step 1: a = 10 (Initialize 'a')",
+      code: "a = 10",
+      desc: "Python binds label 'a' to integer 10 at address 0x7ffe10.",
+      boxes: [
+        { label: "a", addr: "0x7ffe10", val: "10", type: "int", border: "border-cyan-400 text-cyan-300 glow-box-cyan" }
+      ]
+    },
+    {
+      step: 2,
+      title: "Step 2: b = a (One-Time Snapshot Copy)",
+      code: "b = a",
+      desc: "Python inspects 'a' (10) and binds 'b' to the same object at that moment. Variables are NOT linked!",
+      boxes: [
+        { label: "a", addr: "0x7ffe10", val: "10", type: "int", border: "border-cyan-400 text-cyan-300" },
+        { label: "b", addr: "0x7ffe10", val: "10", type: "int", border: "border-amber-400 text-amber-300 glow-box-amber" }
+      ]
+    },
+    {
+      step: 3,
+      title: "Step 3: a = 20 (Rebind 'a' Only)",
+      code: "a = 20",
+      desc: "Python allocates 20 at 0x7ffe28 and rebinds 'a'. Label 'b' is completely untouched!",
+      boxes: [
+        { label: "a (moved)", addr: "0x7ffe28", val: "20", type: "int", border: "border-cyan-400 text-cyan-300" },
+        { label: "b (still on 10)", addr: "0x7ffe10", val: "10", type: "int", border: "border-amber-400 text-amber-300 glow-box-amber" }
+      ]
+    },
+    {
+      step: 4,
+      title: "Step 4: Final State — b is 10 Untouched",
+      code: "print(b)  # Outputs 10",
+      desc: "Because variables store independent references, changing 'a' had zero impact on 'b'.",
+      boxes: [
+        { label: "a", addr: "0x7ffe28", val: "20", type: "int", border: "border-zinc-500 text-zinc-300" },
+        { label: "b", addr: "0x7ffe10", val: "10", type: "int", border: "border-emerald-400 text-emerald-300 glow-box-emerald" }
+      ]
+    }
+  ],
+  "q_var_03": [
+    {
+      step: 1,
+      title: "Initial State: Two Full Cups (x = 10, y = 20)",
+      code: "x = 10\ny = 20",
+      desc: "Cup x holds Milk (10); Cup y holds Juice (20). Direct overwrite x = y would destroy Milk forever!",
+      boxes: [
+        { label: "x (Milk)", addr: "0x7ffe10", val: "10", type: "int", border: "border-cyan-400 text-cyan-300 glow-box-cyan" },
+        { label: "y (Juice)", addr: "0x7ffe18", val: "20", type: "int", border: "border-emerald-400 text-emerald-300 glow-box-emerald" },
+        { label: "temp", addr: "Buffer", val: "Empty", type: "None", border: "border-dashed border-zinc-700 text-zinc-600" }
+      ]
+    },
+    {
+      step: 2,
+      title: "Step 1: temp = x (Safe Holding Buffer)",
+      code: "temp = x",
+      desc: "We copy 10 into holding box 'temp'. Now Milk is safe from being overwritten!",
+      boxes: [
+        { label: "x", addr: "0x7ffe10", val: "10", type: "int", border: "border-cyan-400 text-cyan-300" },
+        { label: "y", addr: "0x7ffe18", val: "20", type: "int", border: "border-emerald-400 text-emerald-300" },
+        { label: "temp (Buffered)", addr: "0x7ffe10", val: "10", type: "int", border: "border-amber-400 text-amber-300 glow-box-amber" }
+      ]
+    },
+    {
+      step: 3,
+      title: "Step 2: x = y (Safe Overwrite)",
+      code: "x = y",
+      desc: "Cup x is overwritten with 20. This is safe because x's original 10 is preserved inside 'temp'.",
+      boxes: [
+        { label: "x (Updated)", addr: "0x7ffe18", val: "20", type: "int", border: "border-emerald-400 text-emerald-300 glow-box-emerald" },
+        { label: "y", addr: "0x7ffe18", val: "20", type: "int", border: "border-emerald-400 text-emerald-300" },
+        { label: "temp (Saved Milk)", addr: "0x7ffe10", val: "10", type: "int", border: "border-amber-400 text-amber-300" }
+      ]
+    },
+    {
+      step: 4,
+      title: "Step 3: y = temp (Complete Swap)",
+      code: "y = temp",
+      desc: "We copy the saved 10 from 'temp' into y. Both values are completely swapped: x = 20, y = 10!",
+      boxes: [
+        { label: "x (Swapped)", addr: "0x7ffe18", val: "20", type: "int", border: "border-emerald-400 text-emerald-300 glow-box-emerald" },
+        { label: "y (Swapped)", addr: "0x7ffe10", val: "10", type: "int", border: "border-cyan-400 text-cyan-300 glow-box-cyan" },
+        { label: "temp", addr: "Buffer", val: "10", type: "int", border: "border-zinc-700 text-zinc-500" }
+      ]
+    }
+  ]
+};
+
+function getMemorySteps(qId) {
+  if (MEMORY_STEPS_CATALOG[qId]) return MEMORY_STEPS_CATALOG[qId];
+  return [
+    {
+      step: 1,
+      title: "Step 1: Read Values from Memory",
+      code: "# Fetching references from RAM",
+      desc: "Python locates the variables at their 64-bit heap addresses in RAM.",
+      boxes: [{ label: "Input", addr: "0x7ffe10", val: "Initial State", type: "ref", border: "border-cyan-400 text-cyan-300 glow-box-cyan" }]
+    },
+    {
+      step: 2,
+      title: "Step 2: CPU ALU Operation",
+      code: "# Processing operation",
+      desc: "The Python runtime evaluates the expression in CPU registers before rebinding.",
+      boxes: [{ label: "ALU", addr: "CPU Reg", val: "Computed Value", type: "val", border: "border-amber-400 text-amber-300 glow-box-amber" }]
+    },
+    {
+      step: 3,
+      title: "Step 3: Object Binding in RAM",
+      code: "# Binding label to result",
+      desc: "The label is bound to the verified heap object address.",
+      boxes: [{ label: "Result", addr: "0x7ffe28", val: "Verified State", type: "result", border: "border-emerald-400 text-emerald-300 glow-box-emerald" }]
+    }
+  ];
+}
+
+function renderMemoryStep(qId, stepIdx = 0) {
+  const steps = getMemorySteps(qId);
+  const total = steps.length;
+  if (stepIdx < 0) stepIdx = 0;
+  if (stepIdx >= total) stepIdx = total - 1;
+  state.activeMemoryStep = stepIdx;
+
+  const current = steps[stepIdx];
+  const counterEl = document.getElementById('memory-stepper-counter');
+  if (counterEl) counterEl.innerText = `Step ${stepIdx + 1} of ${total}`;
+
+  const prevBtn = document.getElementById('btn-memory-prev');
+  if (prevBtn) prevBtn.disabled = stepIdx === 0;
+
+  const nextBtn = document.getElementById('btn-memory-next');
+  if (nextBtn) nextBtn.disabled = stepIdx === total - 1;
+
+  const display = document.getElementById('memory-stepper-display');
+  if (display) {
+    display.innerHTML = `
+      <div class="space-y-2.5">
+        <div class="flex items-center justify-between text-xs font-mono">
+          <span class="text-cyan-300 font-semibold">${escapeHtml(current.title)}</span>
+          <code class="px-2 py-0.5 rounded bg-black/60 text-amber-300 text-[11px] border border-zinc-800">${escapeHtml(current.code)}</code>
+        </div>
+        <p class="text-xs text-zinc-300 leading-relaxed font-sans">${escapeHtml(current.desc)}</p>
+
+        <!-- RAM Compartments Grid -->
+        <div class="grid grid-cols-${Math.min(current.boxes.length, 3)} gap-3 pt-2">
+          ${current.boxes.map(box => `
+            <div class="flex flex-col items-center p-3 rounded-xl bg-[#14161b] border ${box.border} shadow-md text-center">
+              <span class="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">${escapeHtml(box.label)}</span>
+              <div class="text-xl font-mono text-white font-bold my-1">${escapeHtml(box.val)}</div>
+              <span class="text-[9px] font-mono text-zinc-500">${escapeHtml(box.addr)}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  const pills = document.getElementById('memory-step-pills');
+  if (pills) {
+    pills.innerHTML = steps.map((s, idx) => `
+      <button onclick="goToMemoryStep('${escapeHtml(qId)}', ${idx})"
+        class="h-1.5 rounded-full transition-all ${idx === stepIdx ? 'w-6 bg-cyan-400 shadow-sm shadow-cyan-400/50' : 'w-2 bg-zinc-700'}">
+      </button>
+    `).join('');
+  }
+}
+
+function prevMemoryStep(qId) {
+  renderMemoryStep(qId, (state.activeMemoryStep || 0) - 1);
+}
+
+function nextMemoryStep(qId) {
+  renderMemoryStep(qId, (state.activeMemoryStep || 0) + 1);
+}
+
+function goToMemoryStep(qId, idx) {
+  renderMemoryStep(qId, idx);
+}
+
+async function submitFollowupAnswer(qId) {
+  const input = document.getElementById('followup-answer-input');
+  const answer = input ? input.value.trim() : '';
+  if (!answer) {
+    alert('Please enter your answer to the follow-up question.');
+    return;
+  }
+  const submitBtn = document.getElementById('btn-submit-followup');
+  if (submitBtn) {
+    submitBtn.innerText = 'Evaluating...';
+    submitBtn.disabled = true;
+  }
+
+  try {
+    const res = await fetch('/api/evaluate-followup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        concept_id: state.activeConcept,
+        question_id: qId,
+        student_answer: answer
+      })
+    });
+    const result = await res.json();
+    const resultCard = document.getElementById('followup-eval-result');
+    if (resultCard) {
+      resultCard.classList.remove('hidden');
+      if (result.is_correct) {
+        resultCard.className = 'p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/50 text-xs space-y-1 scene-enter';
+        resultCard.innerHTML = `
+          <div class="font-mono text-emerald-400 font-bold flex items-center space-x-1.5">
+            <span>✓</span><span>Transfer Question Solved! (+15% Mastery Boost)</span>
+          </div>
+          <p class="text-zinc-200">${escapeHtml(result.feedback)}</p>
+          <div class="text-[11px] font-mono text-emerald-300">Chapter Mastery: ${Math.round((result.updated_mastery || 0) * 100)}%</div>
+        `;
+      } else {
+        resultCard.className = 'p-3 rounded-lg bg-amber-950/40 border border-amber-500/50 text-xs space-y-1 scene-enter';
+        resultCard.innerHTML = `
+          <div class="font-mono text-amber-400 font-bold flex items-center space-x-1.5">
+            <span>⚠</span><span>Not quite yet</span>
+          </div>
+          <p class="text-zinc-200">${escapeHtml(result.feedback)}</p>
+          ${result.canonical_answer ? `
+            <div class="text-[11px] font-mono text-zinc-400">
+              Expected: <code class="text-amber-300">${escapeHtml(result.canonical_answer)}</code>
+            </div>
+          ` : ''}
+        `;
+      }
+    }
+    await fetchSystemStatus();
+    await fetchCurriculum();
+  } catch (err) {
+    console.error('Error evaluating followup:', err);
+  } finally {
+    if (submitBtn) {
+      submitBtn.innerText = 'Submit Follow-up Answer';
+      submitBtn.disabled = false;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 6. SOCRATIC EVALUATION SUBMISSION
 // ---------------------------------------------------------------------------
 async function submitLessonAnswer() {
   const input = document.getElementById('lesson-answer-input');
@@ -563,6 +915,7 @@ async function submitLessonAnswer() {
       body: JSON.stringify({
         concept_id: state.activeConcept,
         student_answer: answer,
+        question_id: q.id || '',
         question_prompt: qPrompt,
       })
     });
@@ -615,9 +968,10 @@ async function submitLessonAnswer() {
 
       const explanationText = result.step_by_step_explanation || q.explanation || "Python completely evaluates the right-hand side first, allocates memory, and binds the variable name on the left to that address.";
       const canonicalText = result.canonical_answer || q.canonical_answer || "";
+      const followup = result.followup || q.followup;
 
       if (result.is_correct) {
-        // CORRECT ASSESSMENT
+        // CORRECT ASSESSMENT: Straightforward mastery & progression (no remedial clutter)
         feedbackCard.className = 'p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/40 text-xs space-y-3.5 transition-all scene-enter';
         feedbackCard.innerHTML = `
           <!-- Header -->
@@ -678,8 +1032,16 @@ async function submitLessonAnswer() {
           </div>
         `;
       } else {
-        // WRONG OR PARTIAL ANSWER: RICH EDUCATIONAL EXPLANATION
-        feedbackCard.className = 'p-4 rounded-xl bg-amber-950/30 border border-amber-500/40 text-xs space-y-3.5 transition-all scene-enter';
+        // WRONG OR PARTIAL ANSWER:
+        // 1. Load dedicated Remedial Explainer Video
+        if (window.videoEngine) {
+          window.videoEngine.loadStoryboard(state.activeConcept, q.id, true);
+          // Play automatically for immediate visual help
+          window.videoEngine.play();
+        }
+
+        // 2. Render Rich Educational Breakdown with Follow-up Question AND Memory Stepper at the End
+        feedbackCard.className = 'p-4 rounded-xl bg-amber-950/30 border border-amber-500/40 text-xs space-y-4 transition-all scene-enter';
         feedbackCard.innerHTML = `
           <!-- Header -->
           <div class="flex items-center justify-between font-mono text-[11px] pb-2 border-b border-amber-500/20">
@@ -688,7 +1050,9 @@ async function submitLessonAnswer() {
               <span>${scorePct > 0 ? `Partial Understanding (${scorePct}%)` : 'Misconception Diagnosed'}</span>
               <span class="text-zinc-400 text-[10px]">Question ${currentQNumber} of ${totalQ}</span>
             </span>
-            <span class="text-zinc-500 font-mono text-[10px]">Evaluator: ${escapeHtml(result.evaluator_mode || 'rule_fallback')}</span>
+            <span class="text-amber-300 font-mono text-[10px] bg-amber-950/80 px-2 py-0.5 rounded border border-amber-700/50">
+              🎬 Watch Remedial Video Above
+            </span>
           </div>
 
           <!-- Diagnosed Misconception / Gap -->
@@ -705,10 +1069,39 @@ async function submitLessonAnswer() {
             ` : ''}
           </div>
 
+          <!-- 2. TRANSFER FOLLOW-UP QUESTION (Directly Below Video & Diagnosis) -->
+          ${followup ? `
+            <div id="followup-challenge-card" class="p-3.5 rounded-xl bg-[#1b1714] border border-amber-500/50 space-y-2.5 scene-enter">
+              <div class="flex items-center justify-between pb-1.5 border-b border-amber-500/20">
+                <span class="text-xs font-mono text-amber-400 font-bold uppercase tracking-wider flex items-center space-x-1.5">
+                  <span>🎯</span><span>Transfer Follow-up Question</span>
+                </span>
+                <span class="text-[10px] font-mono text-zinc-400">Step 2: Apply what you learned!</span>
+              </div>
+              <p class="text-xs text-amber-100 font-medium leading-relaxed font-sans">${escapeHtml(followup.prompt)}</p>
+              ${followup.hint ? `
+                <div class="p-2 rounded bg-black/40 border border-amber-700/40 text-[11px] text-amber-300 font-mono">
+                  <strong>Hint:</strong> ${escapeHtml(followup.hint)}
+                </div>
+              ` : ''}
+              <div class="space-y-2">
+                <textarea id="followup-answer-input" rows="2" placeholder="Write your follow-up answer here to reinforce your understanding..."
+                  class="w-full bg-[#121214] border border-amber-500/30 rounded-lg p-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-amber-400 font-sans transition"></textarea>
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-mono text-zinc-500">Evaluates transfer &amp; awards mastery points</span>
+                  <button onclick="submitFollowupAnswer('${escapeHtml(q.id || '')}')" id="btn-submit-followup" class="px-3.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-black font-semibold text-xs transition cursor-pointer">
+                    Submit Follow-up Answer
+                  </button>
+                </div>
+              </div>
+              <div id="followup-eval-result" class="hidden"></div>
+            </div>
+          ` : ''}
+
           <!-- STEP-BY-STEP EXPLANATION OF WHAT PYTHON DOES IN MEMORY -->
           <div class="p-3.5 rounded-lg bg-[#141416] border border-zinc-700/60 text-xs space-y-2">
             <div class="font-mono text-[11px] text-amber-300 font-bold uppercase tracking-wider flex items-center space-x-1.5">
-              <span>🔬</span><span>What Python Does in Memory (Step-by-Step):</span>
+              <span>🔬</span><span>What Python Does in Memory (Step-by-Step Breakdown):</span>
             </div>
             <div class="text-zinc-300 whitespace-pre-line leading-relaxed font-sans text-xs pl-1">
               ${escapeHtml(explanationText)}
@@ -724,6 +1117,26 @@ async function submitLessonAnswer() {
               <pre class="font-mono text-cyan-200/90 bg-black/60 p-2.5 rounded border border-zinc-800 text-xs overflow-x-auto whitespace-pre-wrap">${escapeHtml(canonicalText)}</pre>
             </div>
           ` : ''}
+
+          <!-- 3. AT THE END: INTERACTIVE STEP-BY-STEP MEMORY EXECUTION TRACE -->
+          <div id="memory-execution-trace-box" class="p-4 rounded-xl bg-[#0f1115] border border-cyan-500/40 space-y-3 scene-enter">
+            <div class="flex items-center justify-between pb-2 border-b border-cyan-500/20 font-mono text-xs">
+              <span class="text-cyan-400 font-bold uppercase tracking-wider flex items-center space-x-1.5">
+                <span>⚙️</span><span>How It Actually Works in Python Memory (Step-by-Step Runtime Walkthrough)</span>
+              </span>
+              <span class="text-zinc-400 text-[10px]" id="memory-stepper-counter">Step 1 of 4</span>
+            </div>
+
+            <div id="memory-stepper-display">
+              <!-- Dynamically rendered by renderMemoryStep -->
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-zinc-800 text-xs font-mono">
+              <button onclick="prevMemoryStep('${escapeHtml(q.id || '')}')" id="btn-memory-prev" class="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition">&larr; Prev Step</button>
+              <div class="flex items-center space-x-1.5" id="memory-step-pills"></div>
+              <button onclick="nextMemoryStep('${escapeHtml(q.id || '')}')" id="btn-memory-next" class="px-3 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition">Next Step &rarr;</button>
+            </div>
+          </div>
 
           <!-- Footer Metadata & Action Buttons -->
           <div class="flex flex-col sm:flex-row items-center justify-between pt-2 border-t border-amber-500/20 gap-2">
@@ -750,6 +1163,9 @@ async function submitLessonAnswer() {
             </div>
           </div>
         `;
+
+        // Initialize memory stepper display for this question
+        renderMemoryStep(q.id, 0);
       }
     }
 

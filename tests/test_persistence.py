@@ -36,6 +36,35 @@ def test_repository_profile_crud():
         assert all_profiles[0].student_id == "stu_test_user"
 
 
+def test_find_profile_by_name_is_case_insensitive():
+    with TemporaryDirectory() as tmp_dir:
+        db_path = Path(tmp_dir) / "test_records.db"
+        repo = StudentRepository(db_path)
+        repo.save_profile(StudentProfile(student_id="stu_ada", name="Ada Lovelace"))
+
+        found = repo.find_profile_by_name("  ada lovelace  ")
+        assert found is not None
+        assert found.student_id == "stu_ada"
+        assert repo.find_profile_by_name("nobody") is None
+
+
+def test_identify_student_creates_zero_progress_and_resumes(tmp_path, monkeypatch):
+    import app.server as server
+
+    monkeypatch.setattr(server, "DB_FILE", tmp_path / "records.db")
+    state = server.TutorServerState()
+
+    profile, created = state.identify_student("  New   Learner  ")
+    assert created is True
+    assert profile.name == "New Learner"
+    assert profile.student_id.startswith("stu_new_learner")
+    assert state.repository.load_mastery_map(profile.student_id) == {}
+
+    resumed, created_again = state.identify_student("new learner")
+    assert created_again is False
+    assert resumed.student_id == profile.student_id
+
+
 def test_state_service_persistence_and_reload():
     with TemporaryDirectory() as tmp_dir:
         db_path = Path(tmp_dir) / "test_records.db"

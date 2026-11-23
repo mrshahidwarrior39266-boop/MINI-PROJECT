@@ -6,6 +6,7 @@ frontend to the complete Intelligent Tutoring System backend services across all
 import json
 import mimetypes
 import os
+import re
 import sys
 import tempfile
 import time
@@ -88,22 +89,50 @@ class TutorServerState:
             mastery_threshold=0.70,
         )
 
+    def _activate_profile(self, profile: StudentProfile) -> StudentProfile:
+        self.active_profile = profile
+        self._rebuild_coordinator()
+        return profile
+
     def switch_student(self, student_id: str, name: Optional[str] = None) -> StudentProfile:
         loaded = self.repository.load_profile(student_id)
-        if loaded:
-            self.active_profile = loaded
-        else:
-            new_profile = StudentProfile(
+        if not loaded:
+            loaded = StudentProfile(
                 student_id=student_id,
                 name=name or student_id.replace("stu_", "").capitalize(),
                 target_goal="Master Python from fundamentals",
                 explanation_preference="analogy_heavy",
                 pace_rate=1.0,
             )
-            self.repository.save_profile(new_profile)
-            self.active_profile = new_profile
-        self._rebuild_coordinator()
-        return self.active_profile
+            self.repository.save_profile(loaded)
+        return self._activate_profile(loaded)
+
+    def identify_student(self, name: str) -> tuple[StudentProfile, bool]:
+        """Resume a profile by name, or create a fresh zero-progress profile."""
+        normalized = " ".join(name.split())
+        existing = self.repository.find_profile_by_name(normalized)
+        if existing:
+            return self._activate_profile(existing), False
+
+        profile = StudentProfile(
+            student_id=self._new_student_id(normalized),
+            name=normalized or "Student",
+            target_goal="Master Python from fundamentals",
+            explanation_preference="analogy_heavy",
+            pace_rate=1.0,
+        )
+        self.repository.save_profile(profile)
+        return self._activate_profile(profile), True
+
+    def _new_student_id(self, name: str) -> str:
+        slug = re.sub(r"[^a-z0-9]+", "_", name.casefold()).strip("_") or "student"
+        base = f"stu_{slug}"[:70].rstrip("_")
+        candidate = base
+        suffix = 2
+        while self.repository.load_profile(candidate):
+            candidate = f"{base}_{suffix}"
+            suffix += 1
+        return candidate
 
 
 STATE = TutorServerState()
@@ -192,8 +221,7 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
                     "locked": frontier.locked,
                 },
                 "ledger_audit": {
-                    "verified": True,
-                    "mode": "SHA-256 Merkle-Linked Chain",
+                    "mode": "live SHA-256 fingerprint",
                     "fingerprint": audit_hash,
                 }
             })
@@ -323,6 +351,11 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
                         "canonical_answer": q.canonical_answer,
                         "explanation": q.explanation,
                         "has_followup": q.followup is not None,
+                        "followup": {
+                            "prompt": q.followup.prompt,
+                            "hint": q.followup.hint,
+                            "canonical_answer": q.followup.canonical_answer,
+                        } if q.followup else None,
                     }
                     for q in qs
                 ]
@@ -352,7 +385,6 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
                 self._send_error_json(500, f"Could not load audit trail: {exc}")
                 return
             self._send_json({
-                "verified": True,
                 "hash_algorithm": "SHA-256",
                 "audit_hash": audit_hash,
                 "student_id": STATE.active_profile.student_id,
@@ -466,6 +498,30 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
             self._send_error_json(400, "JSON body must be an object.")
             return
 
+        if path == "/api/students/identify":
+            name = body.get("name")
+            if not isinstance(name, str):
+                self._send_error_json(400, "Field 'name' must be a string.")
+                return
+            normalized = " ".join(name.split())
+            if not normalized:
+                self._send_error_json(400, "Field 'name' cannot be empty.")
+                return
+            if len(normalized) > 80:
+                self._send_error_json(400, "Field 'name' is too long (max 80 characters).")
+                return
+            try:
+                profile, created = STATE.identify_student(normalized)
+            except Exception as exc:
+                self._send_error_json(500, f"Could not identify student: {exc}")
+                return
+            self._send_json({
+                "success": True,
+                "created": created,
+                "active_student": profile.model_dump()
+            })
+            return
+
         if path == "/api/students/switch":
             student_id = body.get("student_id")
             name = body.get("name")
@@ -496,6 +552,7 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
         if path == "/api/evaluate":
             concept_id = body.get("concept_id")
             student_answer = body.get("student_answer")
+            question_id = body.get("question_id")
             question_prompt = body.get("question_prompt")
 
             if not isinstance(concept_id, str) or not concept_id.strip():
@@ -509,6 +566,9 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
             if len(student_answer) > 12000:
                 self._send_error_json(400, "Field 'student_answer' is too long (max 12000 characters).")
                 return
+            if question_id is not None and not isinstance(question_id, str):
+                self._send_error_json(400, "Field 'question_id' must be a string when provided.")
+                return
             if question_prompt is not None and not isinstance(question_prompt, str):
                 self._send_error_json(400, "Field 'question_prompt' must be a string when provided.")
                 return
@@ -517,15 +577,28 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
                 return
 
             # Lookup question or default prompt
+            q_id = (question_id or "").strip()
             q_prompt = (question_prompt or "").strip()
+            matched_q = None
+            try:
+                candidate_qs = STATE.question_service.get_questions_for_concept(concept_id)
+                if q_id:
+                    for q in candidate_qs:
+                        if q.id == q_id:
+                            matched_q = q
+                            break
+                if not matched_q and q_prompt:
+                    for q in candidate_qs:
+                        if q.prompt.strip() == q_prompt or q.id == q_prompt:
+                            matched_q = q
+                            break
+                if not matched_q and candidate_qs:
+                    matched_q = candidate_qs[0]
+            except Exception:
+                pass
+
             if not q_prompt:
-                try:
-                    with open(QUESTIONS_FILE, "r", encoding="utf-8") as f:
-                        q_list = json.load(f)
-                    matched_q = next((q for q in q_list if q.get("concept_id") == concept_id), None)
-                    q_prompt = matched_q.get("prompt") if matched_q else f"Explain the mechanics of {concept_id} in Python."
-                except Exception:
-                    q_prompt = f"Explain the mechanics of {concept_id} in Python."
+                q_prompt = matched_q.prompt if matched_q else f"Explain the mechanics of {concept_id} in Python."
 
             # Perform evaluation using TutorCoordinator. The coordinator already
             # persists the assessment log; saving another one here duplicated
@@ -562,6 +635,67 @@ class TutorHTTPRequestHandler(BaseHTTPRequestHandler):
                 "cited_chunk_ids": res.get("cited_chunk_ids", []),
                 "updated_mastery": round(float(res.get("new_mastery", 0.0) or 0.0), 2),
                 "is_frontier_advanced": bool((res.get("new_mastery", 0.0) or 0.0) >= 0.70),
+                "audit_block_hash": audit_hash,
+                "question_id": matched_q.id if matched_q else None,
+                "followup": {
+                    "prompt": matched_q.followup.prompt,
+                    "hint": matched_q.followup.hint,
+                    "canonical_answer": matched_q.followup.canonical_answer,
+                } if (matched_q and matched_q.followup) else None,
+            })
+            return
+
+        if path == "/api/evaluate-followup":
+            concept_id = body.get("concept_id")
+            question_id = body.get("question_id")
+            student_answer = body.get("student_answer")
+
+            if not isinstance(concept_id, str) or not concept_id.strip():
+                self._send_error_json(400, "Field 'concept_id' must be a non-empty string.")
+                return
+            concept_id = concept_id.strip()
+            if not isinstance(question_id, str) or not question_id.strip():
+                self._send_error_json(400, "Field 'question_id' must be a non-empty string.")
+                return
+            question_id = question_id.strip()
+            if not isinstance(student_answer, str) or not student_answer.strip():
+                self._send_error_json(400, "Field 'student_answer' must be a non-empty string.")
+                return
+            student_answer = student_answer.strip()
+            if len(student_answer) > 12000:
+                self._send_error_json(400, "Field 'student_answer' is too long (max 12000 characters).")
+                return
+
+            q = STATE.question_service.questions.get(question_id)
+            if not q or not q.followup:
+                self._send_error_json(404, f"Question or followup for '{question_id}' not found.")
+                return
+
+            try:
+                res = STATE.question_service.evaluate_followup(q, student_answer)
+                score_to_award = 1.0 if res.is_correct else 0.0
+                eval_record = STATE.coordinator.process_student_eval(
+                    concept_id=concept_id,
+                    question=f"[Followup: {question_id}] {q.followup.prompt}",
+                    student_response=student_answer,
+                    score=score_to_award,
+                    detected_misconceptions=res.detected_misconceptions,
+                    feedback=res.feedback
+                )
+                audit_hash = MasteryReporter.compute_audit_hash(STATE.coordinator)
+            except Exception as exc:
+                sys.stderr.write(f"[evaluate-followup] {type(exc).__name__}: {exc}\n")
+                self._send_error_json(500, "Follow-up evaluation failed unexpectedly. Please retry.")
+                return
+
+            self._send_json({
+                "is_correct": res.is_correct,
+                "score": round(float(res.score), 2),
+                "feedback": res.feedback,
+                "diagnosis": res.diagnosis,
+                "canonical_answer": res.canonical_answer,
+                "explanation": res.explanation,
+                "updated_mastery": round(float(eval_record.get("new_mastery", 0.0) or 0.0), 2),
                 "audit_block_hash": audit_hash,
             })
             return
