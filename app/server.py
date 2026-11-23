@@ -518,15 +518,15 @@ def run_server(port: int = 8000, auto_fallback: bool = True):
         httpd = ThreadedHTTPServer(("127.0.0.1", port), TutorHTTPRequestHandler)
         active_port = port
 
-    print("=" * 65)
-    print("  ARCHALEARN // CODEX-INSPIRED INTELLIGENT TUTORING SYSTEM")
-    print("=" * 65)
-    print(f"  * Web UI URL      : http://127.0.0.1:{active_port}/")
-    print(f"  * REST API Status : http://127.0.0.1:{active_port}/api/status")
-    print(f"  * Active Student  : {STATE.active_profile.name} ({STATE.active_profile.student_id})")
-    print(f"  * Tests Certified : 350/350 Passing")
-    print("=" * 65)
-    print("Server running. Press Ctrl+C to terminate.")
+    print("=" * 65, flush=True)
+    print("  ARCHALEARN // CODEX-INSPIRED INTELLIGENT TUTORING SYSTEM", flush=True)
+    print("=" * 65, flush=True)
+    print(f"  * Web UI URL      : http://127.0.0.1:{active_port}/", flush=True)
+    print(f"  * REST API Status : http://127.0.0.1:{active_port}/api/status", flush=True)
+    print(f"  * Active Student  : {STATE.active_profile.name} ({STATE.active_profile.student_id})", flush=True)
+    print(f"  * Tests Certified : 350/350 Passing", flush=True)
+    print("=" * 65, flush=True)
+    print("Server running. Press Ctrl+C to terminate.", flush=True)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
