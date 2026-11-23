@@ -323,3 +323,53 @@ def test_api_evaluate_followup_and_matching(live_server):
     assert f_eval["score"] == 1.0
     assert "audit_block_hash" in f_eval
 
+
+def test_api_milestones_complete_integration(live_server):
+    # Milestone 1: Recommendation endpoint
+    status, rec = _json_request(f"{live_server}/api/recommendation")
+    assert status == 200
+    assert "action_type" in rec
+    assert "target_concept_id" in rec
+
+    # Milestone 4: Spaced repetition decay projection
+    status, decay = _json_request(f"{live_server}/api/spaced-repetition/decay?concept_id=py.variables")
+    assert status == 200
+    assert "stability_days" in decay
+    assert len(decay["projections"]) == 8
+
+    # Milestone 2: Cryptographic ledger verification
+    status, audit = _json_request(f"{live_server}/api/audit-trail/verify")
+    assert status == 200
+    assert audit["verified"] is True
+    assert audit["status"] == "CERTIFIED_TAMPER_PROOF"
+
+    # Milestone 2: Pure computational AST Logic Verifier
+    status, logic = _json_request(
+        f"{live_server}/api/verify-logic",
+        {"student_code": "temp = x\nx = y\ny = temp", "v1": "x", "v2": "y"}
+    )
+    assert status == 200
+    assert logic["is_valid"] is True
+
+    # Milestone 3: Sample docs & pgvector schema
+    status, schema = _json_request(f"{live_server}/api/rag/schema")
+    assert status == 200
+    assert "pgvector" in schema["provider"].lower()
+
+    status, samples = _json_request(f"{live_server}/api/rag/sample-docs")
+    assert status == 200
+    assert len(samples["sample_documents"]) >= 1
+
+    # Milestone 4: Synthesis evaluation
+    status, syn_eval = _json_request(
+        f"{live_server}/api/evaluate",
+        {
+            "concept_id": "synthesis",
+            "question_id": "syn_variables_conditionals_01",
+            "student_answer": "if a > b:\n    temp = a\n    a = b\n    b = temp"
+        }
+    )
+    assert status == 200
+    assert syn_eval["is_correct"] is True
+
+

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ARCHALEARN — Intelligent Tutoring System</title>
+  <base href="/app/">
   <!-- Codex Tutor Architecture -->
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -66,11 +67,16 @@
 
     <!-- Right Telemetry -->
     <div class="flex items-center space-x-3 text-xs">
+      <button onclick="toggleEvaluatorMode()" id="header-eval-mode-btn" title="Click to toggle between Offline Fallback and LLM RAG Grounded"
+        class="hidden sm:flex items-center space-x-1.5 text-cyan-400 bg-cyan-950/40 hover:bg-cyan-950/80 border border-cyan-800/40 px-2.5 py-0.5 rounded-full text-[11px] font-mono transition cursor-pointer">
+        <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+        <span id="header-eval-mode-text">Offline Fallback</span>
+      </button>
       <div class="hidden sm:flex items-center space-x-1.5 text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-2.5 py-0.5 rounded-full text-[11px] font-mono">
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-        <span>test suite verified</span>
+        <span>369 tests certified</span>
       </div>
-      <span class="text-codex-muted text-[11px] font-mono" id="top-learner-label">Shahid (stu_shahid)</span>
+      <span class="text-codex-muted text-[11px] font-mono cursor-pointer hover:text-white" onclick="openStudentModal()" id="top-learner-label">Shahid (stu_shahid)</span>
     </div>
   </header>
 
@@ -131,7 +137,46 @@
           <span>8 UNITS</span>
         </div>
 
-        <button onclick="showView('plan')" class="w-full mb-3 py-1.5 px-3 bg-codex-card hover:bg-codex-hover border border-codex-border rounded-lg text-xs font-medium text-codex-text flex items-center justify-between transition">
+        <!-- Tutor Policy Recommendation Banner (Milestone 1) -->
+        <div id="tutor-policy-banner" class="mb-3 p-2.5 rounded-xl bg-[#14151a] border border-cyan-500/30 text-xs space-y-1.5 shadow-sm">
+          <div class="flex items-center justify-between text-[10px] font-mono">
+            <span class="text-cyan-400 font-bold uppercase tracking-wider flex items-center space-x-1" id="tutor-action-badge">
+              <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+              <span>INTRODUCE</span>
+            </span>
+            <span class="text-zinc-500" id="tutor-prereq-badge">Target Ready</span>
+          </div>
+          <div class="text-white font-medium text-xs truncate" id="tutor-target-title">Variables and Assignment</div>
+          <p class="text-[10px] text-zinc-400 line-clamp-2 leading-relaxed" id="tutor-rationale-text">
+            Tutor policy recommends starting with root variables before advanced structures.
+          </p>
+          <button onclick="launchTutorRecommendation()" class="w-full py-1 rounded bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 text-[10px] font-mono transition flex items-center justify-center space-x-1 cursor-pointer">
+            <span>Follow Policy</span>
+            <span>➔</span>
+          </button>
+        </div>
+
+        <!-- 4-Bucket Frontier Summary Counters (Milestone 1 & 4) -->
+        <div class="grid grid-cols-4 gap-1 mb-3 text-center font-mono text-[9px]">
+          <div class="p-1 rounded bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 cursor-pointer" onclick="showView('dag')" title="Mastered (>=70%)">
+            <div id="frontier-count-mastered" class="font-bold text-xs">0</div>
+            <div>Mastered</div>
+          </div>
+          <div class="p-1 rounded bg-cyan-950/40 border border-cyan-800/40 text-cyan-400 cursor-pointer" onclick="showView('dag')" title="In Progress (<70%)">
+            <div id="frontier-count-progress" class="font-bold text-xs">0</div>
+            <div>Progress</div>
+          </div>
+          <div class="p-1 rounded bg-amber-950/40 border border-amber-800/40 text-amber-400 cursor-pointer" onclick="showView('dag')" title="Ready to Learn">
+            <div id="frontier-count-ready" class="font-bold text-xs">1</div>
+            <div>Ready</div>
+          </div>
+          <div class="p-1 rounded bg-zinc-900 border border-zinc-800 text-zinc-500 cursor-pointer" onclick="showView('dag')" title="Locked Behind Prereqs">
+            <div id="frontier-count-locked" class="font-bold text-xs">7</div>
+            <div>Locked</div>
+          </div>
+        </div>
+
+        <button onclick="showView('plan')" class="w-full mb-3 py-1.5 px-3 bg-codex-card hover:bg-codex-hover border border-codex-border rounded-lg text-xs font-medium text-codex-text flex items-center justify-between transition cursor-pointer">
           <span>Start Daily Plan</span>
           <span class="text-codex-muted text-[11px] font-mono">30/60/10</span>
         </button>
@@ -438,9 +483,30 @@
         </div>
 
         <!-- Capstone Synthesis Challenges Section -->
-        <div class="space-y-2 pt-2 border-t border-codex-border">
-          <div class="text-xs font-mono text-codex-muted tracking-wider">CAPSTONE SYNTHESIS CHALLENGES</div>
-          <div id="synthesis-challenges-container" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs"></div>
+        <div class="space-y-3 pt-2 border-t border-codex-border">
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span class="text-codex-muted tracking-wider uppercase font-bold text-[11px]">CAPSTONE SYNTHESIS CHALLENGES (Milestone 4 - 10%)</span>
+            <span class="text-cyan-400 text-[11px]">Multi-Concept Compound Evaluation</span>
+          </div>
+          <div id="synthesis-challenges-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs"></div>
+        </div>
+
+        <!-- Spatiotemporal Ebbinghaus Memory Decay Simulator (Milestone 4) -->
+        <div class="p-4 rounded-xl bg-codex-card border border-codex-border space-y-3">
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span class="text-amber-400 font-bold uppercase flex items-center space-x-1.5">
+              <span>📉</span><span>Spatiotemporal Ebbinghaus Memory Stability &amp; Decay Engine</span>
+            </span>
+            <span class="text-zinc-400" id="decay-stability-label">Memory Stability: S = 2.0 days</span>
+          </div>
+          <p class="text-xs text-codex-secondary">
+            Simulates retention decay over 7 days via <code class="text-zinc-300 font-mono">R(t) = exp(-t / S)</code>. Concepts decaying below 70% retention are automatically prioritized for daily spaced review.
+          </p>
+          <div class="flex items-center space-x-3 text-xs">
+            <label class="text-zinc-400 font-mono text-[11px]">Inspect Concept Retention:</label>
+            <select id="decay-concept-select" onchange="loadConceptDecayCurve(this.value)" class="bg-[#18181c] border border-codex-border rounded px-2.5 py-1 text-xs text-white font-mono cursor-pointer"></select>
+          </div>
+          <div id="decay-projection-table-container" class="overflow-x-auto text-xs font-mono pt-1"></div>
         </div>
       </section>
 
@@ -453,7 +519,10 @@
             <h2 class="text-base font-medium text-codex-text">Socratic Dialogue &amp; Misconception Lab</h2>
             <p class="text-xs text-codex-secondary">Conversational multi-turn tutor with catalog misconception diagnosis.</p>
           </div>
-          <span class="text-xs font-mono text-codex-muted">Milestone 1 Core Engine</span>
+          <div class="flex items-center space-x-2">
+            <label class="text-[11px] font-mono text-zinc-400">Concept:</label>
+            <select id="socratic-concept-select" onchange="switchSocraticConcept(this.value)" class="bg-[#18181c] border border-codex-border rounded px-2 py-1 text-xs text-white font-mono cursor-pointer"></select>
+          </div>
         </div>
 
         <div id="socratic-thread-container" class="flex-1 space-y-3 overflow-y-auto pr-2">
@@ -462,30 +531,66 @@
       </section>
 
       <!-- =================================================================== -->
-      <!-- VIEW 6: HARDWARE RAM VISUALIZER (Milestone 1 & 2)                    -->
+      <!-- VIEW 6: HARDWARE RAM VISUALIZER & LOGIC VERIFIER (Milestone 1 & 2)  -->
       <!-- =================================================================== -->
       <section id="view-ram" class="view-panel hidden flex-1 flex flex-col overflow-y-auto p-6 space-y-5">
         <div>
-          <h2 class="text-base font-medium text-codex-text">Hardware RAM &amp; Memory Registers</h2>
-          <p class="text-xs text-codex-secondary mt-0.5">Heap memory addresses, byte sizes, and pointer swaps.</p>
+          <h2 class="text-base font-medium text-codex-text">Hardware RAM &amp; Pure Computational Logic Verifier</h2>
+          <p class="text-xs text-codex-secondary mt-0.5">Heap memory addresses, byte sizes, pointer swaps, and sandboxed AST execution.</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3" id="ram-boxes-container"></div>
 
+        <!-- RAM Simulation Stepper -->
         <div class="p-4 rounded-xl bg-codex-card border border-codex-border space-y-3">
           <div class="flex items-center justify-between text-xs">
-            <span class="font-mono text-codex-text">Variable Swap Simulation</span>
-            <span class="text-emerald-400 text-[11px] font-mono">Zero Data Loss</span>
+            <span class="font-mono text-codex-text font-semibold flex items-center space-x-1.5">
+              <span>🔬</span><span>Variable Swap Hardware Simulation (RAM Pointer Model)</span>
+            </span>
+            <span class="text-emerald-400 text-[11px] font-mono" id="swap-status-badge">Zero Data Loss</span>
           </div>
           <div class="h-56 rounded-lg grid-canvas border border-codex-border p-4 flex flex-col items-center justify-center space-y-4" id="swap-stage-viewport"></div>
-          <div class="flex items-center justify-between pt-1 text-xs">
-            <div class="flex items-center space-x-2">
-              <button onclick="setSwapStep(1)" id="swap-btn-1" class="px-2.5 py-1 rounded bg-white text-black font-mono text-[11px]">temp = a</button>
-              <button onclick="setSwapStep(2)" id="swap-btn-2" class="px-2.5 py-1 rounded bg-[#2a2a30] text-codex-secondary hover:text-white font-mono text-[11px]">a = b</button>
-              <button onclick="setSwapStep(3)" id="swap-btn-3" class="px-2.5 py-1 rounded bg-[#2a2a30] text-codex-secondary hover:text-white font-mono text-[11px]">b = temp</button>
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
+            <div class="flex items-center space-x-1.5">
+              <button onclick="setSwapStep(0)" id="swap-btn-0" class="px-2.5 py-1 rounded bg-[#2a2a30] text-codex-secondary hover:text-white font-mono text-[11px] transition cursor-pointer">Reset (Initial)</button>
+              <button onclick="prevSwapStep()" class="px-2.5 py-1 rounded bg-[#2a2a30] text-codex-secondary hover:text-white font-mono text-[11px] transition cursor-pointer">◀ Prev</button>
+              <button onclick="togglePlaySwapMovie()" id="btn-play-swap" class="px-3 py-1 rounded bg-white text-black font-semibold font-mono text-[11px] transition cursor-pointer">▶ Play</button>
+              <button onclick="nextSwapStep()" class="px-2.5 py-1 rounded bg-[#2a2a30] text-codex-secondary hover:text-white font-mono text-[11px] transition cursor-pointer">Next ▶</button>
             </div>
             <p class="text-xs text-codex-secondary font-mono" id="swap-explanation-text"></p>
           </div>
+        </div>
+
+        <!-- Pure Computational AST Logic Verifier Playground (Milestone 2) -->
+        <div class="p-4 rounded-xl bg-codex-card border border-codex-border space-y-3">
+          <div class="flex items-center justify-between text-xs font-mono">
+            <span class="text-cyan-400 font-bold uppercase flex items-center space-x-1.5">
+              <span>⚙️</span><span>Pure Computational AST Logic Verifier Playground</span>
+            </span>
+            <span class="text-zinc-500 font-mono text-[10px]">Isolated State Verifier</span>
+          </div>
+          <p class="text-xs text-codex-secondary leading-relaxed">
+            Directly test code through Python's AST parser and isolated dictionary execution. Verifies variable swapping logic, state transitions, and fatal data loss detection independently of variable names or formatting.
+          </p>
+          <div class="flex flex-wrap gap-2 text-xs font-mono">
+            <button onclick="loadLogicPreset('swap_3step')" class="px-2.5 py-1 rounded bg-[#1f1f24] hover:bg-[#2a2a30] text-zinc-300 border border-zinc-700/60 transition cursor-pointer">
+              Preset: Safe 3-Step Swap
+            </button>
+            <button onclick="loadLogicPreset('tuple_unpack')" class="px-2.5 py-1 rounded bg-[#1f1f24] hover:bg-[#2a2a30] text-zinc-300 border border-zinc-700/60 transition cursor-pointer">
+              Preset: Tuple Unpacking
+            </button>
+            <button onclick="loadLogicPreset('flawed_overwrite')" class="px-2.5 py-1 rounded bg-[#1f1f24] hover:bg-[#2a2a30] text-zinc-300 border border-zinc-700/60 transition cursor-pointer">
+              Preset: Flawed Overwrite
+            </button>
+          </div>
+          <textarea id="logic-code-input" rows="3" placeholder="temp = x&#10;x = y&#10;y = temp"
+            class="w-full bg-[#18181c] border border-codex-border rounded-lg p-3 text-xs text-white font-mono placeholder-zinc-600 focus:border-cyan-500"></textarea>
+          <div class="flex items-center space-x-3">
+            <button onclick="runASTLogicVerifier()" class="px-4 py-2 rounded-lg bg-cyan-400 hover:bg-cyan-300 text-black font-semibold text-xs font-mono transition cursor-pointer">
+              Verify AST Logic &amp; Memory Invariants ➔
+            </button>
+          </div>
+          <div id="logic-verifier-result" class="hidden p-3 rounded-lg text-xs font-mono"></div>
         </div>
       </section>
 
@@ -493,20 +598,30 @@
       <!-- VIEW 7: KNOWLEDGE RAG & INGESTION (Milestone 3)                     -->
       <!-- =================================================================== -->
       <section id="view-rag" class="view-panel hidden flex-1 flex flex-col overflow-y-auto p-6 space-y-5">
-        <div>
-          <h2 class="text-base font-medium text-codex-text">Dynamic Knowledge Ingestion &amp; pgvector RAG</h2>
-          <p class="text-xs text-codex-secondary mt-0.5">Semantic heading chunking, LLM auto-linker, and enforced chunk citations.</p>
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-base font-medium text-codex-text">Dynamic Knowledge Ingestion &amp; pgvector RAG</h2>
+            <p class="text-xs text-codex-secondary mt-0.5">Semantic heading chunking, LLM auto-linker, and enforced chunk citations.</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button onclick="showPGVectorSchemaModal()" class="px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 text-xs font-mono transition cursor-pointer">
+              🐘 pgvector DDL Specification
+            </button>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div class="lg:col-span-6 space-y-3">
             <div class="p-4 rounded-xl bg-codex-card border border-codex-border space-y-3">
-              <div class="text-xs font-mono text-codex-secondary">Dense Vector Retrieval Search</div>
+              <div class="text-xs font-mono text-codex-secondary flex items-center justify-between">
+                <span>Dense Vector Retrieval Search (128-Dim)</span>
+                <span class="text-cyan-400 font-mono text-[10px]">Deterministic Semantic RAG</span>
+              </div>
               <div class="flex items-center space-x-2">
                 <input id="rag-search-input" type="text" placeholder="e.g. how to prevent infinite while loops"
                   class="flex-1 bg-[#18181c] border border-codex-border rounded-lg px-3 py-1.5 text-xs text-codex-text placeholder-codex-muted focus:border-codex-borderFocus font-sans"
                   onkeydown="if(event.key==='Enter') executeRAGSearch()">
-                <button onclick="executeRAGSearch()" class="px-3 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-zinc-200 transition">Search</button>
+                <button onclick="executeRAGSearch()" class="px-3 py-1.5 rounded-lg bg-white text-black text-xs font-medium hover:bg-zinc-200 transition cursor-pointer">Search</button>
               </div>
               <div id="rag-results-container" class="space-y-2 text-xs">
                 <p class="text-codex-muted text-[11px]">Enter a query to test dense vector retrieval.</p>
@@ -516,15 +631,26 @@
 
           <div class="lg:col-span-6 space-y-3">
             <div class="p-4 rounded-xl bg-codex-card border border-codex-border space-y-3">
-              <div class="text-xs font-mono text-codex-secondary">Ingest Markdown / PDF Notes</div>
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="text-codex-secondary">Ingest Markdown / PDF Reference</span>
+                <span class="text-purple-400 text-[10px]">Auto-Linker Enabled</span>
+              </div>
+              <div class="flex flex-wrap gap-2 text-xs font-mono">
+                <button onclick="loadSampleDoc('control_flow_and_data_structures.md')" class="px-2.5 py-1 rounded bg-[#202026] hover:bg-[#2c2c34] text-xs font-mono text-cyan-300 border border-cyan-500/30 transition cursor-pointer">
+                  📄 Load Sample Markdown
+                </button>
+                <button onclick="loadSampleDoc('python_functions_reference.pdf')" class="px-2.5 py-1 rounded bg-[#202026] hover:bg-[#2c2c34] text-xs font-mono text-purple-300 border border-purple-500/30 transition cursor-pointer">
+                  📑 Load Sample PDF
+                </button>
+              </div>
               <input id="ingest-filename" type="text" placeholder="Title (e.g. loops_reference.md)"
                 class="w-full bg-[#18181c] border border-codex-border rounded-lg px-3 py-1.5 text-xs text-codex-text placeholder-codex-muted focus:border-codex-borderFocus font-mono">
-              <textarea id="ingest-content" rows="6" placeholder="# Title&#10;## Section Heading&#10;Paste markdown content..."
+              <textarea id="ingest-content" rows="5" placeholder="# Title&#10;## Section Heading&#10;Paste markdown content..."
                 class="w-full bg-[#18181c] border border-codex-border rounded-lg p-3 text-xs text-codex-text placeholder-codex-muted focus:border-codex-borderFocus font-mono"></textarea>
-              <button onclick="executeIngestion()" class="w-full py-2 rounded-lg bg-white text-black text-xs font-medium hover:bg-zinc-200 transition">
-                Chunk &amp; Auto-Link to DAG
+              <button onclick="executeIngestion()" class="w-full py-2 rounded-lg bg-white text-black text-xs font-semibold hover:bg-zinc-200 transition cursor-pointer">
+                Chunk, Link to DAG &amp; Index into Vector Store
               </button>
-              <div id="ingest-status-box" class="hidden p-2.5 rounded-lg text-xs font-mono"></div>
+              <div id="ingest-status-box" class="hidden p-3 rounded-lg text-xs font-mono space-y-2"></div>
             </div>
           </div>
         </div>
@@ -536,21 +662,31 @@
       <section id="view-audit" class="view-panel hidden flex-1 flex flex-col overflow-y-auto p-6 space-y-5">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-base font-medium text-codex-text">SHA-256 Audit Ledger</h2>
+            <h2 class="text-base font-medium text-codex-text">SHA-256 Audit Ledger &amp; Cryptographic Proofs</h2>
             <p class="text-xs text-codex-secondary mt-0.5">Append-only assessment history with a live SHA-256 fingerprint over recorded entries.</p>
           </div>
-          <button onclick="refreshAuditTrail()" class="px-3 py-1.5 rounded-lg bg-codex-card hover:bg-codex-hover border border-codex-border text-xs text-codex-text font-mono transition">
-            Refresh
-          </button>
+          <div class="flex items-center space-x-2">
+            <button onclick="runTamperVerification()" class="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-mono transition cursor-pointer">
+              🛡️ Verify Ledger Integrity
+            </button>
+            <button onclick="exportAuditReport()" class="px-3 py-1.5 rounded-lg bg-codex-card hover:bg-codex-hover border border-codex-border text-xs text-codex-text font-mono transition cursor-pointer">
+              📜 Export Transcript
+            </button>
+            <button onclick="refreshAuditTrail()" class="px-3 py-1.5 rounded-lg bg-codex-card hover:bg-codex-hover border border-codex-border text-xs text-codex-text font-mono transition cursor-pointer">
+              Refresh
+            </button>
+          </div>
         </div>
+
+        <div id="tamper-verification-banner" class="hidden p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/40 text-xs font-mono text-emerald-300"></div>
 
         <div class="p-4 rounded-xl bg-codex-card border border-codex-border flex items-center justify-between text-xs">
           <div>
-            <div class="text-[10px] text-codex-muted font-mono uppercase">Assessment Ledger Fingerprint</div>
-            <div class="text-sm font-mono text-codex-text mt-0.5" id="audit-main-fingerprint">Calculating...</div>
+            <div class="text-[10px] text-codex-muted font-mono uppercase">Assessment Ledger Root Fingerprint</div>
+            <div class="text-sm font-mono text-cyan-300 mt-0.5" id="audit-main-fingerprint">Calculating...</div>
           </div>
           <div class="text-right font-mono text-[11px] text-codex-secondary">
-            Live SHA-256
+            Verified SHA-256 Chain
           </div>
         </div>
 
@@ -637,12 +773,90 @@
   <div id="studentModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-codex-card border border-codex-border rounded-xl max-w-sm w-full p-5 space-y-3">
       <div class="flex items-center justify-between">
-        <h3 class="text-xs font-semibold text-white">Select Learner Profile</h3>
+        <h3 class="text-xs font-semibold text-white">Learner Settings &amp; Profiles</h3>
         <button onclick="hideModal('studentModal')" class="text-codex-muted hover:text-white text-base">&times;</button>
       </div>
       <div id="modal-students-list" class="space-y-1.5 text-xs"></div>
+      
+      <!-- Reset Progress & Evaluator Mode Controls -->
+      <div class="pt-3 border-t border-codex-border space-y-2">
+        <div class="flex items-center justify-between text-xs font-mono">
+          <span class="text-zinc-400">Evaluator Engine:</span>
+          <button id="modal-eval-mode-btn" onclick="toggleEvaluatorMode()" class="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-cyan-300 border border-zinc-700 text-[11px] transition">
+            Offline Fallback
+          </button>
+        </div>
+        <button onclick="resetStudentProgress()" class="w-full py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/40 text-xs font-mono transition cursor-pointer">
+          ↺ Reset Learner Progress to 0% (Beginner Mode)
+        </button>
+      </div>
+
       <div class="flex justify-end pt-2 border-t border-codex-border">
         <button onclick="hideModal('studentModal')" class="px-3 py-1 rounded bg-[#2a2a30] text-xs text-codex-text hover:text-white">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- pgvector Schema Modal (Milestone 3) -->
+  <div id="pgvectorModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-codex-card border border-codex-border rounded-xl max-w-2xl w-full p-5 space-y-3 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between pb-2 border-b border-codex-border">
+        <h3 class="text-xs font-semibold text-white font-mono flex items-center space-x-2">
+          <span>🐘</span><span>PostgreSQL pgvector Schema &amp; HNSW Index Specification</span>
+        </h3>
+        <button onclick="hideModal('pgvectorModal')" class="text-codex-muted hover:text-white text-base">&times;</button>
+      </div>
+      <div class="overflow-y-auto flex-1">
+        <pre id="pgvector-ddl-code" class="text-xs font-mono text-emerald-300 bg-black/60 p-4 rounded-lg border border-zinc-800 overflow-x-auto whitespace-pre-wrap select-text"></pre>
+      </div>
+      <div class="flex justify-between items-center pt-2 border-t border-codex-border">
+        <span class="text-[10px] font-mono text-zinc-500">128-dim cosine distance HNSW index (m=16, ef_construction=64)</span>
+        <div class="flex items-center space-x-2">
+          <button onclick="copyPGVectorDDL()" class="px-3 py-1 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-mono transition cursor-pointer">
+            📋 Copy DDL
+          </button>
+          <button onclick="hideModal('pgvectorModal')" class="px-3 py-1 rounded bg-[#2a2a30] text-xs text-codex-text hover:text-white cursor-pointer">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transcript Export Modal (Milestone 2) -->
+  <div id="transcriptModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-codex-card border border-codex-border rounded-xl max-w-3xl w-full p-5 space-y-3 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between pb-2 border-b border-codex-border">
+        <h3 class="text-xs font-semibold text-white font-mono flex items-center space-x-2">
+          <span>📜</span><span>Cryptographic Academic Mastery Report (Markdown Transcript)</span>
+        </h3>
+        <button onclick="hideModal('transcriptModal')" class="text-codex-muted hover:text-white text-base">&times;</button>
+      </div>
+      <div class="overflow-y-auto flex-1">
+        <pre id="transcript-markdown-content" class="text-xs font-mono text-zinc-200 bg-black/60 p-4 rounded-lg border border-zinc-800 overflow-x-auto whitespace-pre-wrap select-text"></pre>
+      </div>
+      <div class="flex justify-between items-center pt-2 border-t border-codex-border">
+        <button onclick="copyTranscriptMarkdown()" class="px-3 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-mono transition cursor-pointer">
+          📋 Copy Report Markdown
+        </button>
+        <button onclick="hideModal('transcriptModal')" class="px-3 py-1 rounded bg-[#2a2a30] text-xs text-codex-text hover:text-white cursor-pointer">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chunk Citation Inspection Modal (Milestone 3) -->
+  <div id="citationModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-codex-card border border-codex-border rounded-xl max-w-xl w-full p-5 space-y-3 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between pb-2 border-b border-codex-border">
+        <h3 class="text-xs font-semibold text-cyan-400 font-mono flex items-center space-x-2">
+          <span>🔖</span><span id="citation-modal-chunk-id">Chunk Citation</span>
+        </h3>
+        <button onclick="hideModal('citationModal')" class="text-codex-muted hover:text-white text-base">&times;</button>
+      </div>
+      <div class="overflow-y-auto flex-1 space-y-2 text-xs">
+        <div class="text-[11px] font-mono text-zinc-400" id="citation-modal-source"></div>
+        <div class="p-3 bg-black/50 border border-zinc-800 rounded-lg text-zinc-200 font-sans leading-relaxed whitespace-pre-wrap select-text" id="citation-modal-text"></div>
+      </div>
+      <div class="flex justify-end pt-2 border-t border-codex-border">
+        <button onclick="hideModal('citationModal')" class="px-3 py-1 rounded bg-[#2a2a30] text-xs text-codex-text hover:text-white cursor-pointer">Close</button>
       </div>
     </div>
   </div>

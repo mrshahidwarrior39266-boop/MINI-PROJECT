@@ -13,6 +13,8 @@ const state = {
   activeStudent: null,
   curriculum: [],
   frontier: { ready: [], in_progress: [], mastered: [], locked: [] },
+  recommendation: null,
+  evaluatorMode: 'rule_fallback',
   lessons: {},
   auditHash: '',
   swapStep: 1,
@@ -124,11 +126,51 @@ async function fetchSystemStatus() {
     state.activeStudent = data.active_student;
     state.frontier = data.frontier || { ready: [], in_progress: [], mastered: [], locked: [] };
     state.auditHash = data.ledger_audit?.fingerprint || 'unavailable';
+    state.evaluatorMode = data.evaluator_mode || 'rule_fallback';
+    state.recommendation = data.recommendation || null;
 
     // Top header label
     const learnerLabel = document.getElementById('top-learner-label');
     if (learnerLabel && data.active_student) {
       learnerLabel.innerText = `${data.active_student.name} (${data.active_student.student_id})`;
+    }
+
+    // Evaluator mode badge
+    const isLLM = state.evaluatorMode === 'llm_rag_grounded';
+    const evalHeader = document.getElementById('header-eval-mode-text');
+    if (evalHeader) evalHeader.innerText = isLLM ? 'LLM RAG Grounded' : 'Offline Fallback';
+    const evalModalBtn = document.getElementById('modal-eval-mode-btn');
+    if (evalModalBtn) evalModalBtn.innerText = isLLM ? 'LLM RAG Grounded' : 'Offline Fallback';
+
+    // 4-Bucket Frontier Summary Counters (Milestone 1)
+    const fMastered = document.getElementById('frontier-count-mastered');
+    if (fMastered) fMastered.innerText = (state.frontier.mastered || []).length;
+    const fProgress = document.getElementById('frontier-count-progress');
+    if (fProgress) fProgress.innerText = (state.frontier.in_progress || []).length;
+    const fReady = document.getElementById('frontier-count-ready');
+    if (fReady) fReady.innerText = (state.frontier.ready || []).length;
+    const fLocked = document.getElementById('frontier-count-locked');
+    if (fLocked) fLocked.innerText = (state.frontier.locked || []).length;
+
+    // Tutor Policy Recommendation Banner (Milestone 1)
+    if (state.recommendation) {
+      const rec = state.recommendation;
+      const actionBadge = document.getElementById('tutor-action-badge');
+      if (actionBadge) {
+        actionBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span><span>${escapeHtml(rec.action_type || 'INTRODUCE')}</span>`;
+      }
+      const targetTitle = document.getElementById('tutor-target-title');
+      if (targetTitle) {
+        targetTitle.innerText = rec.target_concept_title || rec.target_concept_id || 'Next Concept';
+      }
+      const rationaleText = document.getElementById('tutor-rationale-text');
+      if (rationaleText) {
+        rationaleText.innerText = rec.rationale || 'Adaptive tutor recommendation based on frontier dependencies.';
+      }
+      const prereqBadge = document.getElementById('tutor-prereq-badge');
+      if (prereqBadge) {
+        prereqBadge.innerText = rec.prerequisites_verified ? 'Prereqs Met' : 'Active Frontier';
+      }
     }
 
     const fingerprintLabel = document.getElementById('sidebar-fingerprint');
@@ -156,11 +198,80 @@ async function fetchSystemStatus() {
   }
 }
 
+function launchTutorRecommendation() {
+  if (state.recommendation && state.recommendation.target_concept_id) {
+    showConceptLesson(state.recommendation.target_concept_id);
+    const qSection = document.getElementById('lesson-diagnostic-prompt');
+    if (qSection) qSection.scrollIntoView({ behavior: 'smooth' });
+  } else {
+    showConceptLesson('py.variables');
+  }
+}
+
+async function resetStudentProgress() {
+  if (!confirm("Are you sure you want to reset this learner's progress to 0% (Beginner Mode)? All chapter masteries and audit records will reset.")) {
+    return;
+  }
+  try {
+    const res = await fetch('/api/students/reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    hideModal('studentModal');
+    await fetchSystemStatus();
+    await fetchCurriculum();
+    await loadLesson('py.variables');
+    alert("Learner progress successfully reset to 0% (Beginner Mode). Chapter 1 is active, Chapters 2-8 are locked.");
+  } catch (err) {
+    console.error("Error resetting student progress:", err);
+    alert("Could not reset learner progress: " + err.message);
+  }
+}
+
+async function toggleEvaluatorMode() {
+  const nextMode = state.evaluatorMode === 'rule_fallback' ? 'llm_rag_grounded' : 'rule_fallback';
+  try {
+    const res = await fetch('/api/evaluator/mode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: nextMode })
+    });
+    const data = await res.json();
+    state.evaluatorMode = data.evaluator_mode || nextMode;
+    const isLLM = state.evaluatorMode === 'llm_rag_grounded';
+    const evalHeader = document.getElementById('header-eval-mode-text');
+    if (evalHeader) evalHeader.innerText = isLLM ? 'LLM RAG Grounded' : 'Offline Fallback';
+    const evalModalBtn = document.getElementById('modal-eval-mode-btn');
+    if (evalModalBtn) evalModalBtn.innerText = isLLM ? 'LLM RAG Grounded' : 'Offline Fallback';
+  } catch (err) {
+    console.error("Error toggling evaluator mode:", err);
+  }
+}
+
 async function fetchCurriculum() {
   try {
     const res = await fetch('/api/curriculum');
     const data = await res.json();
     state.curriculum = data.concepts || [];
+
+    // Populate decay concept select dropdown if empty
+    const decaySelect = document.getElementById('decay-concept-select');
+    if (decaySelect && decaySelect.children.length === 0) {
+      decaySelect.innerHTML = state.curriculum.map(c => 
+        `<option value="${c.id}">${c.id} (${c.title.split('(')[0].trim()})</option>`
+      ).join('');
+      loadConceptDecayCurve(state.curriculum[0]?.id || 'py.variables');
+    }
+
+    // Populate socratic concept select dropdown if empty
+    const socraticSelect = document.getElementById('socratic-concept-select');
+    if (socraticSelect && socraticSelect.children.length === 0) {
+      socraticSelect.innerHTML = state.curriculum.map(c => 
+        `<option value="${c.id}" ${c.id === state.activeConcept ? 'selected' : ''}>${c.id} (${c.title.split('(')[0].trim()})</option>`
+      ).join('');
+    }
 
     const container = document.getElementById('sidebar-concepts-list');
     if (!container) return;
@@ -1008,7 +1119,7 @@ async function submitLessonAnswer() {
           <!-- Footer Metadata & Navigation Controls -->
           <div class="flex flex-col sm:flex-row items-center justify-between pt-2 border-t border-emerald-500/20 gap-2">
             <div class="flex items-center space-x-3 text-[10px] font-mono text-zinc-400">
-              <span>Citations: [${escapeHtml((result.cited_chunk_ids || []).join(', ') || 'chunk.py.var.01')}]</span>
+              <span>Citations: [${((result.cited_chunk_ids && result.cited_chunk_ids.length > 0) ? result.cited_chunk_ids : ['chunk.py.var.01']).map(cid => `<a href="javascript:void(0)" onclick="openCitationChunk('${escapeHtml(cid)}')" class="text-cyan-400 underline hover:text-cyan-300 font-mono">${escapeHtml(cid)}</a>`).join(', ')}]</span>
               <span class="text-emerald-400 font-bold">Chapter Mastery: ${Math.round(updatedMastery * 100)}%</span>
             </div>
 
@@ -1141,7 +1252,7 @@ async function submitLessonAnswer() {
           <!-- Footer Metadata & Action Buttons -->
           <div class="flex flex-col sm:flex-row items-center justify-between pt-2 border-t border-amber-500/20 gap-2">
             <div class="flex items-center space-x-3 text-[10px] font-mono text-zinc-400">
-              <span>Citations: [${escapeHtml((result.cited_chunk_ids || []).join(', ') || 'chunk.py.var.01')}]</span>
+              <span>Citations: [${((result.cited_chunk_ids && result.cited_chunk_ids.length > 0) ? result.cited_chunk_ids : ['chunk.py.var.01']).map(cid => `<a href="javascript:void(0)" onclick="openCitationChunk('${escapeHtml(cid)}')" class="text-cyan-400 underline hover:text-cyan-300 font-mono">${escapeHtml(cid)}</a>`).join(', ')}]</span>
               <span class="text-amber-400">Chapter Mastery: ${Math.round(updatedMastery * 100)}%</span>
             </div>
 
@@ -1197,9 +1308,15 @@ function renderDAGView() {
       badge = 'text-emerald-400 bg-emerald-950/40 border-emerald-800/40';
       statusLabel = 'Mastered';
     } else if (!isLocked) {
-      border = 'border-cyan-500/50 bg-cyan-950/10';
-      badge = 'text-cyan-400 bg-cyan-950/40 border-cyan-800/40 animate-pulse';
-      statusLabel = 'Active Frontier';
+      if (c.mastery > 0) {
+        border = 'border-cyan-500/50 bg-cyan-950/10';
+        badge = 'text-cyan-400 bg-cyan-950/40 border-cyan-800/40 animate-pulse';
+        statusLabel = 'In Progress';
+      } else {
+        border = 'border-amber-500/50 bg-amber-950/10';
+        badge = 'text-amber-400 bg-amber-950/40 border-amber-800/40 animate-pulse';
+        statusLabel = 'Ready to Learn';
+      }
     }
 
     const prereqList = (c.prerequisites && c.prerequisites.length > 0)
@@ -1230,7 +1347,7 @@ function renderDAGView() {
             <span>Prerequisites: </span>${prereqList}
           </div>
           <button onclick="showConceptLesson('${c.id}')"
-            class="w-full py-1 rounded bg-[#2a2a30] hover:bg-[#34343a] text-xs font-mono text-codex-text hover:text-white transition">
+            class="w-full py-1 rounded bg-[#2a2a30] hover:bg-[#34343a] text-xs font-mono text-codex-text hover:text-white transition cursor-pointer">
             ${isLocked ? 'View Locked Prerequisites' : 'Open Concept Chapter'}
           </button>
         </div>
@@ -1271,9 +1388,9 @@ async function refreshDailyPlan() {
 
       const launchControl = item.concept_id === 'synthesis'
         ? `<button onclick="document.getElementById('synthesis-challenges-container')?.scrollIntoView({behavior:'smooth', block:'start'})"
-            class="px-2.5 py-1 rounded bg-[#2a2a30] hover:bg-[#34343a] text-xs font-mono text-codex-secondary hover:text-white shrink-0 transition">View Challenge</button>`
+            class="px-2.5 py-1 rounded bg-[#2a2a30] hover:bg-[#34343a] text-xs font-mono text-cyan-300 hover:text-white shrink-0 transition cursor-pointer">Solve Challenge ➔</button>`
         : `<button onclick="showConceptLesson('${item.concept_id}')"
-            class="px-2.5 py-1 rounded bg-[#2a2a30] hover:bg-[#34343a] text-xs font-mono text-codex-secondary hover:text-white shrink-0 transition">Launch</button>`;
+            class="px-2.5 py-1 rounded bg-[#2a2a30] hover:bg-[#34343a] text-xs font-mono text-codex-secondary hover:text-white shrink-0 transition cursor-pointer">Launch</button>`;
 
       return `
         <div class="p-3 rounded-xl bg-codex-card border border-codex-border hover:bg-codex-hover transition flex items-center justify-between space-x-4">
@@ -1290,8 +1407,9 @@ async function refreshDailyPlan() {
       `;
     }).join('');
 
-    // Fetch synthesis challenges
-    loadSynthesisChallenges();
+    // Fetch synthesis challenges and decay curve
+    await loadSynthesisChallenges();
+    await loadConceptDecayCurve(state.activeConcept || 'py.variables');
 
   } catch (err) {
     console.error('Error fetching plan:', err);
@@ -1309,13 +1427,25 @@ async function loadSynthesisChallenges() {
     const challenges = data.challenges || [];
 
     container.innerHTML = challenges.map(ch => `
-      <div class="p-3.5 rounded-xl bg-codex-card border border-codex-border space-y-2">
+      <div class="p-4 rounded-xl bg-codex-card border border-codex-border space-y-3">
         <div class="flex items-center justify-between text-[11px] font-mono">
-          <span class="text-cyan-400 font-medium">${escapeHtml(ch.title)}</span>
-          <span class="text-codex-muted text-right">${escapeHtml((ch.required_concept_ids || ch.concepts || []).join(' + '))}</span>
+          <span class="text-cyan-400 font-bold">${escapeHtml(ch.title)}</span>
+          <span class="text-codex-muted text-[10px]">${escapeHtml((ch.required_concept_ids || []).join(' + '))}</span>
         </div>
-        <p class="text-xs text-codex-secondary leading-relaxed whitespace-pre-wrap">${escapeHtml(ch.prompt || ch.description || '')}</p>
+        <p class="text-xs text-codex-secondary leading-relaxed whitespace-pre-wrap">${escapeHtml(ch.prompt || '')}</p>
         ${ch.hint ? `<p class="text-[11px] text-codex-muted leading-relaxed"><span class="text-cyan-400 font-mono">Hint:</span> ${escapeHtml(ch.hint)}</p>` : ''}
+        
+        <div class="space-y-2 pt-2 border-t border-codex-border">
+          <textarea id="synth-code-${ch.id}" rows="3" placeholder="# Write Python solution combining ${escapeHtml((ch.required_concept_ids || []).join(', '))}..."
+            class="w-full bg-[#141416] border border-zinc-700 rounded-lg p-2.5 text-xs text-white font-mono placeholder-zinc-600 focus:border-cyan-400"></textarea>
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono text-zinc-500">Compounds mastery across all ${ch.required_concept_ids ? ch.required_concept_ids.length : 0} concepts</span>
+            <button onclick="submitSynthesisSolution('${ch.id}')" id="synth-btn-${ch.id}" class="px-3.5 py-1.5 rounded-lg bg-cyan-400 hover:bg-cyan-300 text-black font-semibold text-xs font-mono transition cursor-pointer">
+              Submit Synthesis Solution ➔
+            </button>
+          </div>
+          <div id="synth-result-${ch.id}" class="hidden"></div>
+        </div>
       </div>
     `).join('');
   } catch (err) {
@@ -1323,9 +1453,129 @@ async function loadSynthesisChallenges() {
   }
 }
 
+async function submitSynthesisSolution(challengeId) {
+  const input = document.getElementById(`synth-code-${challengeId}`);
+  const code = input ? input.value.trim() : '';
+  const btn = document.getElementById(`synth-btn-${challengeId}`);
+  const resultBox = document.getElementById(`synth-result-${challengeId}`);
+
+  if (!code) {
+    alert("Please enter Python solution code for the synthesis challenge.");
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.innerText = "Evaluating..."; }
+
+  try {
+    const res = await fetch('/api/evaluate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        concept_id: "synthesis",
+        challenge_id: challengeId,
+        student_answer: code
+      })
+    });
+    const data = await res.json();
+    if (resultBox) {
+      resultBox.classList.remove('hidden');
+      if (data.is_correct) {
+        resultBox.className = "p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/50 text-xs font-mono space-y-1.5 text-emerald-300";
+        resultBox.innerHTML = `
+          <div class="font-bold flex items-center space-x-1.5 text-emerald-400">
+            <span>✓</span><span>Capstone Synthesis Solved! Compound Mastery Boost Applied</span>
+          </div>
+          <p class="text-zinc-200 font-sans text-xs">${escapeHtml(data.feedback)}</p>
+          <div class="text-[10px] text-emerald-400">Updated Concepts: ${(data.updated_concepts || []).join(', ')}</div>
+        `;
+      } else {
+        resultBox.className = "p-3 rounded-lg bg-amber-950/40 border border-amber-500/50 text-xs font-mono space-y-1.5 text-amber-300";
+        resultBox.innerHTML = `
+          <div class="font-bold flex items-center space-x-1.5 text-amber-400">
+            <span>⚠</span><span>Synthesis Incomplete</span>
+          </div>
+          <p class="text-zinc-200 font-sans text-xs">${escapeHtml(data.feedback)}</p>
+        `;
+      }
+    }
+    await fetchSystemStatus();
+    await fetchCurriculum();
+  } catch (err) {
+    if (resultBox) {
+      resultBox.classList.remove('hidden');
+      resultBox.className = "p-3 rounded-lg bg-rose-950/40 border border-rose-500/50 text-xs font-mono text-rose-300";
+      resultBox.innerText = "Error evaluating synthesis challenge: " + err.message;
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerText = "Submit Synthesis Solution ➔"; }
+  }
+}
+
+async function loadConceptDecayCurve(conceptId) {
+  if (!conceptId) conceptId = state.activeConcept || 'py.variables';
+  const labelEl = document.getElementById('decay-stability-label');
+  const tableContainer = document.getElementById('decay-projection-table-container');
+  if (!tableContainer) return;
+  tableContainer.innerHTML = '<div class="text-zinc-500 text-xs py-2">Computing retention projection...</div>';
+
+  try {
+    const res = await fetch(`/api/spaced-repetition/decay?concept_id=${encodeURIComponent(conceptId)}`);
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.message || "Could not calculate decay.");
+
+    const stab = Number(data.stability_days) || 2.0;
+    const elapsed = Number(data.days_elapsed) || 0.0;
+    const retPct = Math.round((Number(data.effective_retention) || 1.0) * 100);
+
+    if (labelEl) {
+      labelEl.innerText = `Stability: S = ${stab.toFixed(1)}d | Elapsed: ${elapsed.toFixed(1)}d | Current Retention: ${retPct}%`;
+    }
+
+    const proj = data.retention_projection || [];
+    tableContainer.innerHTML = `
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-zinc-800 text-zinc-400 text-[10px]">
+            <th class="py-1 px-2">Timeline</th>
+            <th class="py-1 px-2">Projected Retention R(t)</th>
+            <th class="py-1 px-2">Forgetting Factor e^(-t/S)</th>
+            <th class="py-1 px-2">Cognitive Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-zinc-800/60 text-[11px]">
+          ${proj.map(p => {
+            const pct = Math.round(p.retention * 100);
+            let badge = 'text-emerald-400 bg-emerald-950/30';
+            if (pct < 70) badge = 'text-amber-400 bg-amber-950/30';
+            if (pct < 50) badge = 'text-rose-400 bg-rose-950/30';
+            return `
+              <tr>
+                <td class="py-1.5 px-2 text-zinc-300 font-mono">Day ${p.day}</td>
+                <td class="py-1.5 px-2 font-mono">
+                  <div class="flex items-center space-x-2">
+                    <div class="w-16 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                      <div class="h-full ${pct >= 70 ? 'bg-emerald-400' : 'bg-amber-400'}" style="width: ${pct}%"></div>
+                    </div>
+                    <span class="${pct >= 70 ? 'text-emerald-400' : 'text-amber-400'} font-bold">${pct}%</span>
+                  </div>
+                </td>
+                <td class="py-1.5 px-2 text-zinc-400 font-mono">${(Math.exp(-p.day / Math.max(0.1, stab))).toFixed(3)}</td>
+                <td class="py-1.5 px-2"><span class="px-1.5 py-0.5 rounded text-[10px] border border-zinc-800 ${badge}">${escapeHtml(p.status)}</span></td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  } catch (err) {
+    tableContainer.innerHTML = `<div class="text-rose-400 text-xs py-2">${escapeHtml(err.message)}</div>`;
+  }
+}
+
 // ---------------------------------------------------------------------------
-// 8. HARDWARE RAM VISUALIZER & 3-STEP SWAP MOVIE (Milestone 1 & 2)
+// 8. HARDWARE RAM VISUALIZER & LOGIC VERIFIER (Milestone 1 & 2)
 // ---------------------------------------------------------------------------
+let swapPlayTimer = null;
+
 async function fetchRamState() {
   try {
     const res = await fetch('/api/memory-state');
@@ -1354,7 +1604,7 @@ async function fetchRamState() {
 }
 
 function initSwapStage() {
-  setSwapStep(1);
+  setSwapStep(0);
 }
 
 function setSwapStep(step) {
@@ -1363,7 +1613,7 @@ function setSwapStep(step) {
   const expl = document.getElementById('swap-explanation-text');
   if (!viewport || !expl) return;
 
-  [1, 2, 3].forEach(s => {
+  [0, 1, 2, 3].forEach(s => {
     const btn = document.getElementById(`swap-btn-${s}`);
     if (btn) {
       if (s === step) {
@@ -1375,18 +1625,23 @@ function setSwapStep(step) {
   });
 
   let a_val = 10, b_val = 20, temp_val = '-';
-  if (step === 1) {
+  if (step === 0) {
+    a_val = 10;
+    b_val = 20;
+    temp_val = 'Unallocated';
+    expl.innerText = "Step 0 (Initial): 'a' points to 10 at 0x7ffe10; 'b' points to 20 at 0x7ffe18. Direct 'a = b' would destroy 10!";
+  } else if (step === 1) {
     temp_val = 10;
-    expl.innerText = "temp = a  (Copy 64-bit reference of 'a' to holding box 'temp')";
+    expl.innerText = "Step 1: temp = a  (Copy 64-bit reference of 'a' to holding box 'temp')";
   } else if (step === 2) {
     a_val = 20;
     temp_val = 10;
-    expl.innerText = "a = b     (Rebind label 'a' to point to heap object of 'b')";
+    expl.innerText = "Step 2: a = b     (Rebind label 'a' to point to heap object of 'b' at 0x7ffe18)";
   } else if (step === 3) {
     a_val = 20;
     b_val = 10;
     temp_val = 10;
-    expl.innerText = "b = temp  (Rebind 'b' to saved 'temp' -> Swap completed safely without data loss)";
+    expl.innerText = "Step 3: b = temp  (Rebind 'b' to saved 'temp' -> Swap completed safely without data loss)";
   }
 
   viewport.innerHTML = `
@@ -1401,13 +1656,126 @@ function setSwapStep(step) {
         <div class="text-2xl font-mono text-codex-text mt-1">${b_val}</div>
         <span class="text-[10px] text-zinc-500 font-mono mt-1">28 B</span>
       </div>
-      <div class="flex flex-col items-center p-3 rounded-lg bg-[#18181c] border ${step === 1 ? 'border-cyan-400/80 shadow-lg shadow-cyan-950/30' : 'border-dashed border-zinc-700'}">
+      <div class="flex flex-col items-center p-3 rounded-lg bg-[#18181c] border ${step === 1 ? 'border-cyan-400/80 shadow-lg shadow-cyan-950/30' : (step === 0 ? 'border-dashed border-zinc-800' : 'border-dashed border-zinc-700')}">
         <span class="text-[10px] font-mono text-codex-muted">temp (0x7ffe20)</span>
-        <div class="text-2xl font-mono text-cyan-300 mt-1">${temp_val}</div>
+        <div class="text-2xl font-mono ${temp_val === 'Unallocated' ? 'text-zinc-600 text-sm' : 'text-cyan-300'} mt-1">${temp_val}</div>
         <span class="text-[10px] text-zinc-500 font-mono mt-1">Buffer</span>
       </div>
     </div>
   `;
+}
+
+function prevSwapStep() {
+  const prev = Math.max(0, (state.swapStep || 1) - 1);
+  setSwapStep(prev);
+}
+
+function nextSwapStep() {
+  const next = Math.min(3, (state.swapStep || 0) + 1);
+  setSwapStep(next);
+}
+
+function togglePlaySwapMovie() {
+  const btn = document.getElementById('btn-play-swap');
+  if (swapPlayTimer) {
+    clearInterval(swapPlayTimer);
+    swapPlayTimer = null;
+    if (btn) btn.innerText = "▶ Play";
+  } else {
+    if (btn) btn.innerText = "❚❚ Pause";
+    swapPlayTimer = setInterval(() => {
+      let next = (state.swapStep + 1);
+      if (next > 3) next = 0;
+      setSwapStep(next);
+    }, 1800);
+  }
+}
+
+function loadLogicPreset(preset) {
+  const input = document.getElementById('logic-code-input');
+  if (!input) return;
+  if (preset === 'swap_3step') {
+    input.value = "temp = x\nx = y\ny = temp";
+  } else if (preset === 'tuple_unpack') {
+    input.value = "x, y = y, x";
+  } else if (preset === 'flawed_overwrite') {
+    input.value = "x = y\ny = x";
+  }
+}
+
+async function runASTLogicVerifier() {
+  const input = document.getElementById('logic-code-input');
+  const code = input ? input.value.trim() : '';
+  const resultBox = document.getElementById('logic-verifier-result');
+  if (!code) {
+    alert("Please enter Python swap code to verify.");
+    return;
+  }
+  if (resultBox) {
+    resultBox.className = "p-3 rounded-lg text-xs font-mono bg-zinc-900 border border-zinc-700 text-zinc-300 block";
+    resultBox.innerText = "Parsing AST and executing in isolated sandboxed namespace...";
+  }
+  try {
+    const res = await fetch('/api/verify-logic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code: code,
+        initial_state: { x: 10, y: 20 }
+      })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      throw new Error(data.message || "Logic verification failed.");
+    }
+    if (resultBox) {
+      resultBox.classList.remove('hidden');
+      if (data.verified && !data.has_data_loss) {
+        resultBox.className = "p-3.5 rounded-xl text-xs font-mono bg-emerald-950/40 border border-emerald-500/50 text-emerald-300 space-y-2";
+        resultBox.innerHTML = `
+          <div class="flex items-center justify-between pb-1.5 border-b border-emerald-500/30">
+            <span class="font-bold flex items-center space-x-1.5">
+              <span>✓</span><span>AST Logic Verification Passed</span>
+            </span>
+            <span class="text-[10px] text-emerald-400">Nodes: ${data.ast_nodes} | Safety Invariant: PRESERVED</span>
+          </div>
+          <p class="text-zinc-200 text-xs">${escapeHtml(data.message)}</p>
+          <div class="grid grid-cols-2 gap-2 text-[11px] pt-1">
+            <div class="p-2 bg-black/40 rounded border border-emerald-500/20">
+              <span class="text-zinc-400">Initial State:</span> <code class="text-white">${JSON.stringify(data.initial_state)}</code>
+            </div>
+            <div class="p-2 bg-black/40 rounded border border-emerald-500/20">
+              <span class="text-zinc-400">Final State:</span> <code class="text-emerald-300">${JSON.stringify(data.final_state)}</code>
+            </div>
+          </div>
+        `;
+      } else {
+        resultBox.className = "p-3.5 rounded-xl text-xs font-mono bg-amber-950/40 border border-amber-500/50 text-amber-300 space-y-2";
+        resultBox.innerHTML = `
+          <div class="flex items-center justify-between pb-1.5 border-b border-amber-500/30">
+            <span class="font-bold flex items-center space-x-1.5">
+              <span>⚠</span><span>Fatal Data Loss / Logic Flaw Detected</span>
+            </span>
+            <span class="text-[10px] text-amber-400">Nodes: ${data.ast_nodes} | Invariant: BROKEN</span>
+          </div>
+          <p class="text-zinc-200 text-xs">${escapeHtml(data.message)}</p>
+          <div class="grid grid-cols-2 gap-2 text-[11px] pt-1">
+            <div class="p-2 bg-black/40 rounded border border-amber-500/20">
+              <span class="text-zinc-400">Initial State:</span> <code class="text-white">${JSON.stringify(data.initial_state)}</code>
+            </div>
+            <div class="p-2 bg-black/40 rounded border border-amber-500/20">
+              <span class="text-zinc-400">Final State:</span> <code class="text-rose-400">${JSON.stringify(data.final_state)}</code>
+            </div>
+          </div>
+        `;
+      }
+    }
+  } catch (err) {
+    if (resultBox) {
+      resultBox.className = "p-3 rounded-lg text-xs font-mono bg-rose-950/40 border border-rose-500/40 text-rose-300";
+      resultBox.innerText = "Error: " + err.message;
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1439,7 +1807,7 @@ async function executeRAGSearch() {
       ${results.map(r => `
         <div class="p-3 rounded-lg bg-codex-card border border-codex-border space-y-1">
           <div class="flex items-center justify-between text-[10px] font-mono text-codex-muted">
-            <span class="text-cyan-400 font-medium">${escapeHtml(r.chunk_id || 'unknown')}</span>
+            <span class="text-cyan-400 font-medium cursor-pointer hover:underline" onclick="openCitationChunk('${escapeHtml(r.chunk_id)}')">${escapeHtml(r.chunk_id || 'unknown')}</span>
             <span>Cosine Sim: ${(Number(r.similarity) || 0).toFixed(3)}</span>
           </div>
           <div class="text-xs font-medium text-codex-text">${escapeHtml(r.source_title || 'Untitled source')}</div>
@@ -1450,6 +1818,67 @@ async function executeRAGSearch() {
   } catch (err) {
     console.error('Error executing search:', err);
     container.innerHTML = `<div class="text-rose-400 text-xs">${escapeHtml(err.message || 'Error performing vector search.')}</div>`;
+  }
+}
+
+async function loadSampleDoc(filename) {
+  try {
+    const res = await fetch(`/api/rag/sample-docs?doc=${encodeURIComponent(filename)}`);
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.message || "Failed to load sample document.");
+    
+    const fileInput = document.getElementById('ingest-filename');
+    const contentInput = document.getElementById('ingest-content');
+    if (fileInput) fileInput.value = data.filename;
+    if (contentInput) contentInput.value = data.content;
+
+    const statusBox = document.getElementById('ingest-status-box');
+    if (statusBox) {
+      statusBox.className = "p-2.5 rounded-lg text-xs font-mono bg-cyan-950/30 border border-cyan-500/30 text-cyan-300 block";
+      statusBox.innerText = `Loaded '${data.filename}' (${data.size_bytes} bytes). Click 'Chunk, Link & Index' to ingest.`;
+    }
+  } catch (err) {
+    alert("Could not load sample doc: " + err.message);
+  }
+}
+
+async function showPGVectorSchemaModal() {
+  try {
+    const res = await fetch('/api/rag/schema');
+    const data = await res.json();
+    const ddlCode = document.getElementById('pgvector-ddl-code');
+    if (ddlCode) ddlCode.innerText = data.ddl || '';
+    showModal('pgvectorModal');
+  } catch (err) {
+    alert("Could not load pgvector schema: " + err.message);
+  }
+}
+
+function copyPGVectorDDL() {
+  const ddlCode = document.getElementById('pgvector-ddl-code');
+  if (ddlCode) {
+    navigator.clipboard.writeText(ddlCode.innerText);
+    alert("PostgreSQL pgvector DDL copied to clipboard!");
+  }
+}
+
+async function openCitationChunk(chunkId) {
+  try {
+    const res = await fetch(`/api/rag/chunk/${encodeURIComponent(chunkId)}`);
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.message || "Chunk citation not found.");
+
+    const idEl = document.getElementById('citation-modal-chunk-id');
+    const sourceEl = document.getElementById('citation-modal-source');
+    const textEl = document.getElementById('citation-modal-text');
+
+    if (idEl) idEl.innerText = data.chunk_id;
+    if (sourceEl) sourceEl.innerText = `Source: ${data.source_title} (Heading: ${data.heading_path || 'General'})`;
+    if (textEl) textEl.innerText = data.content;
+
+    showModal('citationModal');
+  } catch (err) {
+    alert("Citation details: " + err.message);
   }
 }
 
@@ -1478,8 +1907,28 @@ async function executeIngestion() {
     }
 
     const linked = Array.isArray(result.linked_concepts) ? result.linked_concepts : [];
-    statusBox.className = 'p-2.5 rounded-lg text-xs font-mono bg-emerald-950/20 border border-emerald-500/30 text-emerald-300 block';
-    statusBox.innerText = `✓ Ingested '${result.filename}' cleanly. Extracted ${result.chunks_extracted} chunks, auto-linked to [${linked.join(', ')}].`;
+    const headings = Array.isArray(result.heading_hierarchy) ? result.heading_hierarchy : [];
+
+    statusBox.className = 'p-3 rounded-lg text-xs font-mono bg-emerald-950/20 border border-emerald-500/30 text-emerald-300 block space-y-2';
+    statusBox.innerHTML = `
+      <div class="font-bold flex items-center space-x-1.5">
+        <span>✓</span><span>Successfully Ingested '${escapeHtml(result.filename)}'</span>
+      </div>
+      <div class="text-zinc-300 text-[11px]">
+        Extracted <strong>${result.chunks_extracted} chunks</strong> (${result.total_words || 0} words).
+      </div>
+      ${headings.length > 0 ? `
+        <div class="text-[10px] text-zinc-400">
+          <span class="text-zinc-500">Extracted Headings:</span>
+          <div class="flex flex-wrap gap-1 mt-1">
+            ${headings.map(h => `<span class="px-1.5 py-0.5 rounded bg-black/40 border border-zinc-800 text-cyan-300">${escapeHtml(h)}</span>`).join('')}
+          </div>
+        </div>
+      ` : ''}
+      <div class="text-[10px] text-zinc-400 pt-1 border-t border-emerald-500/20">
+        <span class="text-emerald-400 font-bold">Auto-Linked DAG Concepts:</span> [${linked.map(l => `<span class="text-white">${escapeHtml(l)}</span>`).join(', ')}]
+      </div>
+    `;
   } catch (err) {
     console.error('Ingestion error:', err);
     statusBox.className = 'p-2.5 rounded-lg text-xs font-mono bg-rose-950/20 border border-rose-500/30 text-rose-300 block';
@@ -1538,6 +1987,58 @@ async function refreshAuditTrail() {
   }
 }
 
+async function runTamperVerification() {
+  const banner = document.getElementById('tamper-verification-banner');
+  try {
+    const res = await fetch('/api/audit-trail/verify');
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.message || "Verification failed.");
+
+    if (banner) {
+      banner.classList.remove('hidden');
+      if (data.verified && !data.tamper_detected) {
+        banner.className = "p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/50 text-xs font-mono text-emerald-300 space-y-1";
+        banner.innerHTML = `
+          <div class="font-bold flex items-center space-x-2">
+            <span>🛡️</span><span>Cryptographic Integrity Certified: Zero Tampering Detected</span>
+          </div>
+          <div class="text-zinc-300 text-[11px]">
+            All ${data.total_records} assessment ledger blocks validated against SHA-256 parent hash chain.
+          </div>
+          <div class="text-[10px] text-zinc-500">Root Fingerprint: <code class="text-cyan-300">${escapeHtml(data.audit_hash)}</code></div>
+        `;
+      } else {
+        banner.className = "p-3 rounded-xl bg-rose-950/40 border border-rose-500/50 text-xs font-mono text-rose-300";
+        banner.innerHTML = `<span>⚠ Warning: Ledger hash mismatch or tamper detected!</span>`;
+      }
+    }
+  } catch (err) {
+    alert("Verification error: " + err.message);
+  }
+}
+
+async function exportAuditReport() {
+  try {
+    const res = await fetch('/api/audit-trail/report');
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.message || "Failed to generate audit report.");
+
+    const contentEl = document.getElementById('transcript-markdown-content');
+    if (contentEl) contentEl.innerText = data.report_markdown;
+    showModal('transcriptModal');
+  } catch (err) {
+    alert("Audit transcript export error: " + err.message);
+  }
+}
+
+function copyTranscriptMarkdown() {
+  const contentEl = document.getElementById('transcript-markdown-content');
+  if (contentEl) {
+    navigator.clipboard.writeText(contentEl.innerText);
+    alert("Academic mastery report copied to clipboard!");
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 11. SOCRATIC LAB MULTI-TURN DIALOGUE (Milestone 1)
 // ---------------------------------------------------------------------------
@@ -1547,6 +2048,13 @@ function currentSocraticQuestion() {
   const lesson = state.lessons[state.activeConcept];
   if (lesson && lesson.diagnostic_prompt) return lesson.diagnostic_prompt;
   return `Explain the mechanics of ${state.activeConcept} in Python.`;
+}
+
+function switchSocraticConcept(conceptId) {
+  if (!conceptId) return;
+  state.activeConcept = conceptId;
+  initSocraticLab(true);
+  renderSocraticLab();
 }
 
 function initSocraticLab(forceReset = false) {
